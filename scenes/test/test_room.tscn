@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://b2s1ws0bkbpmj"]
+
+[ext_resource type="PackedScene" uid="uid://dd6xkg3a44k7o" path="res://scenes/player/player.tscn" id="1_gn454"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k0xob"]
+size = Vector2(32, 32)
+
+[node name="TestRoom" type="Node2D" unique_id=1971894158]
+
+[node name="Floor" type="ColorRect" parent="." unique_id=1607973357]
+offset_left = -480.0
+offset_top = -320.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.23921569, 0.41960785, 0.20784314, 1)
+
+[node name="Rock" type="StaticBody2D" parent="." unique_id=1599404829]
+position = Vector2(64, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Rock" unique_id=739164059]
+shape = SubResource("RectangleShape2D_k0xob")
+
+[node name="ColorRect" type="ColorRect" parent="Rock" unique_id=1629604386]
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+color = Color(0.4351923, 0.43519226, 0.43519226, 1)
+
+[node name="player" parent="." unique_id=993081790 instance=ExtResource("1_gn454")]

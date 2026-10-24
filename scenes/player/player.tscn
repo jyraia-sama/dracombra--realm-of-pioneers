@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://dd6xkg3a44k7o"]
+
+[ext_resource type="Script" uid="uid://bvb5l17k60ign" path="res://scenes/player/player.gd" id="1_8afob"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_auxhd"]
+
+[node name="player" type="CharacterBody2D" unique_id=993081790]
+script = ExtResource("1_8afob")
+
+[node name="Visual" type="Node2D" parent="." unique_id=1106680653]
+
+[node name="Body" type="ColorRect" parent="Visual" unique_id=1901964283]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=197898378]
+shape = SubResource("RectangleShape2D_auxhd")
+
+[node name="AttackPivot" type="Node2D" parent="." unique_id=1346897258]
+
+[node name="AttackFx" type="ColorRect" parent="AttackPivot" unique_id=1141148922]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=941133402]
