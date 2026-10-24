@@ -302,9 +302,9 @@ func _build_minimap() -> void:
 				if c.x >= 0 and c.y >= 0 and c.x < img.get_width() and c.y < img.get_height():
 					img.set_pixelv(c, img.get_pixelv(c).darkened(0.35))
 	var avail := Vector2(560, 250)
-	_map_scale = maxf(1.0, floorf(minf(avail.x / img.get_width(), avail.y / img.get_height())))
-	if img.get_width() * _map_scale > avail.x:
-		_map_scale = minf(avail.x / img.get_width(), avail.y / img.get_height())
+	_map_scale = minf(avail.x / img.get_width(), avail.y / img.get_height())
+	if _map_scale >= 2.0:
+		_map_scale = floorf(_map_scale)
 	_map_view.texture = ImageTexture.create_from_image(img)
 	_map_view.size = Vector2(img.get_size()) * _map_scale
 	_map_view.stretch_mode = TextureRect.STRETCH_SCALE
