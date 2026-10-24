@@ -61,15 +61,14 @@ func _rest() -> void:
 	var player := get_player()
 	player.input_locked = true
 	player.scripted_direction = Vector2.ZERO
-	var tween := create_tween()
-	tween.tween_property(player.visual, "scale", Vector2(1.06, 0.88), 0.4)
+	# Il tombe à genoux, une main au sol.
+	wound.hold(&"collapse", 0)
 	for i in 3:
 		wound.drop_blood(player.global_position + Vector2(randf_range(-5.0, 5.0), randf_range(-2.0, 2.0)), true)
 	await Narration.say("À bout de forces, il dut s'adosser à la paroi pour reprendre son souffle...", 3.4)
 	await Narration.say("« Pas ici... Je ne mourrai pas ici. »", 2.4)
-	var up := create_tween()
-	up.tween_property(player.visual, "scale", Vector2.ONE, 0.5)
-	await up.finished
+	await wound.play(&"rise")
+	wound.release_pose()
 	player.input_locked = false
 
 

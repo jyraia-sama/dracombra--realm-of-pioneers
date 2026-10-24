@@ -77,6 +77,10 @@ func _make_prop_scene(prop_name: String, spec: Dictionary) -> PackedScene:
 	sprite.name = "Sprite2D"
 	sprite.texture = load("res://assets/sprites/props/%s/%s.png" % [group, prop_name])
 	sprite.centered = false
+	var frames: int = int(spec.get("frames", 1))
+	if frames > 1:
+		sprite.hframes = frames
+		sprite.set_script(load("res://scenes/props/sprite_cycle.gd"))
 	match kind:
 		"decal":
 			# À plat sur le sol, sous les personnages.
@@ -942,7 +946,8 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 
 	# L'entrée de la grotte, dans la falaise.
 	var mouth: Vector2i = sp["M"][0]
-	_instance(sc, "cave_mouth", Vector2(mouth.x * T + T / 2.0, mouth.y * T + T + 1))
+	var mouth_node := _instance_named(sc, "cave_mouth", Vector2(mouth.x * T + T / 2.0, mouth.y * T + T + 3), "CaveMouth")
+	mouth_node.scale = Vector2.ONE
 
 	# Les ruines de Dracombra autour du parvis.
 	var r: Vector2i = sp["R"][0]

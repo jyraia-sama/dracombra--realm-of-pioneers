@@ -87,6 +87,7 @@ func _ready() -> void:
 	attack_hitbox.source = self
 	attack_hitbox.active = false
 
+	health.set_max_health(Game.hero_max_health(), true)
 	health.invulnerability_duration = hurt_invulnerability
 	hurtbox.hit_received.connect(_on_hit_received)
 	health.died.connect(_on_died)
@@ -275,6 +276,8 @@ func _update_sprite(delta: float) -> void:
 			index = mini(int(_anim_time / ANIMS[anim][2]), ANIMS[anim][1] - 1)
 	var first_row: int = ANIMS[anim][0]
 	sprite.frame = (first_row + dir) * COLUMNS + index
+	# Les pas : le corps se soulève d'un pixel quand la jambe passe sous lui.
+	sprite.position.y = -1.0 if anim == &"walk" and index % 3 == 1 else 0.0
 
 
 func _looped(anim: StringName, elapsed: float) -> int:

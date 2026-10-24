@@ -2,9 +2,9 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/fallen_adventurer.png" id="1_gncer"]
 
-[node name="FallenAdventurer" type="Node2D" unique_id=1203311030]
+[node name="FallenAdventurer" type="Node2D" unique_id=1035467207]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1360663424]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1864671849]
 texture = ExtResource("1_gncer")
 centered = false
 offset = Vector2(-20, -20)

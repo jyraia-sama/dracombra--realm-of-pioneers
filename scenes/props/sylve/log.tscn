@@ -3,18 +3,18 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/log.png" id="1_ctfw0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2moq4"]
-size = Vector2(24, 6)
+size = Vector2(26, 6)
 
-[node name="Log" type="Node2D" unique_id=1803979907]
+[node name="Log" type="Node2D" unique_id=892700164]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2078358668]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1761805626]
 texture = ExtResource("1_ctfw0")
 centered = false
-offset = Vector2(-13, -10)
+offset = Vector2(-16, -18)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1152236585]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1553561666]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=52059029]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=790025026]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_2moq4")

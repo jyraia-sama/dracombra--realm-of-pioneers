@@ -28,7 +28,7 @@ for x in range(W):
         g[y][x] = "#"
 # Adoucit le pied de la falaise (pas de marches d'une case).
 CAVE_X = 22
-for x in range(CAVE_X - 3, CAVE_X + 4):
+for x in range(CAVE_X - 5, CAVE_X + 6):
     for y in range(H):
         g[y][x] = "#" if y < mountain[CAVE_X] else g[y][x]
         if y >= mountain[CAVE_X] and g[y][x] == "#":

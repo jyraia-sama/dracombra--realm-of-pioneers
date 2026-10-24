@@ -1,13 +1,24 @@
 class_name WoundedEffect
 extends Node2D
-## Le héros est gravement blessé : il boite, pâlit, ne peut plus ni frapper ni rouler,
-## et laisse une traînée de sang derrière lui.
+## Le héros est gravement blessé : il boite en se tenant le flanc, ne peut plus ni frapper
+## ni rouler, et laisse une traînée de sang derrière lui.
+## Sert aussi aux poses de cinématique (s'effondrer, allongé, assis au feu, se relever).
 ## À ajouter dans le niveau :
 ##     var wound := WoundedEffect.new()
 ##     add_child(wound)
 ##     wound.start(player)
 
+const SHEET := preload("res://assets/sprites/hero/warrior_wounded.png")
 const BLOOD_COLORS: Array[Color] = [Color(0.74, 0.08, 0.1), Color(0.56, 0.05, 0.08), Color(0.86, 0.16, 0.12)]
+## Planche warrior_wounded.png (regard vers la droite) : [ligne, nombre d'images, durée d'une image].
+const ANIMS := {
+	&"limp": [0, 6, 0.14],
+	&"collapse": [1, 4, 0.18],
+	&"lying": [2, 2, 0.7],
+	&"sit": [3, 2, 0.9],
+	&"rise": [4, 4, 0.22],
+}
+const COLUMNS := 6
 
 ## Vitesse du héros blessé (part de sa vitesse normale).
 @export var wounded_speed: float = 0.42
@@ -19,11 +30,16 @@ const BLOOD_COLORS: Array[Color] = [Color(0.74, 0.08, 0.1), Color(0.56, 0.05, 0.
 var player: Player
 var active := false
 
+var _sprite: Sprite2D
 var _textures: Array[Texture2D] = []
 var _drops: Array[Node2D] = []
 var _last_feet := Vector2.INF
 var _distance := 0.0
 var _time := 0.0
+## Pose de cinématique en cours (vide : marche ou attente normale).
+var _pose: StringName = &""
+var _pose_time := 0.0
+var _pose_loop := false
 
 
 func _ready() -> void:
@@ -39,9 +55,25 @@ func start(target: Player) -> void:
 	player.actions_locked = true
 	player.health.min_health = 1
 	player.health.set_health(1)
+	_attach_sprite()
 
 
-## Les blessures se sont refermées.
+func _attach_sprite() -> void:
+	if _sprite != null:
+		return
+	_sprite = Sprite2D.new()
+	_sprite.name = "WoundSprite"
+	_sprite.texture = SHEET
+	_sprite.centered = false
+	_sprite.hframes = COLUMNS
+	_sprite.vframes = 5
+	_sprite.offset = Vector2(-29, -31)
+	player.visual.add_child(_sprite)
+	player.sprite.visible = false
+
+
+## Les blessures se sont refermées. La pose en cours (assis, allongé) reste affichée
+## jusqu'à `release_pose()`.
 func heal() -> void:
 	active = false
 	if not is_instance_valid(player):
@@ -50,33 +82,74 @@ func heal() -> void:
 	player.actions_locked = false
 	player.health.min_health = 0
 	player.health.heal(player.health.max_health)
-	player.visual.position = Vector2.ZERO
-	player.visual.rotation = 0.0
-	player.visual.scale = Vector2.ONE
-	player.sprite.self_modulate = Color.WHITE
+	if _sprite != null:
+		_sprite.self_modulate = Color.WHITE
+	if _pose == &"":
+		_detach_sprite()
+
+
+func _detach_sprite() -> void:
+	if _sprite != null:
+		_sprite.queue_free()
+		_sprite = null
+	if is_instance_valid(player):
+		player.sprite.visible = true
+
+
+## Joue une animation de cinématique. Une animation en boucle (allongé, assis) reste
+## jusqu'à la suivante ; les autres restent sur leur dernière image.
+func play(anim: StringName, loop: bool = false) -> void:
+	_attach_sprite()
+	_pose = anim
+	_pose_time = 0.0
+	_pose_loop = loop
+	if not loop:
+		var count: int = ANIMS[anim][1]
+		await get_tree().create_timer(count * float(ANIMS[anim][2])).timeout
+
+
+## Fige une image précise d'une animation (par exemple, à genoux).
+func hold(anim: StringName, index: int) -> void:
+	_attach_sprite()
+	_pose = anim
+	_pose_loop = false
+	_pose_time = index * float(ANIMS[anim][2])
+
+
+## Fin de la pose : retour à la marche (blessé) ou au sprite normal (guéri).
+func release_pose() -> void:
+	_pose = &""
+	if not active:
+		_detach_sprite()
 
 
 func _process(delta: float) -> void:
-	if not active or not is_instance_valid(player):
+	if not is_instance_valid(player) or _sprite == null:
 		return
 	_time += delta
-	_limp()
-	_bleed()
+	_pose_time += delta
+	# La planche regarde à droite ; on garde le dernier sens horizontal.
+	if absf(player.facing.x) > 0.1:
+		_sprite.flip_h = player.facing.x < 0.0
+	if _pose != &"":
+		_sprite.frame = _frame(_pose, _pose_time, _pose_loop)
+	elif player.velocity.length() > 1.0:
+		_sprite.frame = _frame(&"limp", _time, true)
+	else:
+		# À l'arrêt : il reste plié, une main sur le flanc.
+		_sprite.frame = _frame(&"limp", 0.0, false)
+	if active:
+		var pulse := 0.5 + 0.5 * sin(_time * 3.0)
+		_sprite.self_modulate = Color(1.0, 0.9 - pulse * 0.08, 0.9 - pulse * 0.1)
+		_bleed()
 
 
-## Il boite : son corps penche et sautille quand il avance. Il pâlit.
-func _limp() -> void:
-	var moving := player.velocity.length() > 1.0
-	var target := Vector2.ZERO
-	var tilt := 0.0
-	if moving:
-		var phase := _time * 7.0
-		target.y = absf(sin(phase)) * 1.5
-		tilt = sin(phase) * 0.06
-	player.visual.position = player.visual.position.lerp(target, 0.4).round()
-	player.visual.rotation = lerpf(player.visual.rotation, tilt, 0.3)
-	var pulse := 0.5 + 0.5 * sin(_time * 3.0)
-	player.sprite.self_modulate = Color(1.0, 0.86 - pulse * 0.08, 0.86 - pulse * 0.1)
+func _frame(anim: StringName, t: float, loop: bool) -> int:
+	var row: int = ANIMS[anim][0]
+	var count: int = ANIMS[anim][1]
+	var i := int(t / float(ANIMS[anim][2]))
+	i = i % count if loop else mini(i, count - 1)
+	return row * COLUMNS + i
 
 
 func _bleed() -> void:
@@ -96,7 +169,6 @@ func _bleed() -> void:
 func drop_blood(at: Vector2, big: bool) -> void:
 	var drop := Sprite2D.new()
 	drop.texture = _textures[randi_range(3, 5) if big else randi_range(0, 2)]
-	drop.global_position = at.round()
 	drop.rotation = [0.0, PI * 0.5, PI, PI * 1.5][randi() % 4]
 	drop.scale = Vector2.ZERO
 	add_child(drop)

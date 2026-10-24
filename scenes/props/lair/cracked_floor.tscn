@@ -4,15 +4,15 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_frxpc"]
 [ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_87gng"]
 
-[node name="CrackedFloor" type="Node2D" unique_id=707686431]
+[node name="CrackedFloor" type="Node2D" unique_id=777241781]
 z_index = -1
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1746748088]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1399198962]
 texture = ExtResource("1_acyre")
 centered = false
 offset = Vector2(-13, -8)
 
-[node name="Light" type="PointLight2D" parent="." unique_id=1831314860]
+[node name="Light" type="PointLight2D" parent="." unique_id=655769863]
 color = Color(1, 0.4, 0.15, 1)
 energy = 0.4
 texture = ExtResource("2_frxpc")

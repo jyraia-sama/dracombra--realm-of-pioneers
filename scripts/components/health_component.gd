@@ -64,6 +64,13 @@ func heal(amount: int) -> void:
 	health_changed.emit(current_health, max_health)
 
 
+## Change les PV maximum ; `refill` remet aussi les PV au maximum.
+func set_max_health(value: int, refill: bool = false) -> void:
+	max_health = maxi(1, value)
+	current_health = max_health if refill else mini(current_health, max_health)
+	health_changed.emit(current_health, max_health)
+
+
 ## Fixe directement les PV (cinématiques). Ne déclenche pas la mort.
 func set_health(value: int) -> void:
 	current_health = clampi(value, 1, max_health)

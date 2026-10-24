@@ -17,3 +17,13 @@ func has_flag(flag: StringName) -> bool:
 
 func set_flag(flag: StringName, value: bool = true) -> void:
 	flags[flag] = value
+
+
+## PV maximum du héros pendant le prologue : un capitaine aguerri.
+const HERO_PROLOGUE_HEALTH: int = 20
+## PV maximum après le prologue : la blessure de Solakor l'a durablement affaibli.
+const HERO_BASE_HEALTH: int = 10
+
+
+func hero_max_health() -> int:
+	return HERO_BASE_HEALTH if has_flag(&"prologue_done") else HERO_PROLOGUE_HEALTH

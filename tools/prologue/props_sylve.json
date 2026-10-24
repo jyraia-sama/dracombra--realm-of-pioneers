@@ -2,214 +2,26 @@
  "oak_a": {
   "group": "sylve",
   "size": [
-   40,
-   53
+   45,
+   55
   ],
   "kind": "object",
   "collision": [
-   10,
+   12,
    6
   ],
   "block": [
    1,
    1
   ],
-  "light": null
+  "light": null,
+  "frames": 1
  },
  "oak_b": {
   "group": "sylve",
   "size": [
-   41,
-   55
-  ],
-  "kind": "object",
-  "collision": [
-   10,
-   6
-  ],
-  "block": [
-   1,
-   1
-  ],
-  "light": null
- },
- "oak_c": {
-  "group": "sylve",
-  "size": [
-   42,
-   53
-  ],
-  "kind": "object",
-  "collision": [
-   10,
-   6
-  ],
-  "block": [
-   1,
-   1
-  ],
-  "light": null
- },
- "oak_big": {
-  "group": "sylve",
-  "size": [
-   45,
-   64
-  ],
-  "kind": "object",
-  "collision": [
-   12,
-   6
-  ],
-  "block": [
-   1,
-   1
-  ],
-  "light": null
- },
- "pine_a": {
-  "group": "sylve",
-  "size": [
-   28,
-   55
-  ],
-  "kind": "object",
-  "collision": [
-   8,
-   6
-  ],
-  "block": [
-   1,
-   1
-  ],
-  "light": null
- },
- "pine_b": {
-  "group": "sylve",
-  "size": [
-   26,
-   47
-  ],
-  "kind": "object",
-  "collision": [
-   8,
-   6
-  ],
-  "block": [
-   1,
-   1
-  ],
-  "light": null
- },
- "bush": {
-  "group": "sylve",
-  "size": [
-   22,
-   15
-  ],
-  "kind": "object",
-  "collision": [
-   16,
-   6
-  ],
-  "block": [
-   1,
-   1
-  ],
-  "light": null
- },
- "bush_berries": {
-  "group": "sylve",
-  "size": [
-   22,
-   15
-  ],
-  "kind": "object",
-  "collision": [
-   16,
-   6
-  ],
-  "block": [
-   1,
-   1
-  ],
-  "light": null
- },
- "flowers_white": {
-  "group": "sylve",
-  "size": [
-   11,
-   7
-  ],
-  "kind": "object",
-  "collision": null,
-  "block": [
-   0,
-   0
-  ],
-  "light": null
- },
- "flowers_yellow": {
-  "group": "sylve",
-  "size": [
-   9,
-   7
-  ],
-  "kind": "object",
-  "collision": null,
-  "block": [
-   0,
-   0
-  ],
-  "light": null
- },
- "flowers_pink": {
-  "group": "sylve",
-  "size": [
-   8,
-   7
-  ],
-  "kind": "object",
-  "collision": null,
-  "block": [
-   0,
-   0
-  ],
-  "light": null
- },
- "tall_grass": {
-  "group": "sylve",
-  "size": [
-   12,
-   12
-  ],
-  "kind": "object",
-  "collision": null,
-  "block": [
-   0,
-   0
-  ],
-  "light": null
- },
- "tall_grass_b": {
-  "group": "sylve",
-  "size": [
-   13,
-   12
-  ],
-  "kind": "object",
-  "collision": null,
-  "block": [
-   0,
-   0
-  ],
-  "light": null
- },
- "rock_grey": {
-  "group": "sylve",
-  "size": [
-   17,
-   11
+   59,
+   59
   ],
   "kind": "object",
   "collision": [
@@ -220,7 +32,209 @@
    1,
    1
   ],
-  "light": null
+  "light": null,
+  "frames": 1
+ },
+ "oak_c": {
+  "group": "sylve",
+  "size": [
+   49,
+   52
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "oak_big": {
+  "group": "sylve",
+  "size": [
+   87,
+   74
+  ],
+  "kind": "object",
+  "collision": [
+   26,
+   8
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "pine_a": {
+  "group": "sylve",
+  "size": [
+   32,
+   48
+  ],
+  "kind": "object",
+  "collision": [
+   8,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "pine_b": {
+  "group": "sylve",
+  "size": [
+   26,
+   37
+  ],
+  "kind": "object",
+  "collision": [
+   8,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "bush": {
+  "group": "sylve",
+  "size": [
+   19,
+   17
+  ],
+  "kind": "object",
+  "collision": [
+   16,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "bush_berries": {
+  "group": "sylve",
+  "size": [
+   19,
+   18
+  ],
+  "kind": "object",
+  "collision": [
+   16,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "flowers_white": {
+  "group": "sylve",
+  "size": [
+   13,
+   13
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "flowers_yellow": {
+  "group": "sylve",
+  "size": [
+   12,
+   11
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "flowers_pink": {
+  "group": "sylve",
+  "size": [
+   12,
+   11
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "tall_grass": {
+  "group": "sylve",
+  "size": [
+   15,
+   13
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "tall_grass_b": {
+  "group": "sylve",
+  "size": [
+   14,
+   13
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null,
+  "frames": 1
+ },
+ "rock_grey": {
+  "group": "sylve",
+  "size": [
+   19,
+   12
+  ],
+  "kind": "object",
+  "collision": [
+   14,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null,
+  "frames": 1
  },
  "rock_grey_big": {
   "group": "sylve",
@@ -230,54 +244,57 @@
   ],
   "kind": "object",
   "collision": [
-   24,
+   22,
    8
   ],
   "block": [
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "frames": 1
  },
  "log": {
   "group": "sylve",
   "size": [
-   27,
-   10
+   33,
+   18
   ],
   "kind": "object",
   "collision": [
-   24,
+   26,
    6
   ],
   "block": [
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "frames": 1
  },
  "stump": {
   "group": "sylve",
   "size": [
-   14,
-   11
+   20,
+   15
   ],
   "kind": "object",
   "collision": [
-   10,
-   5
+   12,
+   6
   ],
   "block": [
    1,
    1
   ],
-  "light": null
+  "light": null,
+  "frames": 1
  },
  "campfire": {
   "group": "sylve",
   "size": [
-   14,
-   12
+   19,
+   14
   ],
   "kind": "object",
   "collision": [
@@ -295,15 +312,16 @@
     0.25
    ],
    64,
-   0.75,
+   0.8,
    true
-  ]
+  ],
+  "frames": 3
  },
  "bedroll": {
   "group": "sylve",
   "size": [
-   14,
-   21
+   50,
+   26
   ],
   "kind": "decal",
   "collision": null,
@@ -311,20 +329,22 @@
    0,
    0
   ],
-  "light": null
+  "light": null,
+  "frames": 1
  },
  "cave_mouth": {
   "group": "sylve",
   "size": [
-   33,
-   28
+   140,
+   37
   ],
-  "kind": "hanging",
+  "kind": "object",
   "collision": null,
   "block": [
    0,
    0
   ],
-  "light": null
+  "light": null,
+  "frames": 1
  }
 }

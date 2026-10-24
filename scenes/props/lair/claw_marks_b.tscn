@@ -2,10 +2,10 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/lair/claw_marks_b.png" id="1_pcna4"]
 
-[node name="ClawMarksB" type="Node2D" unique_id=71127480]
+[node name="ClawMarksB" type="Node2D" unique_id=1143515199]
 z_index = -1
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1939294464]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1960118680]
 texture = ExtResource("1_pcna4")
 centered = false
 offset = Vector2(-10, -10)

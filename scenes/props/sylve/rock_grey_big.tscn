@@ -3,18 +3,18 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/rock_grey_big.png" id="1_bjebn"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vfg7r"]
-size = Vector2(24, 8)
+size = Vector2(22, 8)
 
-[node name="RockGreyBig" type="Node2D" unique_id=1740206273]
+[node name="RockGreyBig" type="Node2D" unique_id=702184590]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1230755832]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=975462566]
 texture = ExtResource("1_bjebn")
 centered = false
 offset = Vector2(-13, -18)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=957092691]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1941813547]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=686441201]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=188117316]
 position = Vector2(0, -4)
 shape = SubResource("RectangleShape2D_vfg7r")

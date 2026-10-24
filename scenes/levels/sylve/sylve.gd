@@ -79,11 +79,9 @@ func _collapse() -> void:
 	player.input_locked = true
 	player.scripted_direction = Vector2.ZERO
 	Narration.hide_all()
-	# Il tombe sur le côté.
-	var fall := create_tween().set_parallel()
-	fall.tween_property(player.visual, "rotation", PI * 0.5, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	fall.tween_property(player.visual, "position", Vector2(8, -2), 0.5)
-	await fall.finished
+	# Il s'effondre, face contre terre.
+	await wound.play(&"collapse")
+	wound.play(&"lying", true)
 	Level.shake(self, 2.0, 0.2)
 	for i in 4:
 		wound.drop_blood(player.global_position + Vector2(randf_range(-6.0, 10.0), randf_range(-3.0, 2.0)), true)
@@ -97,20 +95,29 @@ func _collapse() -> void:
 
 func _wake_up() -> void:
 	var player := get_player()
+	# Le combat contre Solakor l'a marqué pour toujours : il ne retrouvera pas sa force d'antan.
+	Game.set_flag(&"prologue_done")
+	player.health.set_max_health(Game.hero_max_health())
+	wound.play(&"sit", true)
 	wound.heal()
 	# La pluie a lavé le sang.
-	wound.queue_free()
+	for drop in wound.get_children():
+		if drop is Sprite2D:
+			drop.queue_free()
 	_set_camp_visible(true)
 	daylight.color = MORNING
-	if bedroll != null:
-		player.global_position = bedroll.global_position + Vector2(0, 14)
-	player.face(Vector2.DOWN)
+	# Il est assis près du feu, à sa gauche, face aux flammes.
+	if campfire != null:
+		player.global_position = campfire.global_position + Vector2(-16, 1)
+	player.face(Vector2.RIGHT)
 	await Transition.fade_in(1.6)
 	await Narration.say("Ses blessures s'étaient refermées. Il était vivant.", 2.8)
+	await Narration.say("Mais la griffe de Solakor avait laissé une marque brûlante : il n'avait plus la force d'autrefois.", 3.6)
+	await wound.play(&"rise")
+	wound.release_pose()
 	player.face(Vector2.RIGHT if ruins_point.x >= player.global_position.x else Vector2.LEFT)
 	await Narration.say("Autour de lui, des dragons sculptés dans la pierre... Se pourrait-il que ce soit... Dracombra ?", 3.8)
 	await Narration.title_card("DRACOMBRA", "Chapitre 1 — Les Pionniers", 3.0)
-	Game.set_flag(&"prologue_done")
 	_start_free_play()
 	Narration.say("Explorez la Sylve des Dracombres.", 3.5)
 
