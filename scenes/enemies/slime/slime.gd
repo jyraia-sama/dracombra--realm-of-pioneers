@@ -57,14 +57,32 @@ func _ready() -> void:
 	health.died.connect(_on_died)
 
 
-func _process(_delta: float) -> void:
-	# Le slime se tasse et se détend : plus vite quand il poursuit.
-	if state == State.DEAD:
-		return
-	var period := 160.0 if state == State.CHASE else 420.0
-	sprite.frame = int(Time.get_ticks_msec() / period) % 2
-	if is_instance_valid(_target):
+## Planche : [ligne, nombre d'images, durée d'une image].
+const ANIMS := {
+	&"idle": [0, 4, 0.16],
+	&"hop": [1, 5, 0.09],
+	&"hurt": [2, 2, 0.08],
+	&"death": [3, 4, 0.1],
+}
+const COLUMNS := 5
+
+var _death_time: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if is_instance_valid(_target) and state != State.DEAD:
 		sprite.flip_h = _target.global_position.x < global_position.x
+	var now := Time.get_ticks_msec() / 1000.0
+	match state:
+		State.IDLE:
+			sprite.frame = SheetAnimation.frame(ANIMS, &"idle", COLUMNS, now, true)
+		State.CHASE:
+			sprite.frame = SheetAnimation.frame(ANIMS, &"hop", COLUMNS, now, true)
+		State.HURT:
+			sprite.frame = SheetAnimation.frame(ANIMS, &"hurt", COLUMNS, now, true)
+		State.DEAD:
+			_death_time += delta
+			sprite.frame = SheetAnimation.frame(ANIMS, &"death", COLUMNS, _death_time, false)
 
 
 func _physics_process(delta: float) -> void:
@@ -127,10 +145,11 @@ func _on_died() -> void:
 	hurtbox.set_deferred("monitorable", false)
 	collision_shape.set_deferred("disabled", true)
 	# Le slime s'aplatit et disparaît.
-	var tween := create_tween().set_parallel()
-	tween.tween_property(visual, "scale", Vector2(1.6, 0.3), 0.3)
-	tween.tween_property(visual, "modulate:a", 0.0, 0.3)
-	tween.chain().tween_callback(queue_free)
+	# Il s'écrase en flaque (animation de mort), puis s'efface.
+	var tween := create_tween()
+	tween.tween_interval(0.6)
+	tween.tween_property(visual, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(queue_free)
 
 
 func _flash() -> void:

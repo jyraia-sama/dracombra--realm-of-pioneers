@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbtii8wsdt37y"
-path="res://.godot/imported/solakor_eyes.png-22662c84d87a895cc084859542c71c04.ctex"
+uid="uid://b54koh2s6g57n"
+path="res://.godot/imported/warrior_walk.png-1474f06487505534980a206d09d74d95.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/bosses/solakor_eyes.png"
-dest_files=["res://.godot/imported/solakor_eyes.png-22662c84d87a895cc084859542c71c04.ctex"]
+source_file="res://assets/sprites/hero/warrior_walk.png"
+dest_files=["res://.godot/imported/warrior_walk.png-1474f06487505534980a206d09d74d95.ctex"]
 
 [params]
 

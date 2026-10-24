@@ -32,8 +32,6 @@ var _time: float = 0.0
 
 @onready var visual: Node2D = $Visual
 @onready var body_sprite: Sprite2D = $Visual/Body
-@onready var eye_left: Sprite2D = $Visual/EyeLeft
-@onready var eye_right: Sprite2D = $Visual/EyeRight
 @onready var eye_light: PointLight2D = $Visual/EyeLight
 @onready var hurtbox: Hurtbox = $Hurtbox
 @onready var claw: Node2D = $Claw
@@ -144,10 +142,8 @@ func rock_volley(center: Vector2) -> void:
 
 
 func _set_eyes_open(open: bool) -> void:
-	# solakor_eyes.png : 6 premiers pixels = œil fermé, 6 suivants = œil ouvert.
-	var region := Rect2(6, 0, 6, 3) if open else Rect2(0, 0, 6, 3)
-	eye_left.region_rect = region
-	eye_right.region_rect = region
+	# solakor.png : image 0 = endormi, image 1 = éveillé.
+	body_sprite.frame = 1 if open else 0
 
 
 func _on_hit_received(hitbox: Hitbox) -> void:

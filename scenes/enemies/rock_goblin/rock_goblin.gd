@@ -78,15 +78,57 @@ func _ready() -> void:
 	health.died.connect(_on_died)
 
 
-func _process(_delta: float) -> void:
-	if state == State.DEAD:
-		return
-	if is_instance_valid(_target) and state != State.CHARGE:
+## Planche : [ligne, nombre d'images, durée d'une image].
+const ANIMS := {
+	&"idle": [0, 4, 0.18],
+	&"run": [1, 6, 0.09],
+	&"throw": [2, 5, 0.12],
+	&"charge": [3, 4, 0.1],
+	&"death": [4, 4, 0.12],
+}
+const COLUMNS := 6
+
+var _anim_time: float = 0.0
+var _last_state: State = State.IDLE
+## Temps restant sur la pose « pierre lâchée » après un lancer.
+var _release_time: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if state != _last_state:
+		_last_state = state
+		_anim_time = 0.0
+	_anim_time += delta
+	_release_time = maxf(_release_time - delta, 0.0)
+	if is_instance_valid(_target) and state != State.CHARGE and state != State.DEAD:
 		sprite.flip_h = _target.global_position.x < global_position.x
-	# Image « bras levé » pendant la visée.
-	sprite.frame = 1 if state == State.AIM else 0
 	# Il tremble pendant qu'il prépare sa charge.
 	visual.position.x = randf_range(-1.0, 1.0) if state == State.CHARGE_WINDUP else 0.0
+	sprite.frame = _current_frame()
+
+
+func _current_frame() -> int:
+	var throw_row: int = ANIMS[&"throw"][0] * COLUMNS
+	var charge_row: int = ANIMS[&"charge"][0] * COLUMNS
+	match state:
+		State.DEAD:
+			return SheetAnimation.frame(ANIMS, &"death", COLUMNS, _anim_time, false)
+		State.AIM:
+			# Il lève sa pierre en 3 temps pendant la visée.
+			return throw_row + mini(int(_anim_time / aim_duration * 3.0), 2)
+		State.CHARGE_WINDUP:
+			return charge_row
+		State.CHARGE:
+			return charge_row + 1 + int(_anim_time / 0.08) % 2
+		State.RECOVER:
+			return charge_row + 3
+	if _release_time > 0.0:
+		# Bras tendu juste après le lancer, puis il se reprend.
+		return throw_row + (3 if _release_time > 0.15 else 4)
+	var now := Time.get_ticks_msec() / 1000.0
+	if velocity.length() > 1.0:
+		return SheetAnimation.frame(ANIMS, &"run", COLUMNS, now, true)
+	return SheetAnimation.frame(ANIMS, &"idle", COLUMNS, now, true)
 
 
 func _physics_process(delta: float) -> void:
@@ -155,6 +197,7 @@ func _process_position() -> void:
 
 func _throw() -> void:
 	_throw_timer = throw_cooldown
+	_release_time = 0.3
 	state = State.POSITION
 	if not is_instance_valid(_target):
 		return
@@ -210,10 +253,11 @@ func _on_died() -> void:
 	charge_hitbox.active = false
 	hurtbox.set_deferred("monitorable", false)
 	collision_shape.set_deferred("disabled", true)
-	var tween := create_tween().set_parallel()
-	tween.tween_property(visual, "rotation", PI / 2.0, 0.3)
+	# Il s'effondre en tas de cailloux (animation de mort), puis s'efface.
+	var tween := create_tween()
+	tween.tween_interval(0.9)
 	tween.tween_property(visual, "modulate:a", 0.0, 0.4)
-	tween.chain().tween_callback(queue_free)
+	tween.tween_callback(queue_free)
 
 
 func _flash() -> void:

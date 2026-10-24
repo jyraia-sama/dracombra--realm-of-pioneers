@@ -58,7 +58,7 @@ var _dodge_velocity: Vector2 = Vector2.ZERO
 @onready var hurtbox: Hurtbox = $Hurtbox
 @onready var hurtbox_shape: CollisionShape2D = $Hurtbox/CollisionShape2D
 @onready var attack_pivot: Node2D = $AttackPivot
-@onready var attack_fx: ColorRect = $AttackPivot/AttackFx
+@onready var slash: Sprite2D = $AttackPivot/Slash
 @onready var attack_hitbox: Hitbox = $AttackPivot/AttackHitbox
 @onready var attack_hitbox_shape: CollisionShape2D = $AttackPivot/AttackHitbox/CollisionShape2D
 
@@ -78,14 +78,11 @@ func _ready() -> void:
 	# Zone d'attaque : part du centre du corps vers la droite,
 	# puis tourne avec AttackPivot vers la direction regardée.
 	attack_pivot.position = Vector2(0.0, -tile)
-	attack_fx.size = Vector2(attack_range_tiles * tile, tile)
-	attack_fx.position = Vector2(tile * 0.25, -tile / 2.0)
-	attack_fx.color = Color(1.0, 0.85, 0.3, 0.6)
-	attack_fx.visible = false
-
-	# La hitbox d'attaque couvre exactement la zone jaune.
-	attack_hitbox_shape.shape.size = attack_fx.size
-	attack_hitbox_shape.position = attack_fx.position + attack_fx.size / 2.0
+	var reach := Vector2(attack_range_tiles * tile, tile * 1.5)
+	attack_hitbox_shape.shape.size = reach
+	attack_hitbox_shape.position = Vector2(tile * 0.25 + reach.x / 2.0, 0.0)
+	# La traînée de l'épée balaie cette zone.
+	slash.visible = false
 	attack_hitbox.damage = attack_damage
 	attack_hitbox.knockback_tiles = attack_knockback_tiles
 	attack_hitbox.source = self
@@ -147,6 +144,10 @@ func _start_dodge(direction: Vector2) -> void:
 	state = State.DODGE
 	health.set_invulnerable(dodge_duration)
 	visual.modulate = Color(1.0, 1.0, 1.0, 0.5)
+	# Le guerrier se ramasse pendant la roulade.
+	var tween := create_tween()
+	tween.tween_property(visual, "scale", Vector2(1.15, 0.75), dodge_duration * 0.3)
+	tween.tween_property(visual, "scale", Vector2.ONE, dodge_duration * 0.7)
 
 
 func _process_dodge(delta: float) -> void:
@@ -160,10 +161,10 @@ func _process_dodge(delta: float) -> void:
 
 func _start_attack() -> void:
 	attack_pivot.rotation = facing.angle()
-	attack_fx.visible = true
 	attack_hitbox.active = true
 	_state_timer = attack_duration
 	state = State.ATTACK
+	_play_slash()
 
 
 func _process_attack(delta: float) -> void:
@@ -175,8 +176,30 @@ func _process_attack(delta: float) -> void:
 
 
 func _end_attack() -> void:
-	attack_fx.visible = false
+	slash.visible = false
 	attack_hitbox.active = false
+	visual.position = Vector2.ZERO
+	visual.scale = Vector2.ONE
+
+
+## Le coup d'épée : fente vers l'avant, puis la traînée balaie la zone en 3 images.
+func _play_slash() -> void:
+	slash.visible = true
+	slash.frame = 0
+	slash.modulate.a = 1.0
+	# L'arc est dessiné vers la droite : on le retourne pour garder le haut en haut.
+	slash.flip_v = facing.x < -0.1
+	var step := attack_duration / 4.0
+	var lunge := facing * 3.0
+	var tween := create_tween()
+	tween.tween_property(visual, "position", lunge, step).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(visual, "scale", Vector2(1.08, 0.94), step)
+	tween.tween_callback(func() -> void: slash.frame = 1)
+	tween.tween_interval(step)
+	tween.tween_callback(func() -> void: slash.frame = 2)
+	tween.tween_property(slash, "modulate:a", 0.0, step)
+	tween.parallel().tween_property(visual, "position", Vector2.ZERO, step * 1.5)
+	tween.parallel().tween_property(visual, "scale", Vector2.ONE, step * 1.5)
 
 
 func _process_hurt(delta: float) -> void:
@@ -217,16 +240,26 @@ func _flash() -> void:
 	tween.tween_property(sprite, "self_modulate", Color.WHITE, 0.2)
 
 
+## Lignes de la planche de marche : face, dos, profil (vers la droite).
+const ROW_DOWN := 0
+const ROW_UP := 1
+const ROW_SIDE := 2
+const WALK_FRAMES := 6
+## Durée d'une image de marche, en secondes.
+const WALK_FRAME_TIME := 0.1
+
+
 func _update_sprite() -> void:
-	# Le dessin regarde vers la droite : on le retourne quand le guerrier va à gauche.
-	if facing.x < -0.1:
-		sprite.flip_h = true
-	elif facing.x > 0.1:
-		sprite.flip_h = false
-	# Petit rebond pendant la marche, en attendant de vraies animations.
+	# Profil dès qu'il y a une part de mouvement horizontal, sinon face ou dos.
+	var row := ROW_SIDE
+	if absf(facing.x) < 0.1:
+		row = ROW_UP if facing.y < 0.0 else ROW_DOWN
+	sprite.flip_h = row == ROW_SIDE and facing.x < 0.0
 	var walking := state == State.NORMAL and velocity.length() > 1.0
-	var bob_up := walking and int(Time.get_ticks_msec() / 120.0) % 2 == 0
-	visual.position.y = -1.0 if bob_up else 0.0
+	var column := 0
+	if walking:
+		column = int(Time.get_ticks_msec() / (WALK_FRAME_TIME * 1000.0 / speed_multiplier)) % WALK_FRAMES
+	sprite.frame = row * WALK_FRAMES + column
 
 
 ## Fait regarder le guerrier dans une direction (cinématiques).

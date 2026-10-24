@@ -40,8 +40,9 @@ script = ExtResource("1_goblin")
 [node name="Sprite" type="Sprite2D" parent="Visual"]
 texture = ExtResource("5_sprite")
 centered = false
-offset = Vector2(-8, -23)
-hframes = 2
+offset = Vector2(-22, -27)
+hframes = 6
+vframes = 5
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
