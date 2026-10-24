@@ -6,6 +6,7 @@ signal item_changed(item: ItemData, count: int)
 
 var _counts: Dictionary[StringName, int] = {}
 var _items: Dictionary[StringName, ItemData] = {}
+var _db: Dictionary[StringName, ItemData] = {}
 
 
 func add_item(item: ItemData, amount: int = 1) -> void:
@@ -34,6 +35,34 @@ func get_items() -> Array[ItemData]:
 		if get_count(id) > 0:
 			out.append(_items[id])
 	return out
+
+
+## Retrouve un objet par son identifiant (tous les fichiers de data/items).
+func item_by_id(id: StringName) -> ItemData:
+	if _db.is_empty():
+		for file in ResourceLoader.list_directory("res://data/items/"):
+			if file.ends_with(".tres") or file.ends_with(".res"):
+				var item := load("res://data/items/" + file) as ItemData
+				if item != null:
+					_db[item.id] = item
+	return _db.get(id)
+
+
+## Pour la sauvegarde : { identifiant : quantité }.
+func serialize() -> Dictionary:
+	var out := {}
+	for id in _counts:
+		if _counts[id] > 0:
+			out[String(id)] = _counts[id]
+	return out
+
+
+func deserialize(data: Dictionary) -> void:
+	clear()
+	for id in data:
+		var item := item_by_id(StringName(id))
+		if item != null:
+			add_item(item, int(data[id]))
 
 
 func clear() -> void:

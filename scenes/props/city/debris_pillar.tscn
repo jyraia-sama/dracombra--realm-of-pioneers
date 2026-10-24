@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/pillar_broken.png" id="1_772mw"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_invjm"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tkmfu"]
+size = Vector2(12, 8)
+
+[node name="DebrisPillar" type="Node2D" unique_id=991330985]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1450845332]
+texture = ExtResource("1_772mw")
+centered = false
+offset = Vector2(-8, -34)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=2144517775]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1814847238]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_tkmfu")
+
+[node name="Harvest" type="Node2D" parent="." unique_id=651528699]
+script = ExtResource("2_invjm")
+item_id = &"stone"
+hits = 4
+regrow_days = 0
+hit_size = Vector2(14, 24)

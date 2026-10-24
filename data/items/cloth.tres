@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/items.png" id="2_icons"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icons")
+region = Rect2(176, 0, 16, 16)
+
+[resource]
+script = ExtResource("1_item")
+id = &"cloth"
+display_name = "Tissu"
+icon = SubResource("AtlasTexture_icon")
+heal_amount = 0
+description = "Toile de lin tissée. Sert aux robes de mage et de clerc."
+use_heal = 0
+category = &"resource"

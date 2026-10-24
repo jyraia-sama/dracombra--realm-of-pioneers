@@ -1,0 +1,166 @@
+{
+ "flax_plant": {
+  "group": "sylve",
+  "size": [
+   16,
+   18
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "gem_rock": {
+  "group": "sylve",
+  "texture": "cave/crystal_blue",
+  "size": [
+   18,
+   20
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    0.45,
+    0.75,
+    1.0
+   ],
+   40,
+   0.7,
+   false
+  ]
+ },
+ "debris_pillar": {
+  "group": "city",
+  "texture": "ruins/pillar_broken",
+  "size": [
+   16,
+   34
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "debris_stump": {
+  "group": "city",
+  "texture": "ruins/pillar_stump",
+  "size": [
+   25,
+   24
+  ],
+  "kind": "object",
+  "collision": [
+   18,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "debris_rocks": {
+  "group": "city",
+  "texture": "sylve/rock_grey_big",
+  "size": [
+   27,
+   18
+  ],
+  "kind": "object",
+  "collision": [
+   22,
+   8
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "debris_small": {
+  "group": "city",
+  "texture": "sylve/rock_grey",
+  "size": [
+   19,
+   12
+  ],
+  "kind": "object",
+  "collision": [
+   14,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "debris_wall": {
+  "group": "city",
+  "texture": "ruins/stone_wing",
+  "size": [
+   34,
+   21
+  ],
+  "kind": "object",
+  "collision": [
+   26,
+   10
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "city_gate": {
+  "group": "ruins",
+  "texture": "ruins/ancient_arch",
+  "size": [
+   43,
+   34
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "monument_statue": {
+  "group": "city",
+  "texture": "ruins/dragon_head_statue",
+  "size": [
+   77,
+   41
+  ],
+  "kind": "object",
+  "collision": [
+   64,
+   18
+  ],
+  "block": [
+   4,
+   1
+  ],
+  "light": null
+ }
+}

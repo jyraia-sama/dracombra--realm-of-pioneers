@@ -13,3 +13,5 @@ id = &"slime_gel"
 display_name = "Gelée de slime"
 icon = SubResource("AtlasTexture_icon")
 heal_amount = 0
+description = "Gelée laissée par les slimes."
+category = &"resource"

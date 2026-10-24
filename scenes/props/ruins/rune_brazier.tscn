@@ -7,21 +7,21 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_mmabx"]
 size = Vector2(14, 8)
 
-[node name="RuneBrazier" type="Node2D" unique_id=81565850]
+[node name="RuneBrazier" type="Node2D" unique_id=1437090073]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1226050264]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1714883557]
 texture = ExtResource("1_6ip22")
 centered = false
 offset = Vector2(-15, -22)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1390418688]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1397448189]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1269198088]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=515765901]
 position = Vector2(0, -4)
 shape = SubResource("RectangleShape2D_mmabx")
 
-[node name="Light" type="PointLight2D" parent="." unique_id=123506706]
+[node name="Light" type="PointLight2D" parent="." unique_id=14786590]
 position = Vector2(0, -8.8)
 color = Color(0.78, 0.5, 1, 1)
 texture = ExtResource("2_k3xs5")

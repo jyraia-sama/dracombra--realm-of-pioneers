@@ -1,10 +1,20 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/tall_grass.png" id="1_0ste7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/tall_grass.png" id="1_3b3q8"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_owc5l"]
 
-[node name="TallGrass" type="Node2D" unique_id=1146691075]
+[node name="TallGrass" type="Node2D" unique_id=1180924088]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1257428186]
-texture = ExtResource("1_0ste7")
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1050203354]
+texture = ExtResource("1_3b3q8")
 centered = false
 offset = Vector2(-7, -13)
+
+[node name="Harvest" type="Node2D" parent="." unique_id=838581520]
+script = ExtResource("2_owc5l")
+item_id = &"herb"
+min_amount = 1
+max_amount = 1
+hits = 1
+regrow_days = 2
+hit_size = Vector2(12, 12)

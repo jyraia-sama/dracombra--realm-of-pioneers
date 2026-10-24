@@ -1,20 +1,28 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/pine_b.png" id="1_t5r3i"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/pine_b.png" id="1_uog2v"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_k57c6"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_uog2v"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_j7d1r"]
 size = Vector2(8, 6)
 
-[node name="PineB" type="Node2D" unique_id=241497328]
+[node name="PineB" type="Node2D" unique_id=684009151]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=555000263]
-texture = ExtResource("1_t5r3i")
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1143172687]
+texture = ExtResource("1_uog2v")
 centered = false
 offset = Vector2(-13, -37)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1717194974]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1987093213]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=2115944388]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=764854542]
 position = Vector2(0, -3)
-shape = SubResource("RectangleShape2D_uog2v")
+shape = SubResource("RectangleShape2D_j7d1r")
+
+[node name="Harvest" type="Node2D" parent="." unique_id=2124742886]
+script = ExtResource("2_k57c6")
+min_amount = 1
+max_amount = 2
+hits = 2
+hit_size = Vector2(12, 16)

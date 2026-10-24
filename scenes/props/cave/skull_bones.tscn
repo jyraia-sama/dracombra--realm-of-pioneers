@@ -2,9 +2,9 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/skull_bones.png" id="1_7q5ph"]
 
-[node name="SkullBones" type="Node2D" unique_id=1873665494]
+[node name="SkullBones" type="Node2D" unique_id=448367442]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=340508049]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=929888392]
 texture = ExtResource("1_7q5ph")
 centered = false
 offset = Vector2(-12, -12)

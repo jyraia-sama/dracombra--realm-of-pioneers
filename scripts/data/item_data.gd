@@ -12,3 +12,9 @@ extends Resource
 ## Si supérieur à 0, l'objet est consommé au ramassage et soigne de ce montant.
 ## Il n'entre alors pas dans l'inventaire.
 @export var heal_amount: int = 0
+## Description affichée dans le sac.
+@export_multiline var description: String = ""
+## Soin quand on l'utilise depuis le sac (0 = ne se consomme pas).
+@export var use_heal: int = 0
+## Catégorie, pour trier le sac : resource, food, equipment...
+@export var category: StringName = &"resource"

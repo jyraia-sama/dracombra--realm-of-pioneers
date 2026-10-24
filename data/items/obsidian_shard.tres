@@ -13,3 +13,5 @@ id = &"obsidian_shard"
 display_name = "Éclat d'obsidienne"
 icon = SubResource("AtlasTexture_icon")
 heal_amount = 0
+description = "Éclat noir et tranchant laissé par les araignées d'obsidienne."
+category = &"resource"

@@ -11,6 +11,7 @@ const LAIR := "res://scenes/levels/prologue/solakor_lair.tscn"
 const TUNNEL := "res://scenes/levels/prologue/horde_tunnel.tscn"
 const PASSAGE := "res://scenes/levels/prologue/wounded_passage.tscn"
 const SYLVE := "res://scenes/levels/sylve/sylve.tscn"
+const DRACOMBRA := "res://scenes/levels/dracombra/dracombra.tscn"
 
 const ALT_MASKS := [4, 4, 4, 0, 0, 5, 6, 12]
 
@@ -32,6 +33,13 @@ func _initialize() -> void:
 	var passage_rows := FileAccess.get_file_as_string(args[5]).strip_edges().split("\n")
 	var sylve_rows := FileAccess.get_file_as_string(args[6]).strip_edges().split("\n")
 	props_spec.merge(JSON.parse_string(FileAccess.get_file_as_string(args[7])))
+	props_spec.merge(JSON.parse_string(FileAccess.get_file_as_string(args[8])))
+	var city_rows := FileAccess.get_file_as_string(args[9]).strip_edges().split("\n")
+	# Variantes décoratives (sans récolte) des arbres, pour les forêts denses.
+	for tree in ["oak_a", "oak_b", "oak_c", "pine_a", "pine_b"]:
+		var deco: Dictionary = props_spec[tree].duplicate(true)
+		deco["texture"] = "sylve/" + tree
+		props_spec["deco_" + tree] = deco
 
 	var tex: Texture2D = load(TILES_PNG)
 	light_tex = _make_light_texture()
@@ -43,6 +51,7 @@ func _initialize() -> void:
 	_build_tunnel(tunnel_rows, tunnel_path, ts)
 	_build_passage(passage_rows, ts)
 	_build_sylve(sylve_rows, tex)
+	_build_dracombra(city_rows, tex)
 	print("BUILD OK")
 	quit()
 
@@ -66,6 +75,21 @@ func _make_light_texture() -> Texture2D:
 
 ## Une scène par décor : image posée au pied du décor, collision à sa base,
 ## lumière éventuelle. Origine de la scène = le point du sol sous le décor.
+## Décors récoltables : [objet, min, max, coups, jours avant repousse (0 = jamais), zone frappée l, h].
+const HARVEST := {
+	"oak_a": ["wood", 2, 3, 3, 3, 14, 18], "oak_b": ["wood", 2, 3, 3, 3, 14, 18],
+	"oak_c": ["wood", 2, 3, 3, 3, 14, 18], "pine_a": ["wood", 2, 3, 3, 3, 12, 18],
+	"pine_b": ["wood", 1, 2, 2, 3, 12, 16],
+	"rock_grey": ["stone", 1, 2, 3, 4, 16, 10], "rock_grey_big": ["stone", 3, 4, 5, 5, 24, 14],
+	"bush": ["herb", 1, 2, 1, 2, 16, 14], "bush_berries": ["herb", 1, 2, 1, 2, 16, 14],
+	"tall_grass": ["herb", 1, 1, 1, 2, 12, 12], "tall_grass_b": ["herb", 1, 1, 1, 2, 12, 12],
+	"flax_plant": ["flax", 1, 2, 1, 2, 14, 14], "gem_rock": ["gem", 1, 1, 4, 6, 16, 16],
+	"debris_pillar": ["stone", 2, 3, 4, 0, 14, 24], "debris_stump": ["stone", 2, 3, 3, 0, 20, 16],
+	"debris_rocks": ["stone", 3, 4, 4, 0, 24, 14], "debris_small": ["stone", 1, 2, 2, 0, 16, 10],
+	"debris_wall": ["stone", 3, 5, 5, 0, 28, 16],
+}
+
+
 func _make_prop_scene(prop_name: String, spec: Dictionary) -> PackedScene:
 	var group: String = spec["group"]
 	var w: int = int(spec["size"][0])
@@ -75,7 +99,7 @@ func _make_prop_scene(prop_name: String, spec: Dictionary) -> PackedScene:
 	root.name = prop_name.to_pascal_case()
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite2D"
-	sprite.texture = load("res://assets/sprites/props/%s/%s.png" % [group, prop_name])
+	sprite.texture = load("res://assets/sprites/props/%s.png" % spec.get("texture", "%s/%s" % [group, prop_name]))
 	sprite.centered = false
 	var frames: int = int(spec.get("frames", 1))
 	if frames > 1:
@@ -123,6 +147,20 @@ func _make_prop_scene(prop_name: String, spec: Dictionary) -> PackedScene:
 			light.set_script(load("res://scenes/props/flicker_light.gd"))
 		root.add_child(light)
 		light.owner = root
+
+	if HARVEST.has(prop_name):
+		var hv: Array = HARVEST[prop_name]
+		var harvest := Node2D.new()
+		harvest.name = "Harvest"
+		harvest.set_script(load("res://scripts/components/harvestable.gd"))
+		harvest.set("item_id", StringName(hv[0]))
+		harvest.set("min_amount", hv[1])
+		harvest.set("max_amount", hv[2])
+		harvest.set("hits", hv[3])
+		harvest.set("regrow_days", hv[4])
+		harvest.set("hit_size", Vector2(hv[5], hv[6]))
+		root.add_child(harvest)
+		harvest.owner = root
 
 	var packed := PackedScene.new()
 	packed.pack(root)
@@ -917,7 +955,31 @@ func _build_sylve(rows: PackedStringArray, cave_tex: Texture2D) -> void:
 
 	var player := _add_player(root, _feet(sp["P"][0]))
 	(player.get_node("HeroLight") as PointLight2D).enabled = false
-	_add_enemies(root, sp.get("S", []), "res://scenes/enemies/slime/slime.tscn", "Slime")
+	var monsters: Array = sp.get("S", [])
+	_add_enemies(root, monsters.slice(0, monsters.size() / 2), "res://scenes/enemies/slime/slime.tscn", "Slime")
+	# Des sangliers dans les prairies, loin de la grotte.
+	var boar_cells: Array = monsters.slice(monsters.size() / 2)
+	var tries := 0
+	while boar_cells.size() < 14 and tries < 4000:
+		tries += 1
+		var c := Vector2i(rng.randi_range(30, w - 8), rng.randi_range(20, h - 8))
+		if (rows[c.y][c.x] == "." or rows[c.y][c.x] == ",") and not sc.used.has(c) and c.distance_to(sp["Z"][0]) > 14:
+			boar_cells.append(c)
+	_add_enemies(root, boar_cells, "res://scenes/enemies/boar/boar.tscn", "Boar")
+	# La porte de Dracombra, et les points d'arrivée.
+	var r: Vector2i = sp["R"][0]
+	var gate_cells := [r + Vector2i(-1, -3), r + Vector2i(0, -3), r + Vector2i(1, -3)]
+	var gate := _add_exit(root, gate_cells, DRACOMBRA, "ExitToDracombra")
+	gate.set("spawn_id", &"from_sylve")
+	var spawns := Node2D.new()
+	spawns.name = "Spawns"
+	_add(root, spawns)
+	for item in [["from_dracombra", _feet(r + Vector2i(0, -1))], ["cave", _feet(sp["P"][0])]]:
+		var m := Marker2D.new()
+		m.name = item[0]
+		m.position = item[1]
+		spawns.add_child(m)
+		m.owner = root
 	_add_hud(root)
 	root.set("rest_point", _feet(sp["Z"][0]))
 	root.set("ruins_point", _feet(sp["R"][0]))
@@ -952,7 +1014,7 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 	# Les ruines de Dracombra autour du parvis.
 	var r: Vector2i = sp["R"][0]
 	var ruins := [
-		["dragon_head_statue", Vector2i(0, -5)], ["ancient_stairs", Vector2i(0, -3)],
+		["rune_stones", Vector2i(0, -6)],
 		["ancient_arch", Vector2i(-7, 1)], ["carved_slab", Vector2i(5, 4)],
 		["rune_brazier", Vector2i(-3, -3)], ["rune_brazier", Vector2i(3, -3)],
 		["stone_wing", Vector2i(-6, 4)], ["carved_tablet", Vector2i(8, -1)],
@@ -967,13 +1029,11 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 			if _place(sc, item[0], base + tries, true):
 				break
 
-	# Le grand chêne sous lequel il s'effondrera, et le campement du réveil.
+	# La porte de Dracombra : une arche qui mène aux ruines de la capitale.
+	_instance_named(sc, "city_gate", _feet(r + Vector2i(0, -3)), "CityGate")
+	# Le grand chêne sous lequel il s'effondrera.
 	var z: Vector2i = sp["Z"][0]
 	_place(sc, "oak_big", z + Vector2i(-1, -1), true)
-	var fire := _instance_named(sc, "campfire", _feet(sp["C"][0]) + Vector2(0, -2), "Campfire")
-	var bed := _instance_named(sc, "bedroll", _feet(z) + Vector2(-2, -10), "Bedroll")
-	sc.props.get_parent().set("campfire", fire)
-	sc.props.get_parent().set("bedroll", bed)
 
 	# La forêt : dense, sans vérifier les passages (elle est hors des chemins).
 	sc.check_paths = false
@@ -984,7 +1044,7 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 	for c in forest_cells:
 		if rng.randf() < 0.55:
 			var pick: String = (PINES if rng.randf() < 0.45 else OAKS)[rng.randi() % 2]
-			_place(sc, pick, c)
+			_place(sc, "deco_" + pick, c)
 	for c in forest_cells:
 		if rng.randf() < 0.12:
 			_place(sc, ["bush", "tall_grass", "stump", "flowers_white"][rng.randi() % 4], c)
@@ -994,7 +1054,7 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 			var c := Vector2i(x, y)
 			if rows[y][x] == "#" and sc.is_rock(c + Vector2i(0, 1)) and sc.is_rock(c + Vector2i(0, 2)) \
 					and sc.is_rock(c + Vector2i(0, 3)) and rng.randf() < 0.45:
-				_instance(sc, PINES[rng.randi() % 2], Vector2(x * T + T / 2.0 + rng.randf_range(-4, 4), y * T + T - 2))
+				_instance(sc, "deco_" + PINES[rng.randi() % 2], Vector2(x * T + T / 2.0 + rng.randf_range(-4, 4), y * T + T - 2))
 	sc.check_paths = true
 
 	# La prairie.
@@ -1004,7 +1064,15 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 	_sow(sc, ["bush", "bush", "bush_berries"], 60, meadow)
 	_sow(sc, ["rock_grey", "rock_grey", "rock_grey_big"], 35, meadow)
 	_sow(sc, ["log", "stump"], 22, meadow)
+	# Pierres précieuses au pied de la montagne, lin près de la rivière.
+	_sow(sc, ["gem_rock"], 10, func(c): return meadow.call(c) and sc.is_rock(c + Vector2i(0, -1)) and rows[c.y - 1][c.x] == "#")
+	var near_water := func(c: Vector2i) -> bool:
+		for dx in range(-5, 6):
+			if c.x + dx >= 0 and c.x + dx < rows[0].length() and rows[c.y][c.x + dx] == "w":
+				return true
+		return false
 	sc.check_paths = false
+	_sow(sc, ["flax_plant"], 70, func(c): return meadow.call(c) and near_water.call(c))
 	_sow(sc, ["flowers_white", "flowers_yellow", "flowers_pink"], 260, meadow)
 	_sow(sc, ["tall_grass", "tall_grass_b"], 260, meadow)
 	_sow(sc, ["mushrooms"], 10, func(c): return rows[c.y][c.x] == "f")
@@ -1017,6 +1085,175 @@ func _instance_named(sc: Scatter, prop_name: String, at: Vector2, node_name: Str
 	sc.props.add_child(node)
 	node.owner = sc.props.owner
 	return node
+
+
+# ------------------------------------------------------------------ Dracombra, la ville
+
+const CITY_TILES := "res://assets/tilesets/dracombra_tiles.png"
+const CITY_TILESET := "res://assets/tilesets/dracombra_tileset.tres"
+
+
+func _make_city_tileset() -> TileSet:
+	var ts := TileSet.new()
+	ts.tile_size = Vector2i(T, T)
+	ts.add_physics_layer()
+	ts.set_physics_layer_collision_layer(0, 1)
+	ts.set_physics_layer_collision_mask(0, 0)
+	var full := PackedVector2Array([Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8)])
+	var grass := TileSetAtlasSource.new()
+	grass.resource_name = "Herbe"
+	grass.texture = load(SYLVE_TILES)
+	grass.texture_region_size = Vector2i(T, T)
+	ts.add_source(grass, 0)
+	for row in [0, 1, 2]:
+		for x in 8:
+			grass.create_tile(Vector2i(x, row))
+	var alt := grass.create_alternative_tile(Vector2i(4, 1))
+	var ad := grass.get_tile_data(Vector2i(4, 1), alt)
+	ad.add_collision_polygon(0)
+	ad.set_collision_polygon_points(0, 0, full)
+	var stone := TileSetAtlasSource.new()
+	stone.resource_name = "Pavés"
+	stone.texture = load(CITY_TILES)
+	stone.texture_region_size = Vector2i(T, T)
+	ts.add_source(stone, 1)
+	for row in 4:
+		for x in 8:
+			stone.create_tile(Vector2i(x, row))
+	ResourceSaver.save(ts, CITY_TILESET, ResourceSaver.FLAG_CHANGE_PATH)
+	return load(CITY_TILESET)
+
+
+func _build_dracombra(rows: PackedStringArray, _cave_tex: Texture2D) -> void:
+	var ts := _make_city_tileset()
+	var h := rows.size()
+	var w := rows[0].length()
+	var root := Node2D.new()
+	root.name = "Dracombra"
+	root.y_sort_enabled = true
+	root.set_script(load("res://scenes/levels/dracombra/dracombra.gd"))
+	var daylight := CanvasModulate.new()
+	daylight.name = "Daylight"
+	daylight.color = Color(1.0, 0.98, 0.94)
+	_add(root, daylight)
+	var ground := TileMapLayer.new()
+	ground.name = "Ground"
+	ground.tile_set = ts
+	ground.z_index = -1
+	_add(root, ground)
+	root.set("bounds_layer", ground)
+
+	var grass := _floor_picker(GRASS_W)
+	var forest := _floor_picker(FOREST_W)
+	var special := {}
+	for y in h:
+		for x in w:
+			var ch: String = rows[y][x]
+			var cell := Vector2i(x, y)
+			match ch:
+				"p", "G", "E", "S":
+					# Les avenues : pavés, plus envahis d'herbe loin du centre.
+					var d := Vector2(x - w / 2.0, (y - h / 2.0) * 4.0 / 3.0).length()
+					var row := 1 if rng.randf() < clampf(d / 70.0, 0.15, 0.85) else 0
+					ground.set_cell(cell, 1, Vector2i(rng.randi_range(0, 7), row))
+				"P", "C":
+					ground.set_cell(cell, 1, Vector2i(rng.randi_range(0, 7), 2))
+				"d", "Z":
+					ground.set_cell(cell, 1, Vector2i(rng.randi_range(0, 3), 3))
+				"f":
+					ground.set_cell(cell, 0, forest.call(cell))
+				"X":
+					ground.set_cell(cell, 0, Vector2i(4, 1), 1)
+				"r":
+					ground.set_cell(cell, 1, Vector2i(4 + rng.randi_range(0, 3), 3))
+				_:
+					ground.set_cell(cell, 0, grass.call(cell))
+			if not special.has(ch):
+				special[ch] = []
+			special[ch].append(cell)
+
+	var solid := PackedStringArray()
+	for row in rows:
+		solid.append(row.replace("X", "#"))
+	var sp := special.duplicate()
+	sp["P"] = sp["S"]
+	sp["E"] = [sp["C"][0] + Vector2i(0, 3)]
+	var sc := _new_scatter(root, solid, sp)
+	var center: Vector2i = special["C"][0]
+	_keep(sc, center, 4)
+	_keep(sc, special["Z"][0], 2)
+	for c in special.get("p", []):
+		sc.keep[c] = true
+	for c in special.get("P", []):
+		sc.keep[c] = true
+
+	# Les monuments de l'ancienne capitale, autour de la grande place.
+	var monuments := [
+		["monument_statue", Vector2i(0, -9)], ["rune_brazier", Vector2i(-4, -7)], ["rune_brazier", Vector2i(4, -7)],
+		["ancient_stairs", Vector2i(0, 9)], ["carved_slab", Vector2i(-11, 8)], ["carved_tablet", Vector2i(11, 8)],
+		["pillar", Vector2i(-9, -4)], ["pillar", Vector2i(9, -4)], ["pillar", Vector2i(-9, 4)], ["pillar", Vector2i(9, 4)],
+	]
+	for item in monuments:
+		for tries in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if _place(sc, item[0], center + item[1] + tries, true):
+				break
+	# Arches en ruine là où les avenues traversent les boulevards.
+	for k in 8:
+		var a := k * PI / 4.0
+		for radius in [24.0, 40.0]:
+			var c := center + Vector2i(roundi(cos(a) * radius), roundi(sin(a) * radius * 0.75))
+			_instance(sc, "city_gate", _feet(c))
+
+	# Les décombres à déblayer et les arbres poussés dans les ruines.
+	sc.check_paths = false
+	for c in special.get("r", []):
+		var pick: String = ["debris_small", "debris_small", "debris_rocks", "debris_pillar", "debris_stump", "debris_wall"][rng.randi() % 6]
+		if not _place(sc, pick, c, true):
+			_place(sc, "debris_small", c, true)
+	for c in special.get("t", []):
+		_place(sc, (OAKS + PINES)[rng.randi() % 5], c, true)
+	var forest_cells: Array[Vector2i] = []
+	for c in special.get("f", []):
+		forest_cells.append(c)
+	_shuffle(forest_cells)
+	for c in forest_cells:
+		if rng.randf() < 0.4:
+			_place(sc, "deco_" + (PINES if rng.randf() < 0.4 else OAKS)[rng.randi() % 2], c)
+	var grassy := func(c: Vector2i) -> bool: return rows[c.y][c.x] == "."
+	_sow(sc, ["tall_grass", "tall_grass_b", "bush", "flowers_white", "flowers_yellow"], 500, grassy)
+	_sow(sc, ["flax_plant"], 25, grassy)
+
+	# La guilde, les bâtiments, le mode construction.
+	var guild := Node2D.new()
+	guild.name = "Guild"
+	guild.set_script(load("res://scenes/town/guild.gd"))
+	guild.position = _feet(center)
+	_add(root, guild)
+	var town := Node2D.new()
+	town.name = "Town"
+	town.set_script(load("res://scenes/town/town_layer.gd"))
+	_add(root, town)
+	var build := Node2D.new()
+	build.name = "BuildMode"
+	build.set_script(load("res://scenes/town/build_mode.gd"))
+	_add(root, build)
+
+	var player := _add_player(root, _feet(special["Z"][0]))
+	(player.get_node("HeroLight") as PointLight2D).enabled = false
+	var exit := _add_exit(root, special["E"], SYLVE, "ExitToSylve")
+	exit.set("spawn_id", &"from_dracombra")
+	var spawns := Node2D.new()
+	spawns.name = "Spawns"
+	_add(root, spawns)
+	for item in [["from_sylve", _feet(special["S"][0])], ["camp", _feet(special["Z"][0])]]:
+		var m := Marker2D.new()
+		m.name = item[0]
+		m.position = item[1]
+		spawns.add_child(m)
+		m.owner = root
+	_add_hud(root)
+	root.set("center_cell", center)
+	_save(root, DRACOMBRA)
 
 
 func _save(root: Node, path: String) -> void:

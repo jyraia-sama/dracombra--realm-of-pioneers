@@ -22,7 +22,25 @@ func _ready() -> void:
 	var player := get_player()
 	if player != null:
 		_camera = player.get_node_or_null("Camera2D") as Camera2D
+		_place_player(player)
 	_limit_camera()
+	# Sauvegarde automatique en arrivant dans un niveau (après le prologue).
+	Save.save_game.call_deferred()
+
+
+## Arrivée par une sortie (Marker2D « Spawns/<nom> ») ou depuis une sauvegarde.
+func _place_player(player: Player) -> void:
+	if Game.pending_position != null:
+		player.global_position = Game.pending_position
+		Game.pending_position = null
+		Game.next_spawn = &""
+	elif Game.next_spawn != &"":
+		var marker := get_node_or_null("Spawns/" + String(Game.next_spawn)) as Node2D
+		if marker != null:
+			player.global_position = marker.global_position
+		Game.next_spawn = &""
+	if _camera != null:
+		_camera.reset_smoothing.call_deferred()
 
 
 func _process(delta: float) -> void:

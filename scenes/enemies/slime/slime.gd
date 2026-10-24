@@ -150,6 +150,7 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 func _on_died() -> void:
 	state = State.DEAD
 	loot.drop(global_position)
+	Hero.reward_kill(self)
 	contact_hitbox.active = false
 	hurtbox.set_deferred("monitorable", false)
 	collision_shape.set_deferred("disabled", true)

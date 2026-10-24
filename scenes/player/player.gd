@@ -50,6 +50,8 @@ var actions_locked: bool = false
 var speed_multiplier: float = 1.0
 
 var _state_timer: float = 0.0
+var _shot_cooldown: float = 0.0
+var _regen_timer: float = 0.0
 var _dodge_cooldown_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
 
@@ -88,6 +90,7 @@ func _ready() -> void:
 	attack_hitbox.active = false
 
 	health.set_max_health(Game.hero_max_health(), true)
+	apply_class(true)
 	health.invulnerability_duration = hurt_invulnerability
 	hurtbox.hit_received.connect(_on_hit_received)
 	health.died.connect(_on_died)
@@ -104,6 +107,15 @@ func _process(_delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	_dodge_cooldown_timer = maxf(_dodge_cooldown_timer - delta, 0.0)
+	_shot_cooldown = maxf(_shot_cooldown - delta, 0.0)
+	# Le clerc referme lentement ses blessures.
+	var regen: float = Hero.info().get("regen", 0.0)
+	if regen > 0.0 and Game.has_flag(&"prologue_done") and state != State.DEAD:
+		_regen_timer += delta
+		if _regen_timer >= regen:
+			_regen_timer = 0.0
+			if health.current_health < health.max_health:
+				health.heal(1)
 
 	match state:
 		State.NORMAL:
@@ -154,12 +166,31 @@ func _process_dodge(delta: float) -> void:
 		visual.modulate = Color.WHITE
 
 
+## Applique la classe du héros : PV max, dégâts, teinte provisoire du sprite.
+func apply_class(refill: bool = false) -> void:
+	var info: Dictionary = Hero.info()
+	health.set_max_health(Game.hero_max_health() + Hero.hp_bonus(), refill)
+	attack_hitbox.damage = Hero.damage() if Game.has_flag(&"prologue_done") else attack_damage
+	# En attendant les sprites de chaque classe, une teinte les distingue.
+	sprite.modulate = info["tint"] if Game.has_flag(&"prologue_done") else Color.WHITE
+
+
 func _start_attack() -> void:
-	attack_pivot.rotation = facing.angle()
-	attack_hitbox.active = true
+	var kind: String = Hero.info()["attack"] if Game.has_flag(&"prologue_done") else "melee"
 	_state_timer = attack_duration
 	state = State.ATTACK
-	_play_lunge()
+	if kind == "melee":
+		attack_pivot.rotation = facing.angle()
+		attack_hitbox.active = true
+		_play_lunge()
+		return
+	if _shot_cooldown > 0.0:
+		state = State.NORMAL
+		return
+	_shot_cooldown = float(Hero.info()["cooldown"])
+	var from := global_position + Vector2(0, -Game.TILE_SIZE) + facing * 6.0
+	var shot := HeroProjectile.create(StringName(kind), from, facing, Hero.damage(), self)
+	get_parent().add_child(shot)
 
 
 func _process_attack(delta: float) -> void:
@@ -214,6 +245,11 @@ func _on_died() -> void:
 
 
 func _respawn() -> void:
+	# Après le prologue, le héros se réveille au camp, à Dracombra.
+	if Game.has_flag(&"prologue_done"):
+		Game.next_spawn = &"camp"
+		Transition.change_scene("res://scenes/levels/dracombra/dracombra.tscn")
+		return
 	get_tree().reload_current_scene()
 
 
@@ -276,8 +312,7 @@ func _update_sprite(delta: float) -> void:
 			index = mini(int(_anim_time / ANIMS[anim][2]), ANIMS[anim][1] - 1)
 	var first_row: int = ANIMS[anim][0]
 	sprite.frame = (first_row + dir) * COLUMNS + index
-	# Les pas : le corps se soulève d'un pixel quand la jambe passe sous lui.
-	sprite.position.y = -1.0 if anim == &"walk" and index % 3 == 1 else 0.0
+
 
 
 func _looped(anim: StringName, elapsed: float) -> int:

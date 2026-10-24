@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildingData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_data.gd" id="1_b"]
+[ext_resource type="Texture2D" path="res://assets/sprites/buildings/workbench.png" id="2_t"]
+
+[resource]
+script = ExtResource("1_b")
+id = &"workbench"
+display_name = "Établi"
+description = "Fabriquer les outils, les cordes et l'équipement des classes."
+tier_required = 0
+size = Vector2i(2, 1)
+cost = Dictionary[StringName, int]({&"wood": 10, &"stone": 4})
+build_days = 1
+texture = ExtResource("2_t")
+housing = 0
+can_sleep = false

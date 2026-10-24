@@ -13,3 +13,5 @@ id = &"stone"
 display_name = "Pierre"
 icon = SubResource("AtlasTexture_icon")
 heal_amount = 0
+description = "De la pierre brute : rochers, décombres, éboulis."
+category = &"resource"

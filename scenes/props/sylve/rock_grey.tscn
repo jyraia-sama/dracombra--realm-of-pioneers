@@ -1,20 +1,29 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/rock_grey.png" id="1_x1rgc"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/rock_grey.png" id="1_6hv86"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_k3ogn"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_6hv86"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yei1a"]
 size = Vector2(14, 6)
 
-[node name="RockGrey" type="Node2D" unique_id=657434127]
+[node name="RockGrey" type="Node2D" unique_id=1559571172]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=608459528]
-texture = ExtResource("1_x1rgc")
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1307957703]
+texture = ExtResource("1_6hv86")
 centered = false
 offset = Vector2(-9, -12)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1807500968]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1329161518]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1278454718]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=240357921]
 position = Vector2(0, -3)
-shape = SubResource("RectangleShape2D_6hv86")
+shape = SubResource("RectangleShape2D_yei1a")
+
+[node name="Harvest" type="Node2D" parent="." unique_id=1266138275]
+script = ExtResource("2_k3ogn")
+item_id = &"stone"
+min_amount = 1
+max_amount = 2
+regrow_days = 4
+hit_size = Vector2(16, 10)
