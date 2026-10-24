@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/tilesets/cave_tiles.png" id="1_ct1vj"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_8sklx"]
+
+[node name="GlowMushroom" type="Node2D" unique_id=1479608229]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=339889822]
+texture = ExtResource("1_ct1vj")
+region_enabled = true
+region_rect = Rect2(80, 48, 16, 16)
+
+[node name="PointLight2D" type="PointLight2D" parent="." unique_id=303234353]
+position = Vector2(0, 2)
+color = Color(0.4, 1, 0.9, 1)
+energy = 0.6
+texture = ExtResource("2_8sklx")
+texture_scale = 0.5

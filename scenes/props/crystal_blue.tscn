@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/tilesets/cave_tiles.png" id="1_rjjsi"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_7ht8g"]
+
+[node name="CrystalBlue" type="Node2D" unique_id=841044980]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=39168992]
+texture = ExtResource("1_rjjsi")
+region_enabled = true
+region_rect = Rect2(0, 48, 16, 16)
+
+[node name="PointLight2D" type="PointLight2D" parent="." unique_id=188437989]
+position = Vector2(0, 2)
+color = Color(0.45, 0.8, 1, 1)
+energy = 0.9
+texture = ExtResource("2_7ht8g")
+texture_scale = 0.875
