@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/lair/lava_crack.png" id="1_bs6oq"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_5uedg"]
+[ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_77jp7"]
+
+[node name="LavaCrack" type="Node2D" unique_id=63113651]
+z_index = -1
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=959667337]
+texture = ExtResource("1_bs6oq")
+centered = false
+offset = Vector2(-18, -12)
+
+[node name="Light" type="PointLight2D" parent="." unique_id=131393583]
+color = Color(1, 0.4, 0.15, 1)
+energy = 0.7
+texture = ExtResource("2_5uedg")
+texture_scale = 0.75
+script = ExtResource("3_77jp7")

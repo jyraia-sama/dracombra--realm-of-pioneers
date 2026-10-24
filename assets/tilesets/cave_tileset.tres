@@ -1,14 +1,10 @@
 [gd_resource type="TileSet" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/tilesets/cave_tiles.png" id="1_ahumc"]
-[ext_resource type="PackedScene" path="res://scenes/props/crystal_blue.tscn" id="2_8pp4t"]
-[ext_resource type="PackedScene" path="res://scenes/props/crystal_purple.tscn" id="3_ohbds"]
-[ext_resource type="PackedScene" path="res://scenes/props/glow_mushroom.tscn" id="4_e1wi6"]
-[ext_resource type="PackedScene" path="res://scenes/props/embers.tscn" id="5_gp3xg"]
+[ext_resource type="Texture2D" path="res://assets/tilesets/cave_tiles.png" id="1_5ytsc"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_62boc"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4tp5j"]
 resource_name = "Caverne"
-texture = ExtResource("1_ahumc")
+texture = ExtResource("1_5ytsc")
 0:0/0 = 0
 0:0/0/y_sort_origin = 8
 0:0/0/terrain_set = 0
@@ -196,42 +192,27 @@ texture = ExtResource("1_ahumc")
 1:2/0 = 0
 2:2/0 = 0
 3:2/0 = 0
-3:2/0/probability = 0.35
 4:2/0 = 0
-4:2/0/probability = 0.2
 5:2/0 = 0
-5:2/0/probability = 0.2
 6:2/0 = 0
-6:2/0/probability = 0.3
 7:2/0 = 0
-7:2/0/probability = 0.3
-2:3/0 = 0
-2:3/0/y_sort_origin = 6
-2:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4, 2, 4, 2, 5, 8, -5, 8)
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
 3:3/0 = 0
 3:3/0/y_sort_origin = 6
 3:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-6, 0, 6, 0, 6, 6, -6, 6)
-4:3/0 = 0
-4:3/0/y_sort_origin = 6
 6:3/0 = 0
 6:3/0/y_sort_origin = 8
 6:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 7:3/0 = 0
 7:3/0/y_sort_origin = 8
 7:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
-0:3/0 = 0
-0:3/0/y_sort_origin = 6
-1:3/0 = 0
-1:3/0/y_sort_origin = 6
-5:3/0 = 0
-5:3/0/y_sort_origin = 6
-
-[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_xp2ky"]
-resource_name = "Décors lumineux"
-scenes/0/scene = ExtResource("2_8pp4t")
-scenes/1/scene = ExtResource("3_ohbds")
-scenes/2/scene = ExtResource("4_e1wi6")
-scenes/3/scene = ExtResource("5_gp3xg")
 
 [resource]
 physics_layer_0/collision_layer = 1
@@ -239,5 +220,4 @@ physics_layer_0/collision_mask = 0
 terrain_set_0/mode = 2
 terrain_set_0/terrain_0/name = "Roche"
 terrain_set_0/terrain_0/color = Color(0.55, 0.45, 0.7, 1)
-sources/0 = SubResource("TileSetAtlasSource_62boc")
-sources/1 = SubResource("TileSetScenesCollectionSource_xp2ky")
+sources/0 = SubResource("TileSetAtlasSource_4tp5j")

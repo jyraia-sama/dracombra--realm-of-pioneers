@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/cave/rocks_brown.png" id="1_8yvh8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mfiio"]
+size = Vector2(16, 6)
+
+[node name="RocksBrown" type="Node2D" unique_id=871220668]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1648526324]
+texture = ExtResource("1_8yvh8")
+centered = false
+offset = Vector2(-12, -16)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=1578769534]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=370134690]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_mfiio")

@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/dragon_head_statue.png" id="1_xl34d"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0ihab"]
+size = Vector2(64, 18)
+
+[node name="DragonHeadStatue" type="Node2D" unique_id=766900152]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1034543753]
+texture = ExtResource("1_xl34d")
+centered = false
+offset = Vector2(-38, -41)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=227549632]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=383232984]
+position = Vector2(0, -9)
+shape = SubResource("RectangleShape2D_0ihab")

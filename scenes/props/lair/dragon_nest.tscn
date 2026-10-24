@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/lair/dragon_nest.png" id="1_1tbwn"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_cg74n"]
+[ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_x85wq"]
+
+[node name="DragonNest" type="Node2D" unique_id=1087230575]
+z_index = -1
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=599787622]
+texture = ExtResource("1_1tbwn")
+centered = false
+offset = Vector2(-72, -49)
+
+[node name="Light" type="PointLight2D" parent="." unique_id=360533193]
+color = Color(1, 0.4, 0.15, 1)
+energy = 0.6
+texture = ExtResource("2_cg74n")
+texture_scale = 1.875
+script = ExtResource("3_x85wq")

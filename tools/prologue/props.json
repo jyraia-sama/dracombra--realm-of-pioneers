@@ -1,0 +1,937 @@
+{
+ "crystal_blue_large": {
+  "group": "cave",
+  "size": [
+   30,
+   26
+  ],
+  "kind": "object",
+  "collision": [
+   20,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    0.45,
+    0.75,
+    1.0
+   ],
+   72,
+   1.0,
+   false
+  ]
+ },
+ "crystal_purple_large": {
+  "group": "cave",
+  "size": [
+   30,
+   25
+  ],
+  "kind": "object",
+  "collision": [
+   20,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    0.78,
+    0.5,
+    1.0
+   ],
+   72,
+   1.0,
+   false
+  ]
+ },
+ "crystal_blue": {
+  "group": "cave",
+  "size": [
+   18,
+   20
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    0.45,
+    0.75,
+    1.0
+   ],
+   56,
+   0.9,
+   false
+  ]
+ },
+ "crystal_blue_small": {
+  "group": "cave",
+  "size": [
+   13,
+   13
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    0.45,
+    0.75,
+    1.0
+   ],
+   40,
+   0.7,
+   false
+  ]
+ },
+ "crystal_purple": {
+  "group": "cave",
+  "size": [
+   18,
+   18
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    0.78,
+    0.5,
+    1.0
+   ],
+   64,
+   1.0,
+   false
+  ]
+ },
+ "crystal_purple_small": {
+  "group": "cave",
+  "size": [
+   13,
+   13
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    0.78,
+    0.5,
+    1.0
+   ],
+   40,
+   0.7,
+   false
+  ]
+ },
+ "stalagmite_large": {
+  "group": "cave",
+  "size": [
+   28,
+   24
+  ],
+  "kind": "object",
+  "collision": [
+   20,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "stalagmite": {
+  "group": "cave",
+  "size": [
+   18,
+   20
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "stalagmite_small": {
+  "group": "cave",
+  "size": [
+   12,
+   12
+  ],
+  "kind": "object",
+  "collision": [
+   8,
+   4
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "mushrooms_large": {
+  "group": "cave",
+  "size": [
+   24,
+   22
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    0.4,
+    1.0,
+    0.9
+   ],
+   48,
+   0.7,
+   false
+  ]
+ },
+ "mushrooms": {
+  "group": "cave",
+  "size": [
+   14,
+   15
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    0.4,
+    1.0,
+    0.9
+   ],
+   32,
+   0.6,
+   false
+  ]
+ },
+ "skull_bones": {
+  "group": "cave",
+  "size": [
+   25,
+   12
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "boulder": {
+  "group": "cave",
+  "size": [
+   34,
+   25
+  ],
+  "kind": "object",
+  "collision": [
+   26,
+   12
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "fallen_adventurer": {
+  "group": "cave",
+  "size": [
+   40,
+   20
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "rocks_small": {
+  "group": "cave",
+  "size": [
+   20,
+   14
+  ],
+  "kind": "object",
+  "collision": [
+   14,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "rocks": {
+  "group": "cave",
+  "size": [
+   21,
+   16
+  ],
+  "kind": "object",
+  "collision": [
+   16,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "rocks_brown": {
+  "group": "cave",
+  "size": [
+   24,
+   16
+  ],
+  "kind": "object",
+  "collision": [
+   16,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "rock_fragments": {
+  "group": "cave",
+  "size": [
+   42,
+   19
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "roots_a": {
+  "group": "cave",
+  "size": [
+   15,
+   22
+  ],
+  "kind": "hanging",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "roots_b": {
+  "group": "cave",
+  "size": [
+   9,
+   20
+  ],
+  "kind": "hanging",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "roots_wide": {
+  "group": "cave",
+  "size": [
+   31,
+   19
+  ],
+  "kind": "hanging",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "dark_pool": {
+  "group": "cave",
+  "size": [
+   48,
+   19
+  ],
+  "kind": "object",
+  "collision": [
+   38,
+   12
+  ],
+  "block": [
+   3,
+   1
+  ],
+  "light": [
+   [
+    0.5,
+    0.7,
+    1.0
+   ],
+   32,
+   0.3,
+   false
+  ]
+ },
+ "pillar": {
+  "group": "ruins",
+  "size": [
+   30,
+   41
+  ],
+  "kind": "object",
+  "collision": [
+   24,
+   10
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "pillar_broken": {
+  "group": "ruins",
+  "size": [
+   16,
+   34
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "dragon_head_statue": {
+  "group": "ruins",
+  "size": [
+   77,
+   41
+  ],
+  "kind": "object",
+  "collision": [
+   64,
+   18
+  ],
+  "block": [
+   4,
+   1
+  ],
+  "light": null
+ },
+ "pillar_stump": {
+  "group": "ruins",
+  "size": [
+   25,
+   24
+  ],
+  "kind": "object",
+  "collision": [
+   18,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "ancient_arch": {
+  "group": "ruins",
+  "size": [
+   43,
+   34
+  ],
+  "kind": "object",
+  "collision": [
+   40,
+   8
+  ],
+  "block": [
+   3,
+   1
+  ],
+  "light": null
+ },
+ "carved_slab": {
+  "group": "ruins",
+  "size": [
+   52,
+   32
+  ],
+  "kind": "object",
+  "collision": [
+   44,
+   14
+  ],
+  "block": [
+   3,
+   1
+  ],
+  "light": null
+ },
+ "ancient_stairs": {
+  "group": "ruins",
+  "size": [
+   52,
+   33
+  ],
+  "kind": "object",
+  "collision": [
+   44,
+   14
+  ],
+  "block": [
+   3,
+   1
+  ],
+  "light": null
+ },
+ "rune_brazier": {
+  "group": "ruins",
+  "size": [
+   30,
+   22
+  ],
+  "kind": "object",
+  "collision": [
+   14,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    0.78,
+    0.5,
+    1.0
+   ],
+   64,
+   1.0,
+   true
+  ]
+ },
+ "stone_wing": {
+  "group": "ruins",
+  "size": [
+   34,
+   21
+  ],
+  "kind": "object",
+  "collision": [
+   26,
+   10
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "rune_stone": {
+  "group": "ruins",
+  "size": [
+   22,
+   21
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    0.78,
+    0.5,
+    1.0
+   ],
+   24,
+   0.4,
+   false
+  ]
+ },
+ "rune_stones": {
+  "group": "ruins",
+  "size": [
+   30,
+   20
+  ],
+  "kind": "object",
+  "collision": [
+   24,
+   6
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": [
+   [
+    0.78,
+    0.5,
+    1.0
+   ],
+   28,
+   0.4,
+   false
+  ]
+ },
+ "carved_tablet": {
+  "group": "ruins",
+  "size": [
+   26,
+   18
+  ],
+  "kind": "object",
+  "collision": [
+   20,
+   8
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "dragon_nest": {
+  "group": "lair",
+  "size": [
+   145,
+   99
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    1.0,
+    0.4,
+    0.15
+   ],
+   120,
+   0.6,
+   true
+  ]
+ },
+ "embers_large": {
+  "group": "lair",
+  "size": [
+   28,
+   19
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    1.0,
+    0.5,
+    0.18
+   ],
+   56,
+   1.0,
+   true
+  ]
+ },
+ "embers": {
+  "group": "lair",
+  "size": [
+   22,
+   17
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    1.0,
+    0.5,
+    0.18
+   ],
+   48,
+   0.9,
+   true
+  ]
+ },
+ "embers_small": {
+  "group": "lair",
+  "size": [
+   18,
+   11
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    1.0,
+    0.5,
+    0.18
+   ],
+   36,
+   0.8,
+   true
+  ]
+ },
+ "claw_marks_a": {
+  "group": "lair",
+  "size": [
+   24,
+   20
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "claw_marks_b": {
+  "group": "lair",
+  "size": [
+   21,
+   21
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "claw_marks_c": {
+  "group": "lair",
+  "size": [
+   25,
+   21
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "lava_crack": {
+  "group": "lair",
+  "size": [
+   36,
+   24
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    1.0,
+    0.4,
+    0.15
+   ],
+   48,
+   0.7,
+   true
+  ]
+ },
+ "lava_crack_small": {
+  "group": "lair",
+  "size": [
+   29,
+   25
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    1.0,
+    0.4,
+    0.15
+   ],
+   40,
+   0.6,
+   true
+  ]
+ },
+ "melted_armor": {
+  "group": "lair",
+  "size": [
+   30,
+   21
+  ],
+  "kind": "object",
+  "collision": [
+   24,
+   8
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "fallen_banner": {
+  "group": "lair",
+  "size": [
+   25,
+   19
+  ],
+  "kind": "object",
+  "collision": [
+   20,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "scorched_ground": {
+  "group": "lair",
+  "size": [
+   37,
+   19
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "scorched_ground_small": {
+  "group": "lair",
+  "size": [
+   23,
+   18
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "cracked_floor": {
+  "group": "lair",
+  "size": [
+   26,
+   16
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": [
+   [
+    1.0,
+    0.4,
+    0.15
+   ],
+   28,
+   0.4,
+   true
+  ]
+ },
+ "dragon_scales": {
+  "group": "lair",
+  "size": [
+   52,
+   19
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ }
+}

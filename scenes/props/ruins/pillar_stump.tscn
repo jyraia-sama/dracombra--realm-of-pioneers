@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/pillar_stump.png" id="1_eqnpe"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kcbp7"]
+size = Vector2(18, 8)
+
+[node name="PillarStump" type="Node2D" unique_id=449566413]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=590187249]
+texture = ExtResource("1_eqnpe")
+centered = false
+offset = Vector2(-12, -24)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=595855884]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1825970091]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_kcbp7")

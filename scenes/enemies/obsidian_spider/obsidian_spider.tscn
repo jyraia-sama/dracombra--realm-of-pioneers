@@ -1,0 +1,88 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/enemies/obsidian_spider/obsidian_spider.gd" id="1_spider"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="3_hurtbox"]
+[ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="4_hitbox"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/obsidian_spider.png" id="5_sprite"]
+[ext_resource type="Script" path="res://scripts/components/loot_dropper.gd" id="6_loot"]
+[ext_resource type="Script" path="res://scripts/data/loot_entry.gd" id="7_entry"]
+[ext_resource type="Resource" path="res://data/items/obsidian_shard.tres" id="8_shard"]
+[ext_resource type="Resource" path="res://data/items/heart.tres" id="9_heart"]
+[ext_resource type="Script" path="res://scripts/components/fear.gd" id="10_fear"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="11_light"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_contact"]
+
+[sub_resource type="Resource" id="Resource_shard"]
+script = ExtResource("7_entry")
+item = ExtResource("8_shard")
+chance = 0.8
+min_amount = 1
+max_amount = 2
+
+[sub_resource type="Resource" id="Resource_heart"]
+script = ExtResource("7_entry")
+item = ExtResource("9_heart")
+chance = 0.2
+min_amount = 1
+max_amount = 1
+
+[node name="ObsidianSpider" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1_spider")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Sprite" type="Sprite2D" parent="Visual"]
+texture = ExtResource("5_sprite")
+centered = false
+offset = Vector2(-17, -17)
+hframes = 6
+vframes = 5
+
+[node name="EyeLight" type="PointLight2D" parent="Visual"]
+position = Vector2(0, -8)
+color = Color(0.75, 0.4, 1, 1)
+energy = 0.6
+texture = ExtResource("11_light")
+texture_scale = 0.4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 2
+invulnerability_duration = 0.2
+
+[node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+script = ExtResource("3_hurtbox")
+health = NodePath("../Health")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="ContactHitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 8
+monitorable = false
+script = ExtResource("4_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ContactHitbox"]
+shape = SubResource("RectangleShape2D_contact")
+
+[node name="Loot" type="Node" parent="."]
+script = ExtResource("6_loot")
+entries = Array[ExtResource("7_entry")]([SubResource("Resource_shard"), SubResource("Resource_heart")])
+
+[node name="Fear" type="Node" parent="."]
+script = ExtResource("10_fear")

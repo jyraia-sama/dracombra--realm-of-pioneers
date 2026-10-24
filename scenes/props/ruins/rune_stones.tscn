@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/rune_stones.png" id="1_2jiar"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_gp4pl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_f6hj2"]
+size = Vector2(24, 6)
+
+[node name="RuneStones" type="Node2D" unique_id=830504602]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=871961333]
+texture = ExtResource("1_2jiar")
+centered = false
+offset = Vector2(-15, -20)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=942242880]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=151925031]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_f6hj2")
+
+[node name="Light" type="PointLight2D" parent="." unique_id=223655976]
+position = Vector2(0, -8)
+color = Color(0.78, 0.5, 1, 1)
+energy = 0.4
+texture = ExtResource("2_gp4pl")
+texture_scale = 0.4375

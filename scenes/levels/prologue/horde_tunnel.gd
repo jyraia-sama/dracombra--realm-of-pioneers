@@ -9,6 +9,7 @@ enum Phase { HORDE, FLIGHT, SCARE, DONE }
 
 const SLIME_SCENE := preload("res://scenes/enemies/slime/slime.tscn")
 const GOBLIN_SCENE := preload("res://scenes/enemies/rock_goblin/rock_goblin.tscn")
+const SPIDER_SCENE := preload("res://scenes/enemies/obsidian_spider/obsidian_spider.tscn")
 const DUST_SCENE := preload("res://scenes/props/dust_puff.tscn")
 
 ## Le calque qui sert à placer les fissures (cases de sol).
@@ -28,8 +29,10 @@ const DUST_SCENE := preload("res://scenes/props/dust_puff.tscn")
 @export var spawn_interval_end: float = 0.6
 ## Nombre maximum de monstres en même temps.
 @export var max_alive: int = 14
-## Part de gobelins parmi les apparitions (le reste : slimes).
-@export_range(0.0, 1.0) var goblin_ratio: float = 0.3
+## Part de gobelins parmi les apparitions (le reste : araignées et slimes).
+@export_range(0.0, 1.0) var goblin_ratio: float = 0.25
+## Part d'araignées d'obsidienne parmi les apparitions.
+@export_range(0.0, 1.0) var spider_ratio: float = 0.25
 
 @export_group("Peur")
 ## Abscisse (pixels) où le grondement de la tanière terrifie la horde.
@@ -107,7 +110,12 @@ func _pick_spawn_cell(from: Vector2, ahead_only: bool) -> Vector2i:
 
 
 func _spawn_monster(cell: Vector2i) -> void:
-	var scene := GOBLIN_SCENE if randf() < goblin_ratio else SLIME_SCENE
+	var roll := randf()
+	var scene := SLIME_SCENE
+	if roll < goblin_ratio:
+		scene = GOBLIN_SCENE
+	elif roll < goblin_ratio + spider_ratio:
+		scene = SPIDER_SCENE
 	var monster: CharacterBody2D = scene.instantiate()
 	monster.position = cell_to_world(ground_layer, cell) + Vector2(0.0, Game.TILE_SIZE / 2.0)
 	# Ils sortent enragés : ils repèrent le héros de loin.
