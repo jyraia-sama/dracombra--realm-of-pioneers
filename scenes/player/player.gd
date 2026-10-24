@@ -45,7 +45,7 @@ var _dodge_cooldown_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
 
 @onready var visual: Node2D = $Visual
-@onready var body: ColorRect = $Visual/Body
+@onready var sprite: Sprite2D = $Visual/Sprite
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var health: HealthComponent = $Health
 @onready var hurtbox: Hurtbox = $Hurtbox
@@ -59,11 +59,6 @@ var _dodge_velocity: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	add_to_group("player")
 	var tile := float(Game.TILE_SIZE)
-
-	# Corps provisoire : 1 tile de large, 2 de haut, posé sur les pieds.
-	body.size = Vector2(tile, tile * 2.0)
-	body.position = Vector2(-tile / 2.0, -tile * 2.0)
-	body.color = Color("9aa6b8")
 
 	# Collision aux pieds seulement, pour passer derrière les objets.
 	collision_shape.shape.size = Vector2(tile * 0.75, tile * 0.5)
@@ -95,6 +90,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_sprite()
 	# Clignotement pendant l'invincibilité qui suit un coup.
 	if state == State.DODGE or state == State.DEAD:
 		return
@@ -207,9 +203,21 @@ func _respawn() -> void:
 
 
 func _flash() -> void:
-	body.self_modulate = Color(1.0, 0.35, 0.35)
+	sprite.self_modulate = Color(1.0, 0.35, 0.35)
 	var tween := create_tween()
-	tween.tween_property(body, "self_modulate", Color.WHITE, 0.2)
+	tween.tween_property(sprite, "self_modulate", Color.WHITE, 0.2)
+
+
+func _update_sprite() -> void:
+	# Le dessin regarde vers la droite : on le retourne quand le guerrier va à gauche.
+	if facing.x < -0.1:
+		sprite.flip_h = true
+	elif facing.x > 0.1:
+		sprite.flip_h = false
+	# Petit rebond pendant la marche, en attendant de vraies animations.
+	var walking := state == State.NORMAL and velocity.length() > 1.0
+	var bob_up := walking and int(Time.get_ticks_msec() / 120.0) % 2 == 0
+	visual.position.y = -1.0 if bob_up else 0.0
 
 
 func _get_input_direction() -> Vector2:
