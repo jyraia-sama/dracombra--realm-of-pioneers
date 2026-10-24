@@ -1,11 +1,14 @@
 [gd_scene format=3 uid="uid://b2s1ws0bkbpmj"]
 
 [ext_resource type="PackedScene" uid="uid://dd6xkg3a44k7o" path="res://scenes/player/player.tscn" id="1_gn454"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/slime/slime.tscn" id="2_slime"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_k0xob"]
 size = Vector2(32, 32)
 
 [node name="TestRoom" type="Node2D" unique_id=1971894158]
+y_sort_enabled = true
 
 [node name="Floor" type="ColorRect" parent="." unique_id=1607973357]
 offset_left = -480.0
@@ -27,4 +30,15 @@ offset_right = 16.0
 offset_bottom = 16.0
 color = Color(0.4351923, 0.43519226, 0.43519226, 1)
 
-[node name="player" parent="." unique_id=993081790 instance=ExtResource("1_gn454")]
+[node name="Player" parent="." unique_id=993081790 instance=ExtResource("1_gn454")]
+
+[node name="Slime" parent="." instance=ExtResource("2_slime")]
+position = Vector2(-120, -80)
+
+[node name="Slime2" parent="." instance=ExtResource("2_slime")]
+position = Vector2(160, 90)
+
+[node name="Slime3" parent="." instance=ExtResource("2_slime")]
+position = Vector2(-90, 110)
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
