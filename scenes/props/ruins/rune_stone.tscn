@@ -6,21 +6,21 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rpg57"]
 size = Vector2(12, 6)
 
-[node name="RuneStone" type="Node2D" unique_id=213815725]
+[node name="RuneStone" type="Node2D" unique_id=539661150]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1621213076]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1428171013]
 texture = ExtResource("1_hj8hg")
 centered = false
 offset = Vector2(-11, -21)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1418792609]
+[node name="Body" type="StaticBody2D" parent="." unique_id=560958759]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=306606018]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=192368434]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_rpg57")
 
-[node name="Light" type="PointLight2D" parent="." unique_id=1524179612]
+[node name="Light" type="PointLight2D" parent="." unique_id=1483489635]
 position = Vector2(0, -8.4)
 color = Color(0.78, 0.5, 1, 1)
 energy = 0.4

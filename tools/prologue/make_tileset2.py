@@ -99,6 +99,26 @@ cap_h, face_h = 5, 11
 face_full = np.concatenate([cliff_a[:cap_h], cliff_a[-face_h:]], axis=0)  # 16 x W
 FACE_W = face_full.shape[1]
 
+# Falaise haute (2 cases) : chapeau + 24 px de colonnes, à une échelle un peu plus grande.
+tall_src = np.asarray(defringe(small(defringe(cliff_src), 0.25)))       # ~51 x 41
+tall = np.concatenate([tall_src[:8], tall_src[-24:]], axis=0)          # 32 x W
+TALL_W = tall.shape[1]
+
+
+def tall_tile(part, e, w, seed):
+    """Moitié haute (part=0) ou basse (part=1) d'une falaise de deux cases."""
+    rnd = random.Random(seed)
+    a = void_tile(rnd)
+    ox = (TALL_W - T) // 2  # même découpe en haut et en bas : les colonnes se prolongent
+    paste(a, tall[part * T:(part + 1) * T, ox:ox + T].copy(), 0, 0)
+    top = 8 if part == 0 else 0
+    if w:
+        a[top:, 0, :3] = (a[top:, 0, :3] * 0.7).astype(np.uint8)
+    if e:
+        a[top:, T - 1, :3] = (a[top:, T - 1, :3] * 0.6).astype(np.uint8)
+    return Image.fromarray(a, 'RGBA')
+
+
 # Rochers de bordure : l'anneau de rochers (pièce 6), réduit.
 ring = np.asarray(defringe(small(defringe(piece(6)), 0.24)))             # ~49 x 45
 RW, RH = ring.shape[1], ring.shape[0]
@@ -164,15 +184,20 @@ def rubble_block(seed):
 
 pile = defringe(small(defringe(piece(14)), 0.19))
 old = Image.open(OLD).convert('RGBA')
-img = Image.new('RGBA', (T * 8, T * 6), (0, 0, 0, 0))
+img = Image.new('RGBA', (T * 8, T * 8), (0, 0, 0, 0))
 img.paste(old.crop((0, 3 * T, 8 * T, 4 * T)), (0, 3 * T))
 
 rock_imgs = [rock_tile(m, 100 + m) for m in range(16)]
 ALT = [4, 4, 4, 0, 0, 5, 6, 12]
 alt_imgs = [rock_tile(m, 500 + i * 17) for i, m in enumerate(ALT)]
 blocks = [rubble_block(21), rubble_block(22)]
+# Ligne 6 : haut de falaise, index = côtés ouverts de la case (N=1, E=2, O=4).
+uppers = [tall_tile(0, i & 2, i & 4, 700 + i) for i in range(8)]
+# Ligne 7 : bas de falaise pour les masques 4, 6, 12, 14 (deux variantes chacun).
+lowers = [tall_tile(1, m & 2, m & 8, 800 + k) for k, m in enumerate([4, 4, 6, 6, 12, 12, 14, 14])]
 # Palette commune pour tout le tileset.
-allq = quantize(rock_imgs + alt_imgs + blocks + cave_floor + lair_floor + [pile], 40)
+allq = quantize(rock_imgs + alt_imgs + blocks + cave_floor + lair_floor + [pile] + uppers + lowers, 40)
+uppers, lowers = allq[43:51], allq[51:59]
 rock_imgs, alt_imgs = allq[:16], allq[16:24]
 blocks, cave_floor, lair_floor, pile = allq[24:26], allq[26:34], allq[34:42], allq[42]
 
@@ -190,5 +215,9 @@ img.alpha_composite(pile.crop((0, 0, min(T, pile.width), min(T, pile.height))),
                     (3 * T + max(0, (T - pile.width) // 2), 3 * T + max(0, T - pile.height)))
 img.paste(blocks[0], (6 * T, 3 * T))
 img.paste(blocks[1], (7 * T, 3 * T))
+for i, t in enumerate(uppers):
+    img.paste(t, (i * T, 6 * T))
+for i, t in enumerate(lowers):
+    img.paste(t, (i * T, 7 * T))
 img.save(OUT)
 print('saved', OUT, img.size, 'pile', pile.size, 'cliff', cliff.size, 'ring', ring.shape)

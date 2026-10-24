@@ -44,6 +44,8 @@ var facing: Vector2 = Vector2.DOWN
 var input_locked: bool = false
 ## Direction de marche imposée pendant une cinématique.
 var scripted_direction: Vector2 = Vector2.ZERO
+## Le guerrier peut marcher, mais ni frapper ni esquiver (trop blessé, par exemple).
+var actions_locked: bool = false
 ## Multiplicateur de vitesse de marche (moins de 1 quand le guerrier est blessé).
 var speed_multiplier: float = 1.0
 
@@ -124,7 +126,7 @@ func _process_normal() -> void:
 	if direction != Vector2.ZERO:
 		facing = _snap_to_8_directions(direction)
 
-	if input_locked:
+	if input_locked or actions_locked:
 		return
 	if Input.is_action_just_pressed("dodge") and _dodge_cooldown_timer <= 0.0:
 		_start_dodge(direction)

@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/tall_grass.png" id="1_0ste7"]
+
+[node name="TallGrass" type="Node2D" unique_id=56791157]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1179967852]
+texture = ExtResource("1_0ste7")
+centered = false
+offset = Vector2(-6, -12)

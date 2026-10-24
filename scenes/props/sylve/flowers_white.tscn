@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/flowers_white.png" id="1_nitlg"]
+
+[node name="FlowersWhite" type="Node2D" unique_id=1004771785]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1794324234]
+texture = ExtResource("1_nitlg")
+centered = false
+offset = Vector2(-5, -7)

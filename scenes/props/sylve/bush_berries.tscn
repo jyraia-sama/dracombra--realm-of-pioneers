@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/bush_berries.png" id="1_0lqca"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vhsaq"]
+size = Vector2(16, 6)
+
+[node name="BushBerries" type="Node2D" unique_id=1605255069]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=247476916]
+texture = ExtResource("1_0lqca")
+centered = false
+offset = Vector2(-11, -15)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=1270102953]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=993342644]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_vhsaq")

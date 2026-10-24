@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/oak_a.png" id="1_5qgvi"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v4pjj"]
+size = Vector2(10, 6)
+
+[node name="OakA" type="Node2D" unique_id=720681576]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2100321130]
+texture = ExtResource("1_5qgvi")
+centered = false
+offset = Vector2(-20, -53)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=2040216511]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1028376933]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_v4pjj")

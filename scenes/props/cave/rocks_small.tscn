@@ -5,16 +5,16 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pfp3j"]
 size = Vector2(14, 6)
 
-[node name="RocksSmall" type="Node2D" unique_id=1458231681]
+[node name="RocksSmall" type="Node2D" unique_id=2001404343]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=778223263]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1127996867]
 texture = ExtResource("1_vkx36")
 centered = false
 offset = Vector2(-10, -14)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=930935976]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1950697083]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1555157241]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=444393826]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_pfp3j")

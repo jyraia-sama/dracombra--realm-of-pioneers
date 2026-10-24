@@ -5,16 +5,16 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_jp5rp"]
 size = Vector2(20, 8)
 
-[node name="CarvedTablet" type="Node2D" unique_id=360570182]
+[node name="CarvedTablet" type="Node2D" unique_id=1967568904]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=322387899]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1502077676]
 texture = ExtResource("1_ktgi7")
 centered = false
 offset = Vector2(-13, -18)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1729811797]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1739473705]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=926869412]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=286935881]
 position = Vector2(0, -4)
 shape = SubResource("RectangleShape2D_jp5rp")

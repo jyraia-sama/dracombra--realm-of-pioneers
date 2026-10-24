@@ -1,0 +1,330 @@
+{
+ "oak_a": {
+  "group": "sylve",
+  "size": [
+   40,
+   53
+  ],
+  "kind": "object",
+  "collision": [
+   10,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "oak_b": {
+  "group": "sylve",
+  "size": [
+   41,
+   55
+  ],
+  "kind": "object",
+  "collision": [
+   10,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "oak_c": {
+  "group": "sylve",
+  "size": [
+   42,
+   53
+  ],
+  "kind": "object",
+  "collision": [
+   10,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "oak_big": {
+  "group": "sylve",
+  "size": [
+   45,
+   64
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "pine_a": {
+  "group": "sylve",
+  "size": [
+   28,
+   55
+  ],
+  "kind": "object",
+  "collision": [
+   8,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "pine_b": {
+  "group": "sylve",
+  "size": [
+   26,
+   47
+  ],
+  "kind": "object",
+  "collision": [
+   8,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "bush": {
+  "group": "sylve",
+  "size": [
+   22,
+   15
+  ],
+  "kind": "object",
+  "collision": [
+   16,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "bush_berries": {
+  "group": "sylve",
+  "size": [
+   22,
+   15
+  ],
+  "kind": "object",
+  "collision": [
+   16,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "flowers_white": {
+  "group": "sylve",
+  "size": [
+   11,
+   7
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "flowers_yellow": {
+  "group": "sylve",
+  "size": [
+   9,
+   7
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "flowers_pink": {
+  "group": "sylve",
+  "size": [
+   8,
+   7
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "tall_grass": {
+  "group": "sylve",
+  "size": [
+   12,
+   12
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "tall_grass_b": {
+  "group": "sylve",
+  "size": [
+   13,
+   12
+  ],
+  "kind": "object",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "rock_grey": {
+  "group": "sylve",
+  "size": [
+   17,
+   11
+  ],
+  "kind": "object",
+  "collision": [
+   14,
+   6
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "rock_grey_big": {
+  "group": "sylve",
+  "size": [
+   27,
+   18
+  ],
+  "kind": "object",
+  "collision": [
+   24,
+   8
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "log": {
+  "group": "sylve",
+  "size": [
+   27,
+   10
+  ],
+  "kind": "object",
+  "collision": [
+   24,
+   6
+  ],
+  "block": [
+   2,
+   1
+  ],
+  "light": null
+ },
+ "stump": {
+  "group": "sylve",
+  "size": [
+   14,
+   11
+  ],
+  "kind": "object",
+  "collision": [
+   10,
+   5
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": null
+ },
+ "campfire": {
+  "group": "sylve",
+  "size": [
+   14,
+   12
+  ],
+  "kind": "object",
+  "collision": [
+   12,
+   5
+  ],
+  "block": [
+   1,
+   1
+  ],
+  "light": [
+   [
+    1.0,
+    0.6,
+    0.25
+   ],
+   64,
+   0.75,
+   true
+  ]
+ },
+ "bedroll": {
+  "group": "sylve",
+  "size": [
+   14,
+   21
+  ],
+  "kind": "decal",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ },
+ "cave_mouth": {
+  "group": "sylve",
+  "size": [
+   33,
+   28
+  ],
+  "kind": "hanging",
+  "collision": null,
+  "block": [
+   0,
+   0
+  ],
+  "light": null
+ }
+}

@@ -9,7 +9,8 @@ const TILESET := "res://assets/tilesets/cave_tileset.tres"
 const CAVE := "res://scenes/levels/prologue/cave_entrance.tscn"
 const LAIR := "res://scenes/levels/prologue/solakor_lair.tscn"
 const TUNNEL := "res://scenes/levels/prologue/horde_tunnel.tscn"
-const END := "res://scenes/levels/prologue/prologue_end.tscn"
+const PASSAGE := "res://scenes/levels/prologue/wounded_passage.tscn"
+const SYLVE := "res://scenes/levels/sylve/sylve.tscn"
 
 const ALT_MASKS := [4, 4, 4, 0, 0, 5, 6, 12]
 
@@ -28,6 +29,9 @@ func _initialize() -> void:
 	var tunnel_path: Array = JSON.parse_string(FileAccess.get_file_as_string(args[3]))
 
 	props_spec = JSON.parse_string(FileAccess.get_file_as_string(args[4]))
+	var passage_rows := FileAccess.get_file_as_string(args[5]).strip_edges().split("\n")
+	var sylve_rows := FileAccess.get_file_as_string(args[6]).strip_edges().split("\n")
+	props_spec.merge(JSON.parse_string(FileAccess.get_file_as_string(args[7])))
 
 	var tex: Texture2D = load(TILES_PNG)
 	light_tex = _make_light_texture()
@@ -37,6 +41,8 @@ func _initialize() -> void:
 	_build_cave(cave_rows, ts)
 	_build_lair(lair_rows, ts)
 	_build_tunnel(tunnel_rows, tunnel_path, ts)
+	_build_passage(passage_rows, ts)
+	_build_sylve(sylve_rows, tex)
 	print("BUILD OK")
 	quit()
 
@@ -136,6 +142,8 @@ class Scatter:
 	var blocked := {}   # cases bloquées par la collision d'un décor
 	var start: Vector2i
 	var goals: Array = []
+	## false : pas de vérification de passage (forêts denses, déjà hors des chemins).
+	var check_paths := true
 
 	func is_floor(c: Vector2i) -> bool:
 		return c.x >= 0 and c.y >= 0 and c.x < w and c.y < h and rows[c.y][c.x] != "#"
@@ -156,13 +164,16 @@ class Scatter:
 					return false
 		return true
 
-	## Le passage du départ à la sortie reste-t-il ouvert ?
+	## Le départ mène-t-il toujours à chacun des buts (sorties, lieux de l'histoire) ?
 	func connected() -> bool:
 		var seen := {start: true}
 		var queue: Array[Vector2i] = [start]
+		var remaining := {}
+		for g in goals:
+			remaining[g] = true
 		while not queue.is_empty():
 			var c: Vector2i = queue.pop_back()
-			if goals.has(c):
+			if remaining.erase(c) and remaining.is_empty():
 				return true
 			for d in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
 				var n: Vector2i = c + d
@@ -243,7 +254,7 @@ func _place(sc: Scatter, prop_name: String, cell: Vector2i, ignore_keep := false
 				return false
 	for c in footprint:
 		sc.blocked[c] = true
-	if footprint.size() > 0 and not sc.connected():
+	if footprint.size() > 0 and sc.check_paths and not sc.connected():
 		for c in footprint:
 			sc.blocked.erase(c)
 		return false
@@ -316,7 +327,7 @@ func _floor_picker(rows_weights: Array) -> Callable:
 
 
 const CAVE_FLOOR := [[Vector2i(0, 2), 6], [Vector2i(1, 2), 6], [Vector2i(2, 2), 6], [Vector2i(3, 2), 6],
-	[Vector2i(4, 2), 2], [Vector2i(5, 2), 2], [Vector2i(6, 2), 1], [Vector2i(7, 2), 1]]
+	[Vector2i(4, 2), 2], [Vector2i(5, 2), 2], [Vector2i(6, 2), 0], [Vector2i(7, 2), 0]]
 const LAIR_FLOOR := [[Vector2i(0, 5), 6], [Vector2i(1, 5), 6], [Vector2i(2, 5), 6], [Vector2i(3, 5), 4],
 	[Vector2i(4, 5), 4], [Vector2i(6, 5), 1]]
 
@@ -389,6 +400,15 @@ func _make_tileset(tex: Texture2D) -> TileSet:
 	for row in [2, 5]:
 		for x in 8:
 			src.create_tile(Vector2i(x, row))
+	# Falaises hautes : ligne 6 (moitié haute), ligne 7 (moitié basse).
+	for row in [6, 7]:
+		for x in 8:
+			var c := Vector2i(x, row)
+			src.create_tile(c)
+			var d := src.get_tile_data(c, 0)
+			d.y_sort_origin = 8
+			d.add_collision_polygon(0)
+			d.set_collision_polygon_points(0, 0, full)
 
 	# Éboulis (les autres décors sont des scènes, voir _make_prop_scene).
 	var decor := {
@@ -449,6 +469,15 @@ func _paint(root: Node2D, rows: PackedStringArray, ts: TileSet, darkness: Color,
 				if not is_rock.call(x + 1, y): mask |= 2
 				if not is_rock.call(x, y + 1): mask |= 4
 				if not is_rock.call(x - 1, y): mask |= 8
+				# Paroi de deux cases quand la roche est assez épaisse.
+				if mask & 4 and not mask & 1:
+					var lower_index: int = [4, 6, 12, 14].find(mask & 14)
+					walls.set_cell(cell, 0, Vector2i(lower_index * 2 + rng.randi_range(0, 1), 7))
+					continue
+				if not mask & 4 and not is_rock.call(x, y + 2):
+					var bits := (mask & 1) | (2 if mask & 2 else 0) | (4 if mask & 8 else 0)
+					walls.set_cell(cell, 0, Vector2i(bits, 6))
+					continue
 				var options := _rock_coords(mask)
 				var pick: Vector2i = options[0] if options.size() == 1 or rng.randf() < 0.45 \
 					else options[rng.randi_range(1, options.size() - 1)]
@@ -574,7 +603,7 @@ func _build_lair(rows: PackedStringArray, ts: TileSet) -> void:
 	light.position = Vector2(sp["L"][0] * T) + Vector2(T / 2.0, T / 2.0)
 	_add(root, light)
 
-	var exit := _add_exit(root, sp["E"], END, "CrevasseExit")
+	var exit := _add_exit(root, sp["E"], PASSAGE, "CrevasseExit")
 	_add_hud(root)
 
 	var crevasse_cells: Array[Vector2i] = []
@@ -615,6 +644,42 @@ func _build_tunnel(rows: PackedStringArray, path: Array, ts: TileSet) -> void:
 	root.set("flee_trigger_x", 58.0 * T)
 	root.set("scare_x", 88.0 * T)
 	_save(root, TUNNEL)
+
+
+func _build_passage(rows: PackedStringArray, ts: TileSet) -> void:
+	var root := Node2D.new()
+	root.name = "WoundedPassage"
+	root.y_sort_enabled = true
+	root.set_script(load("res://scenes/levels/prologue/wounded_passage.gd"))
+	var sp := _paint(root, rows, ts, Color(0.26, 0.24, 0.32), _floor_picker(CAVE_FLOOR))
+	var sc := _new_scatter(root, rows, sp)
+	_keep(sc, sp["H"][0], 2)
+	_convert_common(sc, sp)
+	var wall := func(c: Vector2i) -> bool: return sc.is_floor(c) and sc.near_wall(c)
+	_sow(sc, ROOTS, 12, func(c): return sc.is_rock(c))
+	_sow(sc, ROCKS, 5, wall)
+	_sow(sc, STALAGMITES, 4, wall)
+	_sow(sc, ["fallen_adventurer"], 1, func(c): return c.x > 40 and wall.call(c))
+	# Des racines plus nombreuses près de la sortie : la surface est proche.
+	_sow(sc, ROOTS, 8, func(c): return c.x > 58 and sc.is_rock(c))
+	_add_player(root, _feet(sp["P"][0]))
+	_add_exit(root, sp["E"], SYLVE, "ExitToSylve")
+	_add_hud(root)
+
+	var light := PointLight2D.new()
+	light.name = "Daylight"
+	light.texture = light_tex
+	light.color = Color(1.0, 0.92, 0.75)
+	light.energy = 0.4
+	light.texture_scale = 3.0
+	light.position = Vector2(sp["O"][0] * T) + Vector2(T, T / 2.0)
+	_add(root, light)
+
+	root.set("rest_point", _feet(sp["H"][0]))
+	root.set("light_from_x", float(sp["P"][0].x * T))
+	root.set("light_to_x", float(sp["O"][0].x * T))
+	root.set("daylight", light)
+	_save(root, PASSAGE)
 
 
 func _decorate_cave(root: Node2D, rows: PackedStringArray, sp: Dictionary) -> void:
@@ -703,6 +768,250 @@ func _decorate_lair(root: Node2D, rows: PackedStringArray, sp: Dictionary) -> vo
 	_sow(sc, BURNS, 4, func(c): return sc.is_floor(c))
 	_sow(sc, ["lava_crack"], 1, func(c): return sc.is_floor(c))
 	_sow(sc, ["dragon_scales"], 2, func(c): return sc.is_floor(c))
+
+
+# ------------------------------------------------------------------ la Sylve des Dracombres
+
+const SYLVE_TILES := "res://assets/tilesets/sylve_tiles.png"
+const SYLVE_TILESET := "res://assets/tilesets/sylve_tileset.tres"
+const GRASS_W := [[Vector2i(0, 0), 5], [Vector2i(1, 0), 5], [Vector2i(2, 0), 5], [Vector2i(3, 0), 5],
+	[Vector2i(4, 0), 3], [Vector2i(5, 0), 3], [Vector2i(6, 0), 3], [Vector2i(7, 0), 3], [Vector2i(6, 2), 1], [Vector2i(7, 2), 1]]
+const FLOWER_W := [[Vector2i(0, 1), 1], [Vector2i(1, 1), 1], [Vector2i(2, 1), 1], [Vector2i(3, 1), 1], [Vector2i(0, 0), 2]]
+const FOREST_W := [[Vector2i(4, 1), 1], [Vector2i(5, 1), 1], [Vector2i(6, 1), 1], [Vector2i(7, 1), 1]]
+const OAKS := ["oak_a", "oak_b", "oak_c"]
+const PINES := ["pine_a", "pine_b"]
+
+
+func _make_sylve_tileset(cave_tex: Texture2D) -> TileSet:
+	var ts := TileSet.new()
+	ts.tile_size = Vector2i(T, T)
+	ts.add_physics_layer()
+	ts.set_physics_layer_collision_layer(0, 1)
+	ts.set_physics_layer_collision_mask(0, 0)
+	var full := PackedVector2Array([Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8)])
+
+	var src := TileSetAtlasSource.new()
+	src.resource_name = "Sylve"
+	src.texture = load(SYLVE_TILES)
+	src.texture_region_size = Vector2i(T, T)
+	ts.add_source(src, 0)
+	for row in 8:
+		for x in 8:
+			var c := Vector2i(x, row)
+			src.create_tile(c)
+			# L'eau bloque (sauf le gué, ligne 2).
+			if row >= 3 and row <= 5:
+				var d := src.get_tile_data(c, 0)
+				d.add_collision_polygon(0)
+				d.set_collision_polygon_points(0, 0, full)
+	# Lisière : sous-bois infranchissable (tuile alternative avec collision).
+	var alt := src.create_alternative_tile(Vector2i(4, 1))
+	var ad := src.get_tile_data(Vector2i(4, 1), alt)
+	ad.add_collision_polygon(0)
+	ad.set_collision_polygon_points(0, 0, full)
+
+	# La montagne : les roches de la caverne.
+	var rock := TileSetAtlasSource.new()
+	rock.resource_name = "Montagne"
+	rock.texture = cave_tex
+	rock.texture_region_size = Vector2i(T, T)
+	ts.add_source(rock, 1)
+	for row in [0, 1, 4, 6, 7]:
+		for x in 8:
+			var c := Vector2i(x, row)
+			rock.create_tile(c)
+			var d := rock.get_tile_data(c, 0)
+			d.y_sort_origin = 8
+			d.add_collision_polygon(0)
+			d.set_collision_polygon_points(0, 0, full)
+	ResourceSaver.save(ts, SYLVE_TILESET, ResourceSaver.FLAG_CHANGE_PATH)
+	return load(SYLVE_TILESET)
+
+
+func _build_sylve(rows: PackedStringArray, cave_tex: Texture2D) -> void:
+	var ts := _make_sylve_tileset(cave_tex)
+	var h := rows.size()
+	var w := rows[0].length()
+	var at := func(x: int, y: int) -> String:
+		if x < 0 or y < 0 or x >= w or y >= h:
+			return "X"
+		return rows[y][x]
+	var is_rock := func(x: int, y: int) -> bool: return at.call(x, y) == "#" or at.call(x, y) == "M"
+
+	var root := Node2D.new()
+	root.name = "Sylve"
+	root.y_sort_enabled = true
+	root.set_script(load("res://scenes/levels/sylve/sylve.gd"))
+	var daylight := CanvasModulate.new()
+	daylight.name = "Daylight"
+	daylight.color = Color(1, 1, 1)
+	_add(root, daylight)
+	var ground := TileMapLayer.new()
+	ground.name = "Ground"
+	ground.tile_set = ts
+	ground.z_index = -1
+	_add(root, ground)
+	var walls := TileMapLayer.new()
+	walls.name = "Walls"
+	walls.tile_set = ts
+	walls.y_sort_enabled = true
+	_add(root, walls)
+	root.set("bounds_layer", ground)
+
+	var grass := _floor_picker(GRASS_W)
+	var flowers := _floor_picker(FLOWER_W)
+	var forest := _floor_picker(FOREST_W)
+	var special := {}
+	for y in h:
+		for x in w:
+			var ch: String = rows[y][x]
+			var cell := Vector2i(x, y)
+			match ch:
+				"#", "M":
+					ground.set_cell(cell, 0, forest.call(cell))
+					var mask := 0
+					if not is_rock.call(x, y - 1): mask |= 1
+					if not is_rock.call(x + 1, y): mask |= 2
+					if not is_rock.call(x, y + 1): mask |= 4
+					if not is_rock.call(x - 1, y): mask |= 8
+					if mask & 4 and not mask & 1:
+						var lower_index: int = [4, 6, 12, 14].find(mask & 14)
+						walls.set_cell(cell, 1, Vector2i(lower_index * 2 + rng.randi_range(0, 1), 7))
+					elif not mask & 4 and not is_rock.call(x, y + 2):
+						var bits := (mask & 1) | (2 if mask & 2 else 0) | (4 if mask & 8 else 0)
+						walls.set_cell(cell, 1, Vector2i(bits, 6))
+					else:
+						walls.set_cell(cell, 1, Vector2i(mask % 8, mask / 8))
+				"w":
+					var m := _side_mask(at, x, y, ["w", "g"])
+					ground.set_cell(cell, 0, Vector2i(rng.randi_range(0, 3), 3) if m == 0 else Vector2i(m % 8, 4 + m / 8))
+				"g":
+					ground.set_cell(cell, 0, Vector2i(4 + rng.randi_range(0, 1), 2))
+				"d", "R":
+					var m := _side_mask(at, x, y, ["d", "R", "g", "w"])
+					ground.set_cell(cell, 0, Vector2i(rng.randi_range(0, 3), 2) if m == 0 else Vector2i(m % 8, 6 + m / 8))
+				"f":
+					ground.set_cell(cell, 0, forest.call(cell))
+				"X":
+					ground.set_cell(cell, 0, Vector2i(4, 1), 1)
+				",":
+					ground.set_cell(cell, 0, flowers.call(cell))
+				_:
+					ground.set_cell(cell, 0, grass.call(cell))
+			if not special.has(ch):
+				special[ch] = []
+			special[ch].append(cell)
+
+	# Pour le placement des décors : l'eau et la lisière comptent comme de la roche.
+	var solid := PackedStringArray()
+	for row in rows:
+		solid.append(row.replace("w", "#").replace("X", "#").replace("M", "#"))
+	var sp := special.duplicate()
+	sp["E"] = [sp["Z"][0], sp["R"][0]] + sp["g"].slice(0, 1)
+	var sc := _new_scatter(root, solid, sp)
+	_decorate_sylve(sc, sp, rows)
+
+	var player := _add_player(root, _feet(sp["P"][0]))
+	(player.get_node("HeroLight") as PointLight2D).enabled = false
+	_add_enemies(root, sp.get("S", []), "res://scenes/enemies/slime/slime.tscn", "Slime")
+	_add_hud(root)
+	root.set("rest_point", _feet(sp["Z"][0]))
+	root.set("ruins_point", _feet(sp["R"][0]))
+	_save(root, SYLVE)
+
+
+## Côtés d'une case qui ne touchent pas une case du même genre (N=1, E=2, S=4, O=8).
+func _side_mask(at: Callable, x: int, y: int, same: Array) -> int:
+	var m := 0
+	if not same.has(at.call(x, y - 1)): m |= 1
+	if not same.has(at.call(x + 1, y)): m |= 2
+	if not same.has(at.call(x, y + 1)): m |= 4
+	if not same.has(at.call(x - 1, y)): m |= 8
+	return m
+
+
+func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> void:
+	for c in sp.get("d", []):
+		sc.keep[c] = true
+	for ch in ["P", "Z", "C", "R"]:
+		_keep(sc, sp[ch][0], 2)
+	for c in sp.get("S", []):
+		_keep(sc, c, 1)
+	for c in sp.get("g", []):
+		_keep(sc, c, 1)
+
+	# L'entrée de la grotte, dans la falaise.
+	var mouth: Vector2i = sp["M"][0]
+	_instance(sc, "cave_mouth", Vector2(mouth.x * T + T / 2.0, mouth.y * T + T + 1))
+
+	# Les ruines de Dracombra autour du parvis.
+	var r: Vector2i = sp["R"][0]
+	var ruins := [
+		["dragon_head_statue", Vector2i(0, -5)], ["ancient_stairs", Vector2i(0, -3)],
+		["ancient_arch", Vector2i(-7, 1)], ["carved_slab", Vector2i(5, 4)],
+		["rune_brazier", Vector2i(-3, -3)], ["rune_brazier", Vector2i(3, -3)],
+		["stone_wing", Vector2i(-6, 4)], ["carved_tablet", Vector2i(8, -1)],
+		["rune_stones", Vector2i(-2, 6)], ["rune_stone", Vector2i(9, 3)],
+	]
+	for i in 10:
+		var a := TAU * i / 10.0
+		ruins.append([["pillar", "pillar_broken", "pillar_stump"][i % 3], Vector2i(roundi(cos(a) * 10.0), roundi(sin(a) * 7.0))])
+	for item in ruins:
+		var base: Vector2i = r + item[1]
+		for tries in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(2, 1)]:
+			if _place(sc, item[0], base + tries, true):
+				break
+
+	# Le grand chêne sous lequel il s'effondrera, et le campement du réveil.
+	var z: Vector2i = sp["Z"][0]
+	_place(sc, "oak_big", z + Vector2i(-1, -1), true)
+	var fire := _instance_named(sc, "campfire", _feet(sp["C"][0]) + Vector2(0, -2), "Campfire")
+	var bed := _instance_named(sc, "bedroll", _feet(z) + Vector2(-2, -10), "Bedroll")
+	sc.props.get_parent().set("campfire", fire)
+	sc.props.get_parent().set("bedroll", bed)
+
+	# La forêt : dense, sans vérifier les passages (elle est hors des chemins).
+	sc.check_paths = false
+	var forest_cells: Array[Vector2i] = []
+	for c in sp.get("f", []):
+		forest_cells.append(c)
+	_shuffle(forest_cells)
+	for c in forest_cells:
+		if rng.randf() < 0.55:
+			var pick: String = (PINES if rng.randf() < 0.45 else OAKS)[rng.randi() % 2]
+			_place(sc, pick, c)
+	for c in forest_cells:
+		if rng.randf() < 0.12:
+			_place(sc, ["bush", "tall_grass", "stump", "flowers_white"][rng.randi() % 4], c)
+	# Des pins sur la montagne, au-dessus des falaises.
+	for y in rows.size():
+		for x in rows[0].length():
+			var c := Vector2i(x, y)
+			if rows[y][x] == "#" and sc.is_rock(c + Vector2i(0, 1)) and sc.is_rock(c + Vector2i(0, 2)) \
+					and sc.is_rock(c + Vector2i(0, 3)) and rng.randf() < 0.45:
+				_instance(sc, PINES[rng.randi() % 2], Vector2(x * T + T / 2.0 + rng.randf_range(-4, 4), y * T + T - 2))
+	sc.check_paths = true
+
+	# La prairie.
+	var meadow := func(c: Vector2i) -> bool: return sc.is_floor(c) and (rows[c.y][c.x] == "." or rows[c.y][c.x] == ",")
+	_sow(sc, OAKS, 70, meadow)
+	_sow(sc, PINES, 20, meadow)
+	_sow(sc, ["bush", "bush", "bush_berries"], 60, meadow)
+	_sow(sc, ["rock_grey", "rock_grey", "rock_grey_big"], 35, meadow)
+	_sow(sc, ["log", "stump"], 22, meadow)
+	sc.check_paths = false
+	_sow(sc, ["flowers_white", "flowers_yellow", "flowers_pink"], 260, meadow)
+	_sow(sc, ["tall_grass", "tall_grass_b"], 260, meadow)
+	_sow(sc, ["mushrooms"], 10, func(c): return rows[c.y][c.x] == "f")
+
+
+func _instance_named(sc: Scatter, prop_name: String, at: Vector2, node_name: String) -> Node2D:
+	var node: Node2D = (prop_scenes[prop_name] as PackedScene).instantiate()
+	node.position = at
+	node.name = node_name
+	sc.props.add_child(node)
+	node.owner = sc.props.owner
+	return node
 
 
 func _save(root: Node, path: String) -> void:
