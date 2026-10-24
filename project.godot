@@ -18,6 +18,9 @@ config/icon="res://icon.svg"
 [autoload]
 
 Game="*uid://f57mwd80yu0t"
+Inventory="*res://scripts/autoload/inventory.gd"
+Narration="*res://scenes/ui/narration.tscn"
+Transition="*res://scenes/ui/transition.tscn"
 
 [display]
 

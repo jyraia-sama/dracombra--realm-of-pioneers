@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/props/falling_rock.gd" id="1_rock"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/falling_rock.png" id="2_sprite"]
+[ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="3_hitbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_impact"]
+
+[sub_resource type="Curve" id="Curve_fade"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[node name="FallingRock" type="Node2D"]
+script = ExtResource("1_rock")
+
+[node name="Shadow" type="Polygon2D" parent="."]
+color = Color(0, 0, 0, 0.15)
+
+[node name="Rock" type="Sprite2D" parent="."]
+texture = ExtResource("2_sprite")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 24
+monitorable = false
+script = ExtResource("3_hitbox")
+once_per_activation = true
+active = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_impact")
+
+[node name="Dust" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 14
+lifetime = 0.6
+one_shot = true
+explosiveness = 0.9
+emission_shape = 3
+emission_rect_extents = Vector2(6, 2)
+direction = Vector2(0, -1)
+spread = 80.0
+gravity = Vector2(0, 40)
+initial_velocity_min = 15.0
+initial_velocity_max = 40.0
+scale_amount_min = 1.0
+scale_amount_max = 2.0
+scale_amount_curve = SubResource("Curve_fade")
+color = Color(0.62, 0.56, 0.6, 0.8)

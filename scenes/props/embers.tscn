@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/embers.png" id="1_4idqj"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_1veea"]
+[ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_3u0ni"]
+
+[node name="Embers" type="Node2D" unique_id=93564977]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=134430866]
+texture = ExtResource("1_4idqj")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 16)
+
+[node name="PointLight2D" type="PointLight2D" parent="." unique_id=1223160380]
+position = Vector2(0, 2)
+color = Color(1, 0.45, 0.15, 1)
+energy = 0.9
+texture = ExtResource("2_1veea")
+texture_scale = 0.75
+script = ExtResource("3_3u0ni")

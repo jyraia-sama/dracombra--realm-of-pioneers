@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/enemies/rock_goblin/thrown_rock.gd" id="1_rock"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/thrown_rock.png" id="2_sprite"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_rock"]
+radius = 3.0
+
+[node name="ThrownRock" type="Area2D"]
+collision_layer = 0
+collision_mask = 9
+monitorable = false
+script = ExtResource("1_rock")
+knockback_tiles = 0.75
+once_per_activation = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_rock")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_sprite")

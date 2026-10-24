@@ -11,6 +11,9 @@ signal died
 @export var max_health: int = 3
 ## Durée d'invincibilité après avoir reçu un coup, en secondes.
 @export var invulnerability_duration: float = 0.0
+## Les dégâts ne peuvent pas faire descendre en dessous de cette valeur.
+## Mettre 1 rend immortel (utile pendant un combat scénarisé).
+@export var min_health: int = 0
 
 var current_health: int = 0
 
@@ -39,10 +42,14 @@ func set_invulnerable(duration: float) -> void:
 	_invulnerability_timer = maxf(_invulnerability_timer, duration)
 
 
+func clear_invulnerable() -> void:
+	_invulnerability_timer = 0.0
+
+
 func take_damage(amount: int) -> void:
 	if is_dead() or is_invulnerable():
 		return
-	current_health = maxi(current_health - amount, 0)
+	current_health = maxi(current_health - amount, min_health)
 	_invulnerability_timer = invulnerability_duration
 	damaged.emit(amount)
 	health_changed.emit(current_health, max_health)
@@ -54,4 +61,10 @@ func heal(amount: int) -> void:
 	if is_dead():
 		return
 	current_health = mini(current_health + amount, max_health)
+	health_changed.emit(current_health, max_health)
+
+
+## Fixe directement les PV (cinématiques). Ne déclenche pas la mort.
+func set_health(value: int) -> void:
+	current_health = clampi(value, 1, max_health)
 	health_changed.emit(current_health, max_health)

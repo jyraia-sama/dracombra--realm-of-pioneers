@@ -27,7 +27,8 @@ var _state_timer: float = 0.0
 var _target: Node2D
 
 @onready var visual: Node2D = $Visual
-@onready var body: ColorRect = $Visual/Body
+@onready var sprite: Sprite2D = $Visual/Sprite
+@onready var loot: LootDropper = $Loot
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var health: HealthComponent = $Health
 @onready var hurtbox: Hurtbox = $Hurtbox
@@ -39,11 +40,6 @@ var _target: Node2D
 func _ready() -> void:
 	add_to_group("enemies")
 	var tile := float(Game.TILE_SIZE)
-
-	# Corps provisoire : 1 tile sur 1 tile, posé sur le sol.
-	body.size = Vector2(tile, tile)
-	body.position = Vector2(-tile / 2.0, -tile)
-	body.color = Color("6cc24a")
 
 	collision_shape.shape.size = Vector2(tile * 0.75, tile * 0.5)
 	collision_shape.position = Vector2(0.0, -tile * 0.25)
@@ -59,6 +55,16 @@ func _ready() -> void:
 
 	hurtbox.hit_received.connect(_on_hit_received)
 	health.died.connect(_on_died)
+
+
+func _process(_delta: float) -> void:
+	# Le slime se tasse et se détend : plus vite quand il poursuit.
+	if state == State.DEAD:
+		return
+	var period := 160.0 if state == State.CHASE else 420.0
+	sprite.frame = int(Time.get_ticks_msec() / period) % 2
+	if is_instance_valid(_target):
+		sprite.flip_h = _target.global_position.x < global_position.x
 
 
 func _physics_process(delta: float) -> void:
@@ -116,6 +122,7 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 
 func _on_died() -> void:
 	state = State.DEAD
+	loot.drop(global_position)
 	contact_hitbox.active = false
 	hurtbox.set_deferred("monitorable", false)
 	collision_shape.set_deferred("disabled", true)
@@ -127,6 +134,6 @@ func _on_died() -> void:
 
 
 func _flash() -> void:
-	body.self_modulate = Color(1.0, 0.35, 0.35)
+	sprite.self_modulate = Color(1.0, 0.35, 0.35)
 	var tween := create_tween()
-	tween.tween_property(body, "self_modulate", Color.WHITE, 0.2)
+	tween.tween_property(sprite, "self_modulate", Color.WHITE, 0.2)

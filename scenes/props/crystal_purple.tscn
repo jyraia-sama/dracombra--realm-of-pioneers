@@ -3,14 +3,14 @@
 [ext_resource type="Texture2D" path="res://assets/tilesets/cave_tiles.png" id="1_7737w"]
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_mf1e8"]
 
-[node name="CrystalPurple" type="Node2D" unique_id=1471495125]
+[node name="CrystalPurple" type="Node2D" unique_id=1757292639]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=154730438]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1903877408]
 texture = ExtResource("1_7737w")
 region_enabled = true
 region_rect = Rect2(16, 48, 16, 16)
 
-[node name="PointLight2D" type="PointLight2D" parent="." unique_id=2066499750]
+[node name="PointLight2D" type="PointLight2D" parent="." unique_id=104810845]
 position = Vector2(0, 2)
 color = Color(0.8, 0.5, 1, 1)
 texture = ExtResource("2_mf1e8")

@@ -46,7 +46,8 @@ func _physics_process(_delta: float) -> void:
 
 ## Direction dans laquelle repousser une cible située en `target_position`.
 func get_knockback_direction(target_position: Vector2) -> Vector2:
-	var origin := source.global_position if source != null else global_position
+	# La source a pu disparaître entre-temps (pierre lancée par un gobelin mort...).
+	var origin := source.global_position if is_instance_valid(source) else global_position
 	var direction := target_position - origin
 	if direction == Vector2.ZERO:
 		return Vector2.DOWN

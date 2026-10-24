@@ -40,6 +40,13 @@ var state: State = State.NORMAL
 ## Direction regardée, toujours l'une des 8 directions.
 var facing: Vector2 = Vector2.DOWN
 
+## Pendant une cinématique, le joueur ne contrôle plus le guerrier.
+var input_locked: bool = false
+## Direction de marche imposée pendant une cinématique.
+var scripted_direction: Vector2 = Vector2.ZERO
+## Multiplicateur de vitesse de marche (moins de 1 quand le guerrier est blessé).
+var speed_multiplier: float = 1.0
+
 var _state_timer: float = 0.0
 var _dodge_cooldown_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
@@ -117,12 +124,14 @@ func _physics_process(delta: float) -> void:
 
 
 func _process_normal() -> void:
-	var direction := _get_input_direction()
-	velocity = direction * walk_speed_tiles * Game.TILE_SIZE
+	var direction := scripted_direction if input_locked else _get_input_direction()
+	velocity = direction * walk_speed_tiles * speed_multiplier * Game.TILE_SIZE
 
 	if direction != Vector2.ZERO:
 		facing = _snap_to_8_directions(direction)
 
+	if input_locked:
+		return
 	if Input.is_action_just_pressed("dodge") and _dodge_cooldown_timer <= 0.0:
 		_start_dodge(direction)
 	elif Input.is_action_just_pressed("attack"):
@@ -218,6 +227,17 @@ func _update_sprite() -> void:
 	var walking := state == State.NORMAL and velocity.length() > 1.0
 	var bob_up := walking and int(Time.get_ticks_msec() / 120.0) % 2 == 0
 	visual.position.y = -1.0 if bob_up else 0.0
+
+
+## Fait regarder le guerrier dans une direction (cinématiques).
+func face(direction: Vector2) -> void:
+	facing = _snap_to_8_directions(direction)
+
+
+## Déclenche une attaque, même quand les commandes sont bloquées (cinématiques).
+func perform_attack() -> void:
+	if state == State.NORMAL:
+		_start_attack()
 
 
 func _get_input_direction() -> Vector2:

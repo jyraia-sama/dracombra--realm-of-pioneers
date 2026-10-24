@@ -1,13 +1,14 @@
 [gd_resource type="TileSet" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/tilesets/cave_tiles.png" id="1_hgejx"]
-[ext_resource type="PackedScene" path="res://scenes/props/crystal_blue.tscn" id="2_ahumc"]
-[ext_resource type="PackedScene" path="res://scenes/props/crystal_purple.tscn" id="3_8pp4t"]
-[ext_resource type="PackedScene" path="res://scenes/props/glow_mushroom.tscn" id="4_ohbds"]
+[ext_resource type="Texture2D" path="res://assets/tilesets/cave_tiles.png" id="1_ahumc"]
+[ext_resource type="PackedScene" path="res://scenes/props/crystal_blue.tscn" id="2_8pp4t"]
+[ext_resource type="PackedScene" path="res://scenes/props/crystal_purple.tscn" id="3_ohbds"]
+[ext_resource type="PackedScene" path="res://scenes/props/glow_mushroom.tscn" id="4_e1wi6"]
+[ext_resource type="PackedScene" path="res://scenes/props/embers.tscn" id="5_gp3xg"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_e1wi6"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_62boc"]
 resource_name = "Caverne"
-texture = ExtResource("1_hgejx")
+texture = ExtResource("1_ahumc")
 0:0/0 = 0
 0:0/0/y_sort_origin = 8
 0:0/0/terrain_set = 0
@@ -225,11 +226,12 @@ texture = ExtResource("1_hgejx")
 5:3/0 = 0
 5:3/0/y_sort_origin = 6
 
-[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_gp3xg"]
+[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_xp2ky"]
 resource_name = "Décors lumineux"
-scenes/0/scene = ExtResource("2_ahumc")
-scenes/1/scene = ExtResource("3_8pp4t")
-scenes/2/scene = ExtResource("4_ohbds")
+scenes/0/scene = ExtResource("2_8pp4t")
+scenes/1/scene = ExtResource("3_ohbds")
+scenes/2/scene = ExtResource("4_e1wi6")
+scenes/3/scene = ExtResource("5_gp3xg")
 
 [resource]
 physics_layer_0/collision_layer = 1
@@ -237,5 +239,5 @@ physics_layer_0/collision_mask = 0
 terrain_set_0/mode = 2
 terrain_set_0/terrain_0/name = "Roche"
 terrain_set_0/terrain_0/color = Color(0.55, 0.45, 0.7, 1)
-sources/0 = SubResource("TileSetAtlasSource_e1wi6")
-sources/1 = SubResource("TileSetScenesCollectionSource_gp3xg")
+sources/0 = SubResource("TileSetAtlasSource_62boc")
+sources/1 = SubResource("TileSetScenesCollectionSource_xp2ky")
