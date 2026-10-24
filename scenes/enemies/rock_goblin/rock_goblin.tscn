@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="4_hitbox"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemies/rock_goblin.png" id="5_sprite"]
 [ext_resource type="Script" path="res://scripts/components/loot_dropper.gd" id="6_loot"]
+[ext_resource type="Script" path="res://scripts/components/fear.gd" id="10_fear"]
 [ext_resource type="Script" path="res://scripts/data/loot_entry.gd" id="7_entry"]
 [ext_resource type="Resource" path="res://data/items/stone.tres" id="8_stone"]
 [ext_resource type="Resource" path="res://data/items/heart.tres" id="9_heart"]
@@ -76,3 +77,6 @@ shape = SubResource("RectangleShape2D_charge")
 [node name="Loot" type="Node" parent="."]
 script = ExtResource("6_loot")
 entries = Array[ExtResource("7_entry")]([SubResource("Resource_stone"), SubResource("Resource_heart")])
+
+[node name="Fear" type="Node" parent="."]
+script = ExtResource("10_fear")

@@ -8,6 +8,11 @@ extends CanvasLayer
 @onready var title: Control = $Title
 @onready var title_label: Label = $Title/TitleLabel
 @onready var subtitle_label: Label = $Title/SubtitleLabel
+@onready var top_bar: ColorRect = $TopBar
+@onready var bottom_bar: ColorRect = $BottomBar
+
+## Hauteur des bandes noires de cinématique, en pixels.
+const BAR_HEIGHT := 34.0
 
 var _say_id: int = 0
 
@@ -38,10 +43,21 @@ func title_card(main_text: String, sub_text: String = "", duration: float = 2.5)
 	await _fade(title, 0.0, 0.5)
 
 
+## Bandes noires en haut et en bas : le joueur ne contrôle plus le héros.
+func cinematic(on: bool, time: float = 0.5) -> void:
+	var height := BAR_HEIGHT if on else 0.0
+	var tween := create_tween().set_parallel()
+	tween.tween_property(top_bar, "offset_bottom", height, time)
+	tween.tween_property(bottom_bar, "offset_top", -height, time)
+	await tween.finished
+
+
 func hide_all() -> void:
 	_say_id += 1
 	box.modulate.a = 0.0
 	title.modulate.a = 0.0
+	top_bar.offset_bottom = 0.0
+	bottom_bar.offset_top = 0.0
 
 
 func _fade(node: CanvasItem, alpha: float, time: float) -> void:

@@ -20,7 +20,7 @@ enum State { NORMAL, DODGE, ATTACK, HURT, DEAD }
 
 @export_group("Attaque")
 ## Durée d'une attaque, en secondes.
-@export var attack_duration: float = 0.25
+@export var attack_duration: float = 0.3
 ## Portée de l'attaque, en tiles.
 @export var attack_range_tiles: float = 1.0
 ## Dégâts infligés par l'attaque.
@@ -58,7 +58,6 @@ var _dodge_velocity: Vector2 = Vector2.ZERO
 @onready var hurtbox: Hurtbox = $Hurtbox
 @onready var hurtbox_shape: CollisionShape2D = $Hurtbox/CollisionShape2D
 @onready var attack_pivot: Node2D = $AttackPivot
-@onready var slash: Sprite2D = $AttackPivot/Slash
 @onready var attack_hitbox: Hitbox = $AttackPivot/AttackHitbox
 @onready var attack_hitbox_shape: CollisionShape2D = $AttackPivot/AttackHitbox/CollisionShape2D
 
@@ -81,8 +80,6 @@ func _ready() -> void:
 	var reach := Vector2(attack_range_tiles * tile, tile * 1.5)
 	attack_hitbox_shape.shape.size = reach
 	attack_hitbox_shape.position = Vector2(tile * 0.25 + reach.x / 2.0, 0.0)
-	# La traînée de l'épée balaie cette zone.
-	slash.visible = false
 	attack_hitbox.damage = attack_damage
 	attack_hitbox.knockback_tiles = attack_knockback_tiles
 	attack_hitbox.source = self
@@ -94,7 +91,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	_update_sprite()
+	_update_sprite(_delta)
 	# Clignotement pendant l'invincibilité qui suit un coup.
 	if state == State.DODGE or state == State.DEAD:
 		return
@@ -143,11 +140,6 @@ func _start_dodge(direction: Vector2) -> void:
 	_state_timer = dodge_duration
 	state = State.DODGE
 	health.set_invulnerable(dodge_duration)
-	visual.modulate = Color(1.0, 1.0, 1.0, 0.5)
-	# Le guerrier se ramasse pendant la roulade.
-	var tween := create_tween()
-	tween.tween_property(visual, "scale", Vector2(1.15, 0.75), dodge_duration * 0.3)
-	tween.tween_property(visual, "scale", Vector2.ONE, dodge_duration * 0.7)
 
 
 func _process_dodge(delta: float) -> void:
@@ -164,7 +156,7 @@ func _start_attack() -> void:
 	attack_hitbox.active = true
 	_state_timer = attack_duration
 	state = State.ATTACK
-	_play_slash()
+	_play_lunge()
 
 
 func _process_attack(delta: float) -> void:
@@ -176,30 +168,18 @@ func _process_attack(delta: float) -> void:
 
 
 func _end_attack() -> void:
-	slash.visible = false
 	attack_hitbox.active = false
 	visual.position = Vector2.ZERO
 	visual.scale = Vector2.ONE
 
 
-## Le coup d'épée : fente vers l'avant, puis la traînée balaie la zone en 3 images.
-func _play_slash() -> void:
-	slash.visible = true
-	slash.frame = 0
-	slash.modulate.a = 1.0
-	# L'arc est dessiné vers la droite : on le retourne pour garder le haut en haut.
-	slash.flip_v = facing.x < -0.1
-	var step := attack_duration / 4.0
-	var lunge := facing * 3.0
+## Le coup d'épée : une petite fente vers l'avant (l'animation fait le reste).
+func _play_lunge() -> void:
+	var step := attack_duration / 3.0
 	var tween := create_tween()
-	tween.tween_property(visual, "position", lunge, step).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(visual, "scale", Vector2(1.08, 0.94), step)
-	tween.tween_callback(func() -> void: slash.frame = 1)
+	tween.tween_property(visual, "position", facing * 3.0, step).set_ease(Tween.EASE_OUT)
 	tween.tween_interval(step)
-	tween.tween_callback(func() -> void: slash.frame = 2)
-	tween.tween_property(slash, "modulate:a", 0.0, step)
-	tween.parallel().tween_property(visual, "position", Vector2.ZERO, step * 1.5)
-	tween.parallel().tween_property(visual, "scale", Vector2.ONE, step * 1.5)
+	tween.tween_property(visual, "position", Vector2.ZERO, step)
 
 
 func _process_hurt(delta: float) -> void:
@@ -240,26 +220,71 @@ func _flash() -> void:
 	tween.tween_property(sprite, "self_modulate", Color.WHITE, 0.2)
 
 
-## Lignes de la planche de marche : face, dos, profil (vers la droite).
-const ROW_DOWN := 0
-const ROW_UP := 1
-const ROW_SIDE := 2
-const WALK_FRAMES := 6
-## Durée d'une image de marche, en secondes.
-const WALK_FRAME_TIME := 0.1
+## Planche warrior.png : 6 colonnes, 3 lignes par animation (face, dos, profil).
+## [première ligne, nombre d'images, durée d'une image (0 = calée sur la durée de l'action)]
+const ANIMS := {
+	&"idle": [0, 4, 0.22],
+	&"walk": [3, 6, 0.1],
+	&"roll": [6, 6, 0.0],
+	&"attack": [9, 5, 0.0],
+	&"hurt": [12, 2, 0.08],
+	&"death": [15, 4, 0.15],
+}
+const COLUMNS := 6
+const DIR_DOWN := 0
+const DIR_UP := 1
+const DIR_SIDE := 2
+
+var _anim_time: float = 0.0
+var _anim_state: State = State.NORMAL
 
 
-func _update_sprite() -> void:
+func _update_sprite(delta: float) -> void:
+	if state != _anim_state:
+		_anim_state = state
+		_anim_time = 0.0
+	_anim_time += delta
 	# Profil dès qu'il y a une part de mouvement horizontal, sinon face ou dos.
-	var row := ROW_SIDE
+	var dir := DIR_SIDE
 	if absf(facing.x) < 0.1:
-		row = ROW_UP if facing.y < 0.0 else ROW_DOWN
-	sprite.flip_h = row == ROW_SIDE and facing.x < 0.0
-	var walking := state == State.NORMAL and velocity.length() > 1.0
-	var column := 0
-	if walking:
-		column = int(Time.get_ticks_msec() / (WALK_FRAME_TIME * 1000.0 / speed_multiplier)) % WALK_FRAMES
-	sprite.frame = row * WALK_FRAMES + column
+		dir = DIR_UP if facing.y < 0.0 else DIR_DOWN
+	sprite.flip_h = dir == DIR_SIDE and facing.x < 0.0
+
+	var anim := &"idle"
+	var index := 0
+	match state:
+		State.NORMAL:
+			if velocity.length() > 1.0:
+				anim = &"walk"
+				index = _looped(anim, Time.get_ticks_msec() / 1000.0 * speed_multiplier)
+			else:
+				index = _looped(anim, Time.get_ticks_msec() / 1000.0)
+		State.DODGE:
+			anim = &"roll"
+			index = _progress(anim, _anim_time / dodge_duration)
+		State.ATTACK:
+			anim = &"attack"
+			index = _progress(anim, _anim_time / attack_duration)
+		State.HURT:
+			anim = &"hurt"
+			index = _progress(anim, _anim_time / maxf(hurt_duration, 0.01))
+		State.DEAD:
+			anim = &"death"
+			index = mini(int(_anim_time / ANIMS[anim][2]), ANIMS[anim][1] - 1)
+	var first_row: int = ANIMS[anim][0]
+	sprite.frame = (first_row + dir) * COLUMNS + index
+
+
+func _looped(anim: StringName, elapsed: float) -> int:
+	var count: int = ANIMS[anim][1]
+	var frame_time: float = ANIMS[anim][2]
+	return int(elapsed / frame_time) % count
+
+
+## Image d'une animation calée sur l'avancement d'une action (0 = début, 1 = fin).
+func _progress(anim: StringName, ratio: float) -> int:
+	var count: int = ANIMS[anim][1]
+	return clampi(int(ratio * count), 0, count - 1)
 
 
 ## Fait regarder le guerrier dans une direction (cinématiques).

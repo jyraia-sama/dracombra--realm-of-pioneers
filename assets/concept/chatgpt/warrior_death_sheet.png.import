@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://1leyduw0530v"
-path="res://.godot/imported/sword_slash.png-d3edfdf947c987720772c0d336032f18.ctex"
+uid="uid://45l6yaly83jp"
+path="res://.godot/imported/warrior_death_sheet.png-214ffaff6f614e7dbd012a686cbf9d23.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/hero/sword_slash.png"
-dest_files=["res://.godot/imported/sword_slash.png-d3edfdf947c987720772c0d336032f18.ctex"]
+source_file="res://assets/concept/chatgpt/warrior_death_sheet.png"
+dest_files=["res://.godot/imported/warrior_death_sheet.png-214ffaff6f614e7dbd012a686cbf9d23.ctex"]
 
 [params]
 

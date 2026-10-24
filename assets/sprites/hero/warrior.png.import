@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b54koh2s6g57n"
-path="res://.godot/imported/warrior_walk.png-1474f06487505534980a206d09d74d95.ctex"
+uid="uid://blueckn1rpvlp"
+path="res://.godot/imported/warrior.png-0c9b39cf9fe414d9834d3f20db952b9f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/hero/warrior_walk.png"
-dest_files=["res://.godot/imported/warrior_walk.png-1474f06487505534980a206d09d74d95.ctex"]
+source_file="res://assets/sprites/hero/warrior.png"
+dest_files=["res://.godot/imported/warrior.png-0c9b39cf9fe414d9834d3f20db952b9f.ctex"]
 
 [params]
 

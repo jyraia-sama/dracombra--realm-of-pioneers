@@ -29,6 +29,7 @@ var _target: Node2D
 @onready var visual: Node2D = $Visual
 @onready var sprite: Sprite2D = $Visual/Sprite
 @onready var loot: LootDropper = $Loot
+@onready var fear: Fear = $Fear
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var health: HealthComponent = $Health
 @onready var hurtbox: Hurtbox = $Hurtbox
@@ -70,6 +71,9 @@ var _death_time: float = 0.0
 
 
 func _process(delta: float) -> void:
+	if fear.is_scared and state != State.DEAD:
+		sprite.frame = SheetAnimation.frame(ANIMS, &"hop", COLUMNS, Time.get_ticks_msec() / 1000.0, true)
+		return
 	if is_instance_valid(_target) and state != State.DEAD:
 		sprite.flip_h = _target.global_position.x < global_position.x
 	var now := Time.get_ticks_msec() / 1000.0
@@ -86,6 +90,11 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if fear.is_scared and state != State.DEAD:
+		# La peur pilote sa vitesse : il ne blesse plus personne.
+		contact_hitbox.active = false
+		move_and_slide()
+		return
 	match state:
 		State.IDLE:
 			_process_idle()

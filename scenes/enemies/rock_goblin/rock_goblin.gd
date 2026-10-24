@@ -59,6 +59,7 @@ var _target: Node2D
 @onready var charge_hitbox: Hitbox = $ChargeHitbox
 @onready var charge_hitbox_shape: CollisionShape2D = $ChargeHitbox/CollisionShape2D
 @onready var loot: LootDropper = $Loot
+@onready var fear: Fear = $Fear
 
 
 func _ready() -> void:
@@ -100,6 +101,9 @@ func _process(delta: float) -> void:
 		_anim_time = 0.0
 	_anim_time += delta
 	_release_time = maxf(_release_time - delta, 0.0)
+	if fear.is_scared and state != State.DEAD:
+		sprite.frame = SheetAnimation.frame(ANIMS, &"run", COLUMNS, Time.get_ticks_msec() / 1000.0, true)
+		return
 	if is_instance_valid(_target) and state != State.CHARGE and state != State.DEAD:
 		sprite.flip_h = _target.global_position.x < global_position.x
 	# Il tremble pendant qu'il prépare sa charge.
@@ -132,6 +136,11 @@ func _current_frame() -> int:
 
 
 func _physics_process(delta: float) -> void:
+	if fear.is_scared and state != State.DEAD:
+		# La peur pilote sa vitesse : il ne blesse plus personne.
+		charge_hitbox.active = false
+		move_and_slide()
+		return
 	_throw_timer = maxf(_throw_timer - delta, 0.0)
 	_charge_timer = maxf(_charge_timer - delta, 0.0)
 

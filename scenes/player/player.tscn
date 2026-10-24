@@ -4,8 +4,7 @@
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="3_hurtbox"]
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="4_hitbox"]
-[ext_resource type="Texture2D" path="res://assets/sprites/hero/warrior_walk.png" id="5_sprite"]
-[ext_resource type="Texture2D" path="res://assets/sprites/hero/sword_slash.png" id="6_slash"]
+[ext_resource type="Texture2D" path="res://assets/sprites/hero/warrior.png" id="5_sprite"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_auxhd"]
 
@@ -23,9 +22,9 @@ script = ExtResource("1_8afob")
 [node name="Sprite" type="Sprite2D" parent="Visual" unique_id=1901964283]
 texture = ExtResource("5_sprite")
 centered = false
-offset = Vector2(-17, -31)
+offset = Vector2(-28, -34)
 hframes = 6
-vframes = 3
+vframes = 18
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=197898378]
 shape = SubResource("RectangleShape2D_auxhd")
@@ -45,12 +44,6 @@ health = NodePath("../Health")
 shape = SubResource("RectangleShape2D_hurtbox")
 
 [node name="AttackPivot" type="Node2D" parent="." unique_id=1346897258]
-
-[node name="Slash" type="Sprite2D" parent="AttackPivot"]
-texture = ExtResource("6_slash")
-centered = false
-offset = Vector2(2, -15)
-hframes = 3
 
 [node name="AttackHitbox" type="Area2D" parent="AttackPivot"]
 collision_layer = 0

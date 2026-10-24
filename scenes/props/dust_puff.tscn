@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/props/dust_puff.gd" id="1_dust"]
+
+[sub_resource type="Curve" id="Curve_fade"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[node name="DustPuff" type="CPUParticles2D"]
+emitting = false
+amount = 18
+lifetime = 0.7
+one_shot = true
+explosiveness = 0.85
+emission_shape = 3
+emission_rect_extents = Vector2(7, 3)
+direction = Vector2(0, -1)
+spread = 70.0
+gravity = Vector2(0, 30)
+initial_velocity_min = 12.0
+initial_velocity_max = 35.0
+scale_amount_min = 1.0
+scale_amount_max = 2.5
+scale_amount_curve = SubResource("Curve_fade")
+color = Color(0.6, 0.55, 0.6, 0.8)
+script = ExtResource("1_dust")
