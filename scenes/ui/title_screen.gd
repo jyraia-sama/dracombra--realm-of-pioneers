@@ -107,6 +107,10 @@ func _build_updates() -> void:
 	Updater.ready_to_restart.connect(func() -> void:
 		_update_bar.visible = false
 		_set_update_button("Redémarrer le jeu", Updater.restart))
+	Updater.status_changed.connect(func(t: String) -> void:
+		# Un échec : on peut réessayer.
+		if t.contains("Réessayez") or t.contains("Impossible"):
+			_update_button.disabled = false)
 	Updater.check()
 
 

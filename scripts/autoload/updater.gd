@@ -1,14 +1,14 @@
 extends Node
 ## Mises à jour du jeu (version .exe).
 ##
-## Le .exe contient le moteur et une version du jeu. Les nouvelles versions sont publiées
-## sur la branche « updates » du dépôt GitHub : latest.json (numéro de version, notes,
-## empreinte) et Dracombra.pck (tout le contenu du jeu, sans le moteur).
+## Les nouvelles versions sont publiées sur la branche « updates » du dépôt GitHub :
+## latest.json (version, notes, empreinte) et Dracombra.zip (le nouveau .exe).
 ##
-## À l'écran titre, le jeu compare sa version à latest.json. Si elle est plus ancienne, le
-## joueur peut télécharger le .pck, rangé dans son dossier utilisateur. Au lancement
-## suivant (ou en redémarrant tout de suite), le .exe relance le moteur sur ce .pck
-## (option --main-pack) au lieu de la version qu'il contient.
+## À l'écran titre, le jeu compare sa version à latest.json. Si une version plus récente
+## existe, le joueur peut la télécharger : le zip est vérifié, l'ancien .exe est renommé
+## en .old (Windows autorise à renommer un programme en cours d'exécution), le nouveau
+## prend sa place, et le jeu redémarre dessus. L'ancien fichier est effacé au lancement
+## suivant.
 
 signal status_changed(text: String)
 signal update_available(version: String, notes: String)
@@ -16,34 +16,45 @@ signal progress(ratio: float)
 signal ready_to_restart
 
 const BASE_URL := "https://raw.githubusercontent.com/jyraia-sama/dracombra--realm-of-pioneers/updates/"
-const MANIFEST := BASE_URL + "latest.json"
 const DIR := "user://update/"
-const PACK := DIR + "Dracombra.pck"
-const PACK_VERSION := DIR + "version.txt"
 
+## Adresse des mises à jour (remplaçable pour les tests : « -- --update-url=http://... »).
+var base_url := BASE_URL
 var manifest: Dictionary = {}
 var busy := false
 var _download: HTTPRequest
+## Chemin du programme, retenu au démarrage : une fois le fichier renommé, le système
+## donnerait le nouveau nom de l'ancien programme.
+var _exe := ""
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_exe = OS.get_executable_path()
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--update-url="):
+			base_url = a.trim_prefix("--update-url=")
 	if not can_update():
 		return
-	# Une version plus récente a déjà été téléchargée : on relance le jeu dessus.
-	var installed := installed_version()
-	if not running_update() and installed != "" and is_newer(installed, version()):
-		_relaunch()
-		return
-	# Vérification automatique de bout en bout (outil de test : « -- --update-selftest »).
+	_remove_old_exe()
+	# Vérification de bout en bout (outil de test : « -- --update-selftest »).
 	if OS.get_cmdline_user_args().has("--update-selftest"):
-		print("UPDATER version=%s update=%s" % [version(), running_update()])
-		if running_update():
+		print("UPDATER version=%s" % version())
+		DirAccess.make_dir_recursive_absolute(DIR)
+		var f := FileAccess.open(DIR.path_join("selftest.txt"), FileAccess.WRITE)
+		if f:
+			f.store_string(version())
+			f.close()
+		# Une seule mise à jour par test : après le redémarrage, on s'arrête.
+		if OS.get_cmdline_user_args().has("--after-update"):
 			get_tree().quit()
 			return
 		update_available.connect(func(_v: String, _n: String) -> void: download())
 		ready_to_restart.connect(restart)
-		status_changed.connect(func(t: String) -> void: print("UPDATER ", t))
+		status_changed.connect(func(t: String) -> void:
+			print("UPDATER ", t)
+			if t.ends_with("à jour.") or t.contains("impossible") or t.contains("échoué"):
+				get_tree().quit())
 		check.call_deferred()
 
 
@@ -54,16 +65,6 @@ func can_update() -> bool:
 
 func version() -> String:
 	return str(ProjectSettings.get_setting("application/config/version", "0.0.0"))
-
-
-func running_update() -> bool:
-	return OS.get_cmdline_args().has("--main-pack")
-
-
-func installed_version() -> String:
-	if not FileAccess.file_exists(PACK) or not FileAccess.file_exists(PACK_VERSION):
-		return ""
-	return FileAccess.get_file_as_string(PACK_VERSION).strip_edges()
 
 
 ## a est-elle plus récente que b ? (« 0.3.10 » > « 0.3.9 »)
@@ -103,27 +104,23 @@ func check() -> void:
 		manifest = data
 		var latest := str(data["version"])
 		if is_newer(latest, version()):
-			if installed_version() == latest:
-				status_changed.emit("Version %s téléchargée : redémarrez pour en profiter." % latest)
-				ready_to_restart.emit()
-			else:
-				status_changed.emit("Nouvelle version disponible : %s" % latest)
-				update_available.emit(latest, str(data.get("notes", "")))
+			status_changed.emit("Nouvelle version disponible : %s" % latest)
+			update_available.emit(latest, str(data.get("notes", "")))
 		else:
 			status_changed.emit("Version %s — le jeu est à jour." % version()))
-	req.request(MANIFEST, PackedStringArray(["Cache-Control: no-cache"]))
+	req.request(base_url + "latest.json", PackedStringArray(["Cache-Control: no-cache"]))
 
 
-## Télécharge la version annoncée par check().
+## Télécharge et installe la version annoncée par check().
 func download() -> void:
 	if busy or manifest.is_empty():
 		return
 	busy = true
 	DirAccess.make_dir_recursive_absolute(DIR)
-	var part := PACK + ".part"
+	var zip_path := DIR.path_join("update.zip")
 	_download = HTTPRequest.new()
-	_download.download_file = part
-	_download.timeout = 600.0
+	_download.download_file = zip_path
+	_download.timeout = 900.0
 	add_child(_download)
 	status_changed.emit("Téléchargement de la version %s..." % manifest["version"])
 	_download.request_completed.connect(func(result: int, code: int, _h: PackedStringArray, _b: PackedByteArray) -> void:
@@ -131,23 +128,64 @@ func download() -> void:
 		_download = null
 		busy = false
 		if result != HTTPRequest.RESULT_SUCCESS or code != 200:
-			DirAccess.remove_absolute(part)
+			DirAccess.remove_absolute(zip_path)
 			status_changed.emit("Le téléchargement a échoué. Réessayez plus tard.")
 			return
-		# Le fichier est-il complet et intact ?
 		var expected := str(manifest.get("sha256", ""))
-		if expected != "" and FileAccess.get_sha256(part) != expected:
-			DirAccess.remove_absolute(part)
+		if expected != "" and FileAccess.get_sha256(zip_path) != expected:
+			DirAccess.remove_absolute(zip_path)
 			status_changed.emit("Le fichier téléchargé est abîmé. Réessayez.")
 			return
-		DirAccess.remove_absolute(PACK)
-		DirAccess.rename_absolute(part, PACK)
-		var f := FileAccess.open(PACK_VERSION, FileAccess.WRITE)
-		f.store_string(str(manifest["version"]))
-		f.close()
+		var err := _install(zip_path)
+		DirAccess.remove_absolute(zip_path)
+		if err != "":
+			status_changed.emit(err)
+			return
 		status_changed.emit("Version %s installée." % manifest["version"])
 		ready_to_restart.emit())
-	_download.request(BASE_URL + str(manifest.get("pack", "Dracombra.pck")))
+	_download.request(base_url + str(manifest.get("file", "Dracombra.zip")))
+
+
+## Remplace le programme : l'ancien est renommé, le nouveau prend sa place.
+func _install(zip_path: String) -> String:
+	var zip := ZIPReader.new()
+	if zip.open(zip_path) != OK:
+		return "Le fichier téléchargé est illisible."
+	var files := zip.get_files()
+	if files.is_empty():
+		return "Le fichier téléchargé est vide."
+	var data := zip.read_file(files[0])
+	zip.close()
+	if data.is_empty():
+		return "Le fichier téléchargé est vide."
+	var exe := _exe
+	var old := _old_path()
+	if FileAccess.file_exists(old):
+		DirAccess.remove_absolute(old)
+	if DirAccess.rename_absolute(exe, old) != OK:
+		return "Impossible de remplacer le jeu (dossier protégé ?). Déplacez le jeu dans Documents."
+	var f := FileAccess.open(exe, FileAccess.WRITE)
+	if f == null:
+		DirAccess.rename_absolute(old, exe)
+		return "Impossible d'écrire le nouveau jeu."
+	f.store_buffer(data)
+	f.close()
+	if not OS.has_feature("windows"):
+		OS.execute("chmod", ["+x", exe])
+	return ""
+
+
+func _old_path() -> String:
+	var exe := _exe
+	if exe.get_extension() == "":
+		return exe + ".old"
+	return exe.get_basename() + ".old." + exe.get_extension()
+
+
+func _remove_old_exe() -> void:
+	var old := _old_path()
+	if FileAccess.file_exists(old):
+		DirAccess.remove_absolute(old)
 
 
 func _process(_delta: float) -> void:
@@ -155,14 +193,13 @@ func _process(_delta: float) -> void:
 		progress.emit(float(_download.get_downloaded_bytes()) / float(_download.get_body_size()))
 
 
-## Relance le .exe sur la version téléchargée.
+## Relance le jeu (le nouveau programme) et ferme celui-ci.
 func restart() -> void:
-	_relaunch()
-
-
-func _relaunch() -> void:
-	var args := PackedStringArray(["--main-pack", ProjectSettings.globalize_path(PACK)])
+	var args := PackedStringArray()
 	if OS.get_cmdline_user_args().has("--update-selftest"):
-		args.append_array(["--headless", "--", "--update-selftest"])
-	OS.create_process(OS.get_executable_path(), args)
+		args.append_array(["--headless", "--"])
+		for a in OS.get_cmdline_user_args():
+			args.append(a)
+		args.append("--after-update")
+	OS.create_process(_exe, args)
 	get_tree().quit()
