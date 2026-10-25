@@ -131,37 +131,221 @@ bool greenish(int m) {
 	return m == GRASS || m == FOREST;
 }
 
+// ------------------------------------------------------------------ sol dessiné
+// Herbe, terre, sous-bois et eau ne viennent plus des tuiles : aplats calmes, grandes
+// taches douces, quelques touffes et fleurs. Les détails et le contraste sont laissés
+// aux objets (arbres, ruines, maisons), qui ressortent sur un sol tranquille.
+uniform bool painted = true;
+
+vec3 rgb(int r, int g, int b) {
+	return vec3(float(r), float(g), float(b)) / 255.0;
+}
+
+// Grandes taches : 0 = sombre, 1 = normal, 2 = clair.
+int patch_level(ivec2 px, int salt) {
+	vec2 p = vec2(px);
+	float n = value_noise(p / 42.0, salt) * 0.7 + value_noise(p / 15.0, salt + 5) * 0.3;
+	return n < 0.36 ? 0 : (n > 0.64 ? 2 : 1);
+}
+
+// Petit motif posé au hasard dans une case de `cell` pixels. Renvoie 0 (rien) ou 1..n.
+// Motifs (5 x 3, lignes de haut en bas) : touffe d'herbe, fleur, cailloux.
+int decal(ivec2 px, int cell, float chance, int salt, out int kind) {
+	ivec2 b = ivec2(floor(vec2(px) / float(cell)));
+	float h = hash(b + ivec2(salt * 97, salt * 31));
+	kind = 0;
+	if (h > chance) {
+		return 0;
+	}
+	ivec2 o = ivec2(int(hash(b + ivec2(7, salt)) * float(cell - 5)), int(hash(b + ivec2(salt, 13)) * float(cell - 3)));
+	ivec2 l = px - b * cell - o;
+	if (l.x < 0 || l.y < 0 || l.x > 4 || l.y > 2) {
+		return 0;
+	}
+	kind = int(hash(b + ivec2(3, 3 + salt)) * 3.0);
+	int bit = l.y * 5 + l.x;
+	// Bits : ligne 0 = bits 0-4, ligne 1 = 5-9, ligne 2 = 10-14.
+	int masks[3] = int[3](
+		0x0A95,   // touffe : X.X.X / .XXX. / ..X..   (approché)
+		0x0462,   // fleur : .X... / XXX.. / .X...
+		0x0C03);  // cailloux : XX... / ..... / ..XX.
+	int lit[3] = int[3](0x0005, 0x0020, 0x0001);
+	if (((masks[kind] >> bit) & 1) == 0) {
+		return 0;
+	}
+	return ((lit[kind] >> bit) & 1) == 1 ? 2 : 1;
+}
+
+// Pavés : cellules de Voronoï d'environ 7 px, joint sombre, arête claire en haut.
+ivec2 cobble_cell(vec2 p, out float d1, out float d2) {
+	vec2 g = floor(p / 7.0);
+	d1 = 99.0;
+	d2 = 99.0;
+	ivec2 best = ivec2(0);
+	for (int y = -1; y <= 1; y++) {
+		for (int x = -1; x <= 1; x++) {
+			ivec2 c = ivec2(g) + ivec2(x, y);
+			vec2 fp = (vec2(c) + vec2(hash(c + ivec2(11, 0)), hash(c + ivec2(0, 17))) * 0.8 + 0.1) * 7.0;
+			float d = length(p - fp);
+			if (d < d1) {
+				d2 = d1;
+				d1 = d;
+				best = c;
+			} else if (d < d2) {
+				d2 = d;
+			}
+		}
+	}
+	return best;
+}
+
+vec3 cobble(ivec2 px) {
+	float d1;
+	float d2;
+	vec2 p = vec2(px) + 0.5;
+	ivec2 c = cobble_cell(p, d1, d2);
+	if (d2 - d1 < 1.1) {
+		return rgb(104, 98, 90);
+	}
+	float a;
+	float b;
+	ivec2 above = cobble_cell(p + vec2(0.0, -1.0), a, b);
+	float t = hash(c + ivec2(23, 5));
+	vec3 col = t < 0.33 ? rgb(170, 162, 142) : (t < 0.66 ? rgb(181, 173, 152) : rgb(160, 152, 134));
+	// Mousse : les pavés gagnés par l'herbe, par plaques.
+	if (value_noise(vec2(px) / 30.0, 71) > 0.66 && hash(c + ivec2(1, 99)) < 0.6) {
+		col = mix(col, rgb(128, 146, 72), 0.55);
+	}
+	if (above != c || b - a < 1.1) {
+		col += vec3(0.06);
+	}
+	return col;
+}
+
+// Dalles de la grande place : 16 px, rangées décalées, joints, quelques fissures.
+vec3 slab(ivec2 px) {
+	int row = px.y / 16;
+	int sx = px.x + (row % 2) * 8;
+	ivec2 c = ivec2(sx / 16, row);
+	ivec2 l = ivec2(sx % 16, px.y % 16);
+	if (l.x == 0 || l.y == 0) {
+		return rgb(98, 90, 80);
+	}
+	float t = hash(c + ivec2(41, 7));
+	vec3 col = t < 0.33 ? rgb(166, 156, 134) : (t < 0.66 ? rgb(176, 166, 143) : rgb(157, 147, 127));
+	if (l.y == 1 || l.x == 1) {
+		col += vec3(0.05);
+	}
+	if (l.y == 15 || l.x == 15) {
+		col -= vec3(0.05);
+	}
+	// Une fissure de temps en temps.
+	if (hash(c + ivec2(3, 77)) < 0.25) {
+		int fx = 3 + int(hash(c + ivec2(9, 9)) * 9.0);
+		if (abs(l.x - fx - (l.y / 4) % 2) < 1 && l.y > 2 && l.y < 12) {
+			col = rgb(132, 124, 112);
+		}
+	}
+	return col;
+}
+
+vec3 painted_color(int m, ivec2 px) {
+	int k;
+	if (m == GRASS) {
+		int lv = patch_level(px, 21);
+		vec3 c = lv == 0 ? rgb(122, 140, 55) : (lv == 2 ? rgb(146, 161, 71) : rgb(134, 151, 62));
+		int d = decal(px, 9, 0.13, 1, k);
+		if (d > 0) {
+			if (k == 1) {
+				c = d == 2 ? rgb(250, 232, 120) : rgb(232, 196, 68);
+			} else {
+				c = d == 2 ? rgb(162, 176, 84) : rgb(102, 124, 50);
+			}
+		}
+		return c;
+	}
+	if (m == FOREST) {
+		int lv = patch_level(px, 33);
+		vec3 c = lv == 0 ? rgb(70, 98, 50) : (lv == 2 ? rgb(92, 118, 56) : rgb(82, 108, 53));
+		int d = decal(px, 8, 0.18, 2, k);
+		if (d > 0) {
+			c = k == 1 ? rgb(150, 110, 60) : (d == 2 ? rgb(108, 132, 60) : rgb(56, 80, 44));
+		}
+		return c;
+	}
+	if (m == DIRT) {
+		int lv = patch_level(px, 45);
+		vec3 c = lv == 0 ? rgb(196, 176, 106) : (lv == 2 ? rgb(214, 196, 126) : rgb(205, 186, 115));
+		int d = decal(px, 10, 0.10, 3, k);
+		if (d > 0 && k != 1) {
+			c = d == 2 ? rgb(226, 212, 150) : rgb(172, 152, 94);
+		}
+		return c;
+	}
+	if (m == WATER) {
+		int lv = patch_level(px, 57);
+		vec3 c = lv == 0 ? rgb(66, 104, 128) : (lv == 2 ? rgb(88, 128, 148) : rgb(76, 116, 138));
+		// Reflets : petits traits horizontaux.
+		ivec2 b = ivec2(px.x / 12, px.y / 5);
+		float h = hash(b + ivec2(5, 9));
+		int start = int(hash(b) * 7.0);
+		if (h < 0.12 && px.y % 5 == 2 && (px.x % 12) >= start && (px.x % 12) < start + 4) {
+			c = rgb(150, 186, 196);
+		}
+		return c;
+	}
+	if (m == RUBBLE) {
+		int lv = patch_level(px, 46);
+		vec3 c = lv == 0 ? rgb(184, 164, 100) : (lv == 2 ? rgb(204, 186, 118) : rgb(195, 175, 108));
+		int d = decal(px, 7, 0.22, 4, k);
+		if (d > 0) {
+			c = d == 2 ? rgb(196, 190, 170) : rgb(140, 132, 118);
+		}
+		return c;
+	}
+	if (m == PAVING) {
+		return cobble(px);
+	}
+	if (m == SLABS) {
+		return slab(px);
+	}
+	return vec3(-1.0);
+}
+
+bool is_painted(int m) {
+	return painted && m >= GRASS && m <= RUBBLE && m != FORD;
+}
+
 void fragment() {
 	ivec2 size = textureSize(types, 0) * tile;
 	ivec2 px = ivec2(floor(UV * vec2(size)));
-	vec4 col = tile_pixel(px);
 	int m = material_at(px);
+	vec4 col = is_painted(m) ? vec4(painted_color(m, px), 1.0) : tile_pixel(px);
 	int up = material_at(px + ivec2(0, -1));
 	int dn = material_at(px + ivec2(0, 1));
 	int lf = material_at(px + ivec2(-1, 0));
 	int rt = material_at(px + ivec2(1, 0));
 	bool touches_green = greenish(up) || greenish(dn) || greenish(lf) || greenish(rt);
+	bool touches_water = up == WATER || dn == WATER || lf == WATER || rt == WATER;
 	if ((m == DIRT || m == RUBBLE) && touches_green) {
-		// Bord de terre : une ligne plus sombre, comme une petite marche.
-		col.rgb *= 0.72;
+		// Bord de la terre : une ligne plus sombre.
+		col.rgb = painted ? rgb(176, 156, 96) : col.rgb * 0.72;
 	} else if (m == WATER) {
-		if (touches_green || up == DIRT || dn == DIRT || lf == DIRT || rt == DIRT) {
-			// La berge.
-			col.rgb = mix(col.rgb, vec3(0.24, 0.17, 0.11), 0.75);
+		if (!touches_water || touches_green || up == DIRT || dn == DIRT || lf == DIRT || rt == DIRT) {
+			// Liseré clair au bord de l'eau.
+			col.rgb = rgb(214, 228, 222);
 		} else {
 			int up2 = material_at(px + ivec2(0, -2));
 			int up3 = material_at(px + ivec2(0, -3));
 			if (up2 != WATER || up3 != WATER) {
 				// L'ombre de la berge sur l'eau, côté nord.
-				col.rgb *= 0.7;
-			} else if (dn != WATER || material_at(px + ivec2(0, 2)) != WATER) {
-				// Un liseré d'écume au pied de la berge.
-				col.rgb = mix(col.rgb, vec3(0.75, 0.88, 0.95), 0.45);
+				col.rgb *= 0.8;
 			}
 		}
-	} else if (greenish(m) && (dn == DIRT || dn == WATER || dn == RUBBLE || dn == PAVING || dn == SLABS)) {
-		// L'herbe déborde un peu : liseré clair sur son bord.
-		col.rgb *= 1.18;
+	} else if (greenish(m) && (dn == DIRT || dn == WATER || dn == RUBBLE || dn == PAVING || dn == SLABS
+			|| up == DIRT || lf == DIRT || rt == DIRT)) {
+		// Bord de l'herbe : un liseré plus foncé, comme une petite marche.
+		col.rgb = m == FOREST ? rgb(58, 84, 46) : rgb(108, 126, 48);
 	} else if ((m == PAVING || m == SLABS) && touches_green) {
 		col.rgb *= 0.85;
 	}
