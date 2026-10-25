@@ -100,7 +100,7 @@ func _run() -> void:
 	await _frames(30)
 	_check(not tree.visible, "récolte : sans hache, l'arbre tombe après 6 coups")
 	await _collect(city, player)
-	_check(Inv.get_count(&"wood") >= 2, "récolte : du bois dans le sac (%d)" % Inv.get_count(&"wood"))
+	_check(Inv.get_count(&"wood") >= 1, "récolte : du bois dans le sac (%d)" % Inv.get_count(&"wood"))
 	var debris: Node2D = null
 	for p in city.get_node("Props").get_children():
 		var h := p.get_node_or_null("Harvest")

@@ -18,6 +18,8 @@ var phase: Phase = Phase.FREE
 func _ready() -> void:
 	Town.center = center_cell
 	super()
+	# Sol aux bords organiques (plus d'effet de grille).
+	GroundPainter.apply(self, $Ground, &"city")
 	if Game.has_flag(&"wake_in_dracombra") and not Game.has_flag(&"prologue_done"):
 		_wake_up.call_deferred()
 	elif Game.has_flag(&"prologue_done"):
