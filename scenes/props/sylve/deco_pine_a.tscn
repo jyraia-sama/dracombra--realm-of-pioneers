@@ -10,7 +10,7 @@ size = Vector2(8, 6)
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1431985926]
 texture = ExtResource("1_tc1xj")
 centered = false
-offset = Vector2(-16, -48)
+offset = Vector2(-20, -62)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=607509583]
 collision_mask = 0
