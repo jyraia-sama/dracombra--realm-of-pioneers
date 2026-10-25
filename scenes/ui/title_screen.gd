@@ -58,6 +58,65 @@ func _ready() -> void:
 	_name_box.add_child(_name_edit)
 	_add_button(_name_box, "Commencer", _start)
 	(_menu.get_child(0) as Button).grab_focus()
+	_build_updates()
+
+
+# ------------------------------------------------------------------ mises à jour
+
+var _update_label: Label
+var _update_button: Button
+var _update_bar: ProgressBar
+
+
+## En bas de l'écran : la version, et un bouton quand une mise à jour est disponible.
+func _build_updates() -> void:
+	var box := VBoxContainer.new()
+	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	box.offset_left = -200
+	box.offset_right = 200
+	box.offset_top = -64
+	box.offset_bottom = -8
+	box.alignment = BoxContainer.ALIGNMENT_END
+	add_child(box)
+	_update_label = Label.new()
+	_update_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_update_label.add_theme_font_size_override("font_size", 10)
+	_update_label.add_theme_color_override("font_color", Color(0.7, 0.66, 0.78))
+	_update_label.text = "Version %s" % Updater.version()
+	box.add_child(_update_label)
+	_update_bar = ProgressBar.new()
+	_update_bar.custom_minimum_size = Vector2(220, 6)
+	_update_bar.show_percentage = false
+	_update_bar.max_value = 1.0
+	_update_bar.visible = false
+	box.add_child(_update_bar)
+	_update_button = Button.new()
+	_update_button.visible = false
+	_update_button.add_theme_font_size_override("font_size", 11)
+	box.add_child(_update_button)
+	Updater.status_changed.connect(func(t: String) -> void: _update_label.text = t)
+	Updater.progress.connect(func(r: float) -> void:
+		_update_bar.visible = true
+		_update_bar.value = r)
+	Updater.update_available.connect(func(v: String, notes: String) -> void:
+		if notes != "":
+			_update_label.text += "\n" + notes
+		_set_update_button("Mettre à jour (%s)" % v, func() -> void:
+			_update_button.disabled = true
+			Updater.download()))
+	Updater.ready_to_restart.connect(func() -> void:
+		_update_bar.visible = false
+		_set_update_button("Redémarrer le jeu", Updater.restart))
+	Updater.check()
+
+
+func _set_update_button(text: String, action: Callable) -> void:
+	_update_button.text = text
+	_update_button.disabled = false
+	_update_button.visible = true
+	for c in _update_button.pressed.get_connections():
+		_update_button.pressed.disconnect(c["callable"])
+	_update_button.pressed.connect(action)
 
 
 func _add_button(parent: Control, text: String, action: Callable) -> void:
