@@ -57,3 +57,4 @@ active = false
 shape = SubResource("RectangleShape2D_attack")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=941133402]
+zoom = Vector2(1.3333334, 1.3333334)

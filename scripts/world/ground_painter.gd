@@ -87,6 +87,30 @@ func _build(kind: StringName) -> void:
 		var col: Color = look[key]
 		sm.set_shader_parameter(key, Vector3(col.r, col.g, col.b))
 	material = sm
+	# Découpe en morceaux de 12 x 12 cases : Godot n'applique qu'un nombre limité de
+	# lumières à chaque objet dessiné. Un seul grand sol recevait toutes les lumières du
+	# niveau (cristaux, braises), et celle du héros finissait par sauter.
+	_split_in_chunks(used.size, sm)
+
+
+const CHUNK := 12
+
+
+func _split_in_chunks(cells: Vector2i, sm: ShaderMaterial) -> void:
+	var tex := texture
+	texture = null
+	for cy in range(0, cells.y, CHUNK):
+		for cx in range(0, cells.x, CHUNK):
+			var part := Sprite2D.new()
+			part.texture = tex
+			part.centered = false
+			part.region_enabled = true
+			part.region_rect = Rect2(cx, cy, mini(CHUNK, cells.x - cx), mini(CHUNK, cells.y - cy))
+			part.position = Vector2(cx, cy)
+			part.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			part.material = sm
+			add_child(part)
+	material = null
 
 
 ## [matériau, coordonnées de la tuile à dessiner].
