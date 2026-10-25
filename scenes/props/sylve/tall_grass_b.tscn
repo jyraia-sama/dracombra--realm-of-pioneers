@@ -3,14 +3,14 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/tall_grass_b.png" id="1_30s6q"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_f87jm"]
 
-[node name="TallGrassB" type="Node2D" unique_id=1607426463]
+[node name="TallGrassB" type="Node2D" unique_id=1608073060]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1219687274]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1698562577]
 texture = ExtResource("1_30s6q")
 centered = false
 offset = Vector2(-7, -13)
 
-[node name="Harvest" type="Node2D" parent="." unique_id=1638166472]
+[node name="Harvest" type="Node2D" parent="." unique_id=275328935]
 script = ExtResource("2_f87jm")
 item_id = &"herb"
 min_amount = 1

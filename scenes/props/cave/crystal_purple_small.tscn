@@ -3,14 +3,14 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/crystal_purple_small.png" id="1_23i64"]
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_gs078"]
 
-[node name="CrystalPurpleSmall" type="Node2D" unique_id=1344656740]
+[node name="CrystalPurpleSmall" type="Node2D" unique_id=1343733438]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1880382765]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1099357261]
 texture = ExtResource("1_23i64")
 centered = false
 offset = Vector2(-6, -13)
 
-[node name="Light" type="PointLight2D" parent="." unique_id=1100314973]
+[node name="Light" type="PointLight2D" parent="." unique_id=412860186]
 position = Vector2(0, -5.2)
 color = Color(0.78, 0.5, 1, 1)
 energy = 0.7

@@ -4,15 +4,15 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_cg74n"]
 [ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_x85wq"]
 
-[node name="DragonNest" type="Node2D" unique_id=721698557]
+[node name="DragonNest" type="Node2D" unique_id=572318276]
 z_index = -1
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1308297324]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=746432641]
 texture = ExtResource("1_1tbwn")
 centered = false
 offset = Vector2(-72, -49)
 
-[node name="Light" type="PointLight2D" parent="." unique_id=807755570]
+[node name="Light" type="PointLight2D" parent="." unique_id=1726993063]
 color = Color(1, 0.4, 0.15, 1)
 energy = 0.6
 texture = ExtResource("2_cg74n")

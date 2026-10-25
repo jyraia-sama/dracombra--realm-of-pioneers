@@ -6,21 +6,21 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j7dif"]
 size = Vector2(22, 8)
 
-[node name="RockGreyBig" type="Node2D" unique_id=1994470948]
+[node name="RockGreyBig" type="Node2D" unique_id=1564829722]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1241882282]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=856062691]
 texture = ExtResource("1_vfg7r")
 centered = false
 offset = Vector2(-13, -18)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1907080297]
+[node name="Body" type="StaticBody2D" parent="." unique_id=738306587]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1843313280]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1959584100]
 position = Vector2(0, -4)
 shape = SubResource("RectangleShape2D_j7dif")
 
-[node name="Harvest" type="Node2D" parent="." unique_id=893236636]
+[node name="Harvest" type="Node2D" parent="." unique_id=1725685669]
 script = ExtResource("2_gcnxg")
 item_id = &"stone"
 min_amount = 3

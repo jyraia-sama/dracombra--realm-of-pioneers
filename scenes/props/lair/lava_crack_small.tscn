@@ -4,15 +4,15 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_6jfrb"]
 [ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_6knts"]
 
-[node name="LavaCrackSmall" type="Node2D" unique_id=2123131954]
+[node name="LavaCrackSmall" type="Node2D" unique_id=237197917]
 z_index = -1
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=623922596]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=76006286]
 texture = ExtResource("1_lif5u")
 centered = false
 offset = Vector2(-14, -12)
 
-[node name="Light" type="PointLight2D" parent="." unique_id=1827897236]
+[node name="Light" type="PointLight2D" parent="." unique_id=1948278588]
 color = Color(1, 0.4, 0.15, 1)
 energy = 0.6
 texture = ExtResource("2_6jfrb")

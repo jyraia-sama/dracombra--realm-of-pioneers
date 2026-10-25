@@ -73,7 +73,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.0,
+    23,
+    8
+   ]
+  ]
  },
  "rubble_wing": {
   "group": "city",
@@ -90,7 +97,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.0,
+    22,
+    8
+   ]
+  ]
  },
  "rubble_blocks": {
   "group": "city",
@@ -107,7 +121,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.5,
+    19,
+    8
+   ]
+  ]
  },
  "rubble_pillar": {
   "group": "city",
@@ -124,7 +145,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.0,
+    22,
+    8
+   ]
+  ]
  },
  "rubble_column": {
   "group": "city",
@@ -141,7 +169,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.5,
+    17,
+    8
+   ]
+  ]
  },
  "rubble_slab": {
   "group": "city",
@@ -158,7 +193,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.0,
+    21,
+    8
+   ]
+  ]
  },
  "rubble_small": {
   "group": "city",
@@ -175,7 +217,14 @@
    1,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.5,
+    16,
+    8
+   ]
+  ]
  },
  "ruin_pillar_small": {
   "group": "city",
@@ -192,7 +241,14 @@
    1,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.0,
+    13,
+    8
+   ]
+  ]
  },
  "ruin_wall": {
   "group": "city",
@@ -209,7 +265,14 @@
    3,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    -0.5,
+    38,
+    8
+   ]
+  ]
  },
  "ruin_pillars": {
   "group": "city",
@@ -226,7 +289,14 @@
    1,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.0,
+    19,
+    8
+   ]
+  ]
  },
  "ruin_arch_dragon": {
   "group": "city",
@@ -243,7 +313,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    -4.0,
+    15,
+    8
+   ]
+  ]
  },
  "ruin_column": {
   "group": "city",
@@ -260,7 +337,14 @@
    1,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    0.0,
+    8,
+    8
+   ]
+  ]
  },
  "ruin_arch": {
   "group": "city",
@@ -277,7 +361,14 @@
    2,
    1
   ],
-  "light": null
+  "light": null,
+  "collision_parts": [
+   [
+    -5.0,
+    24,
+    8
+   ]
+  ]
  },
  "dracombra_gate": {
   "group": "city",

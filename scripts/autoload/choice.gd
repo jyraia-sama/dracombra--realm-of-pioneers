@@ -83,8 +83,5 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_open and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause")):
 		get_viewport().set_input_as_handled()
 		_picked.emit(-1)
-	elif is_open and event.is_action_pressed("interact"):
-		var focused := get_viewport().gui_get_focus_owner() as Button
-		if focused != null and _buttons.is_ancestor_of(focused):
-			get_viewport().set_input_as_handled()
-			focused.pressed.emit()
+	elif is_open and UiNav.handle(event, get_viewport()):
+		get_viewport().set_input_as_handled()

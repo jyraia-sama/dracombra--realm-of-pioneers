@@ -3,14 +3,14 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/mushrooms.png" id="1_q74fj"]
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_nw6ts"]
 
-[node name="Mushrooms" type="Node2D" unique_id=944444353]
+[node name="Mushrooms" type="Node2D" unique_id=1705669524]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1211397131]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1887263276]
 texture = ExtResource("1_q74fj")
 centered = false
 offset = Vector2(-7, -15)
 
-[node name="Light" type="PointLight2D" parent="." unique_id=1360926725]
+[node name="Light" type="PointLight2D" parent="." unique_id=974518099]
 position = Vector2(0, -6)
 color = Color(0.4, 1, 0.9, 1)
 energy = 0.6

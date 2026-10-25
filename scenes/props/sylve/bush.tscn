@@ -6,21 +6,21 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_42l17"]
 size = Vector2(16, 6)
 
-[node name="Bush" type="Node2D" unique_id=1358747062]
+[node name="Bush" type="Node2D" unique_id=115139164]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1760682491]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1426133677]
 texture = ExtResource("1_p5era")
 centered = false
 offset = Vector2(-9, -17)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=311983769]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1306483851]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=2054680821]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=743041914]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_42l17")
 
-[node name="Harvest" type="Node2D" parent="." unique_id=582852195]
+[node name="Harvest" type="Node2D" parent="." unique_id=1794381387]
 script = ExtResource("2_b30r7")
 item_id = &"herb"
 min_amount = 1

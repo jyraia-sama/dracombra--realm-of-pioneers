@@ -5,16 +5,16 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kcu7l"]
 size = Vector2(12, 6)
 
-[node name="DecoOakC" type="Node2D" unique_id=1536372021]
+[node name="DecoOakC" type="Node2D" unique_id=533848316]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1307596099]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=580394584]
 texture = ExtResource("1_113to")
 centered = false
 offset = Vector2(-24, -52)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1740672237]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1906327827]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=371520219]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1346731258]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_kcu7l")

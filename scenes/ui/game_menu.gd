@@ -60,14 +60,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if Choice.is_open:
 		return
 	if is_open:
+		if UiNav.handle(event, get_viewport()):
+			get_viewport().set_input_as_handled()
+			return
 		if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel") \
 				or (event.is_action_pressed("bag") and _tabs.current_tab == 0) \
 				or (event.is_action_pressed("map") and _tabs.current_tab == 2):
 			get_viewport().set_input_as_handled()
 			close()
-		elif event.is_action_pressed("move_left") and not _bag_list.has_focus():
+		elif event.is_action_pressed("move_left"):
+			get_viewport().set_input_as_handled()
 			_tabs.current_tab = posmod(_tabs.current_tab - 1, TABS.size())
-		elif event.is_action_pressed("move_right") and not _bag_list.has_focus():
+		elif event.is_action_pressed("move_right"):
+			get_viewport().set_input_as_handled()
 			_tabs.current_tab = posmod(_tabs.current_tab + 1, TABS.size())
 		return
 	var player := get_tree().get_first_node_in_group("player") as Player
@@ -107,6 +112,11 @@ func _refresh() -> void:
 			_bag_list.grab_focus()
 		1:
 			_refresh_sheet()
+			await get_tree().process_frame
+			for b in _class_box.get_children():
+				if b is Button and not b.disabled:
+					b.grab_focus()
+					break
 		2:
 			_refresh_map()
 		3:
@@ -129,6 +139,7 @@ func _build_bag() -> void:
 	_bag_list.fixed_column_width = 140
 	_bag_list.add_theme_font_size_override("font_size", 11)
 	_bag_list.item_selected.connect(_on_bag_selected)
+	_bag_list.item_activated.connect(func(_i: int) -> void: _on_bag_use())
 	box.add_child(_bag_list)
 	var side := VBoxContainer.new()
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL

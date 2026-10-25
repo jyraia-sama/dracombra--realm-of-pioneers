@@ -4,23 +4,23 @@
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_skfu0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8lb7t"]
-size = Vector2(20, 8)
+size = Vector2(22, 8)
 
-[node name="RubbleWing" type="Node2D" unique_id=969156834]
+[node name="RubbleWing" type="Node2D" unique_id=724201814]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=143692667]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1989184760]
 texture = ExtResource("1_2k4a0")
 centered = false
 offset = Vector2(-13, -20)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=38987878]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1032187834]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=939468966]
+[node name="@CollisionShape2D@3" type="CollisionShape2D" parent="Body" unique_id=1276536623]
 position = Vector2(0, -4)
 shape = SubResource("RectangleShape2D_8lb7t")
 
-[node name="Harvest" type="Node2D" parent="." unique_id=1729009380]
+[node name="Harvest" type="Node2D" parent="." unique_id=1395564996]
 script = ExtResource("2_skfu0")
 item_id = &"stone"
 min_amount = 3

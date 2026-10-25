@@ -85,3 +85,11 @@ func _start() -> void:
 	var name := _name_edit.text.strip_edges()
 	Hero.hero_name = name if name != "" else "Heros"
 	Transition.change_scene(FIRST_LEVEL)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Pendant la saisie du nom, les lettres vont dans le champ (pas de navigation ZQSD).
+	if _name_edit.has_focus():
+		return
+	if UiNav.handle(event, get_viewport()):
+		get_viewport().set_input_as_handled()
