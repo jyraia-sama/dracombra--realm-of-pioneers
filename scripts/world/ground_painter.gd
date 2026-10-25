@@ -17,6 +17,8 @@ const JITTER_PREFIXES := ["Deco", "TallGrass", "Bush", "Flowers", "FlaxPlant", "
 
 var _layer: TileMapLayer
 var _walls: TileMapLayer
+## Première case couverte par le sol dessiné (coin haut gauche).
+var origin_cell := Vector2i.ZERO
 
 ## Couleurs des falaises et du sol de grotte selon le lieu.
 const LOOKS := {
@@ -49,6 +51,7 @@ func _build(kind: StringName) -> void:
 	var used := _layer.get_used_rect()
 	if _walls:
 		used = used.merge(_walls.get_used_rect())
+	origin_cell = used.position
 	var img := Image.create(used.size.x, used.size.y, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	var rng := RandomNumberGenerator.new()
@@ -215,3 +218,27 @@ static func _jitter_props(level: Node2D) -> void:
 			continue
 		var h := absi(name.hash())
 		n2.position += Vector2(float(h % 11) - 5.0, float((h / 11) % 9) - 4.0)
+
+
+## Une couleur par case, prise sur le sol dessiné (pour la carte du menu).
+## Renvoie null tant que le sol n'est pas encore calculé.
+func cell_colors() -> Image:
+	var size := Vector2i.ZERO
+	var parts: Array[Sprite2D] = []
+	for c in get_children():
+		var sp := c as Sprite2D
+		if sp == null:
+			continue
+		if sp.material != null:
+			return null
+		parts.append(sp)
+		size = size.max(Vector2i(sp.position) + Vector2i((sp.texture.get_size() * sp.scale).round()))
+	if parts.is_empty():
+		return null
+	var out := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
+	for sp in parts:
+		var img := sp.texture.get_image()
+		var cells := Vector2i((sp.texture.get_size() * sp.scale).round())
+		img.resize(cells.x, cells.y, Image.INTERPOLATE_BILINEAR)
+		out.blit_rect(img, Rect2i(Vector2i.ZERO, cells), Vector2i(sp.position))
+	return out

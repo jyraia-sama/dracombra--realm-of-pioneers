@@ -32,7 +32,9 @@ func _ready() -> void:
 		var icon := TextureRect.new()
 		icon.position = Vector2(3, 3)
 		icon.size = Vector2(16, 16)
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		# Icônes HD (32 px) affichées sur 16 px d'interface.
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		panel.add_child(icon)
 		var key := _label(str(i + 1), Vector2(1, -2), Color(0.85, 0.8, 0.9))
 		panel.add_child(key)
@@ -106,7 +108,7 @@ func refresh() -> void:
 		if id == &"__weapon":
 			var atlas := AtlasTexture.new()
 			atlas.atlas = load("res://assets/sprites/items/items.png")
-			atlas.region = Rect2(int(Hero.info()["icon"]), 0, 16, 16)
+			atlas.region = Rect2(int(Hero.info()["icon"]) * 2, 0, 32, 32)
 			cell["icon"].texture = atlas
 			cell["icon"].modulate = Color.WHITE
 			cell["count"].text = ""
