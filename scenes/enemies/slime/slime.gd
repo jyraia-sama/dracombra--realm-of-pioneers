@@ -61,11 +61,11 @@ func _ready() -> void:
 ## Planche : [ligne, nombre d'images, durée d'une image].
 const ANIMS := {
 	&"idle": [0, 4, 0.16],
-	&"hop": [1, 5, 0.09],
+	&"hop": [1, 4, 0.1],
 	&"hurt": [2, 2, 0.08],
 	&"death": [3, 4, 0.1],
 }
-const COLUMNS := 5
+const COLUMNS := 4
 
 var _death_time: float = 0.0
 

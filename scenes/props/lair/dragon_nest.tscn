@@ -8,9 +8,10 @@
 z_index = -1
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1018083053]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_1tbwn")
 centered = false
-offset = Vector2(-43, -25)
+offset = Vector2(-51, -30)
 
 [node name="Light" type="PointLight2D" parent="." unique_id=432839017]
 color = Color(1, 0.4, 0.15, 1)

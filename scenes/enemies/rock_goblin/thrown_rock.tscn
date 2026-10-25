@@ -18,4 +18,5 @@ once_per_activation = true
 shape = SubResource("CircleShape2D_rock")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_sprite")

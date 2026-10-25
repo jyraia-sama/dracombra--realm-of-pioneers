@@ -6,6 +6,7 @@
 z_index = -1
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1428386018]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_crg73")
 centered = false
-offset = Vector2(-10, -9)
+offset = Vector2(-21, -22)

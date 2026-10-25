@@ -4,22 +4,23 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_k3xs5"]
 [ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_wp5qb"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_mmabx"]
-size = Vector2(14, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(27, 4)
 
 [node name="RuneBrazier" type="Node2D" unique_id=757345559]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=253666919]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_6ip22")
 centered = false
-offset = Vector2(-15, -22)
+offset = Vector2(-32, -90)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1667487214]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=854003938]
-position = Vector2(0, -4)
-shape = SubResource("RectangleShape2D_mmabx")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0, -2)
+shape = SubResource("Foot0")
 
 [node name="Light" type="PointLight2D" parent="." unique_id=595502972]
 position = Vector2(0, -8.8)

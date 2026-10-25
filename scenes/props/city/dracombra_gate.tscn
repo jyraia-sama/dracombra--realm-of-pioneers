@@ -4,29 +4,30 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_cublj"]
 [ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_ii0ad"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_6bgvo"]
-size = Vector2(30, 10)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(36, 4)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_c66uc"]
-size = Vector2(30, 10)
+[sub_resource type="RectangleShape2D" id="Foot1"]
+size = Vector2(46, 4)
 
 [node name="DracombraGate" type="Node2D" unique_id=1287553141]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1607945979]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_bdy7v")
 centered = false
-offset = Vector2(-44, -62)
+offset = Vector2(-114, -166)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=573129548]
 collision_mask = 0
 
-[node name="@CollisionShape2D@15" type="CollisionShape2D" parent="Body" unique_id=1718944073]
-position = Vector2(-29, -5)
-shape = SubResource("RectangleShape2D_6bgvo")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(-34.5, -2)
+shape = SubResource("Foot0")
 
-[node name="@CollisionShape2D@16" type="CollisionShape2D" parent="Body" unique_id=2035745032]
-position = Vector2(29, -5)
-shape = SubResource("RectangleShape2D_c66uc")
+[node name="Foot1" type="CollisionShape2D" parent="Body"]
+position = Vector2(29, -2)
+shape = SubResource("Foot1")
 
 [node name="Light" type="PointLight2D" parent="." unique_id=1094820398]
 position = Vector2(0, -24.8)

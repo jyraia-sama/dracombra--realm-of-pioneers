@@ -3,22 +3,23 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/rune_stones.png" id="1_2jiar"]
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_gp4pl"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_f6hj2"]
-size = Vector2(24, 6)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(21.5, 4)
 
 [node name="RuneStones" type="Node2D" unique_id=498698327]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=929554985]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_2jiar")
 centered = false
-offset = Vector2(-15, -20)
+offset = Vector2(-22, -37)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=367109792]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1162483502]
-position = Vector2(0, -3)
-shape = SubResource("RectangleShape2D_f6hj2")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0.25, -2)
+shape = SubResource("Foot0")
 
 [node name="Light" type="PointLight2D" parent="." unique_id=477695396]
 position = Vector2(0, -8)

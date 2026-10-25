@@ -2,19 +2,35 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/dragon_head_statue.png" id="1_fyy7q"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_686x4"]
-size = Vector2(64, 18)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(3, 4)
+
+[sub_resource type="RectangleShape2D" id="Foot1"]
+size = Vector2(20, 4)
+
+[sub_resource type="RectangleShape2D" id="Foot2"]
+size = Vector2(32.5, 4)
 
 [node name="MonumentStatue" type="Node2D" unique_id=1824387920]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1715712635]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_fyy7q")
 centered = false
-offset = Vector2(-38, -41)
+offset = Vector2(-80, -108)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=2049990225]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1079206083]
-position = Vector2(0, -9)
-shape = SubResource("RectangleShape2D_686x4")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(-39, -2)
+shape = SubResource("Foot0")
+
+[node name="Foot1" type="CollisionShape2D" parent="Body"]
+position = Vector2(-9, -2)
+shape = SubResource("Foot1")
+
+[node name="Foot2" type="CollisionShape2D" parent="Body"]
+position = Vector2(23.25, -2)
+shape = SubResource("Foot2")
+

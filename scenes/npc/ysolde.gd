@@ -27,7 +27,8 @@ func _ready() -> void:
 	_sprite.hframes = COLUMNS
 	_sprite.vframes = 8
 	_sprite.centered = false
-	_sprite.offset = Vector2(-13, -30)
+	_sprite.scale = Vector2(0.5, 0.5)  # dessin HD
+	_sprite.offset = Vector2(-31, -64)
 	add_child(_sprite)
 	var body := StaticBody2D.new()
 	body.collision_layer = 1
@@ -57,7 +58,8 @@ func _process(delta: float) -> void:
 		var d := player.global_position - global_position
 		if absf(d.x) > absf(d.y):
 			anim = &"idle_side"
-			_sprite.flip_h = d.x < 0.0
+			# La planche HD la dessine tournée vers la gauche.
+			_sprite.flip_h = d.x > 0.0
 		else:
 			anim = &"idle_down" if d.y > 0.0 else &"idle_up"
 	# Sinon, elle pile des herbes dans son mortier.

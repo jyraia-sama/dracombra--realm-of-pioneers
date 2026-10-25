@@ -41,7 +41,8 @@ script = ExtResource("1_goblin")
 [node name="Sprite" type="Sprite2D" parent="Visual"]
 texture = ExtResource("5_sprite")
 centered = false
-offset = Vector2(-22, -27)
+scale = Vector2(0.5, 0.5)
+offset = Vector2(-44, -66)
 hframes = 6
 vframes = 5
 
