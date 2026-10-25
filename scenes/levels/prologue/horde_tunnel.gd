@@ -76,6 +76,7 @@ func _process(delta: float) -> void:
 				_start_flight()
 		Phase.FLIGHT:
 			_flight_time += delta
+			_repel(player, delta)
 			_unstick(player, delta)
 			_steer(player)
 			_tick_spawns(delta, player, true)
@@ -127,9 +128,9 @@ func _spawn_monster(cell: Vector2i) -> void:
 	# Ils sortent enragés : ils repèrent le héros de loin.
 	monster.set("detection_radius_tiles", 30.0)
 	monster.set("lose_interest_radius_tiles", 40.0)
-	if phase == Phase.FLIGHT:
-		monster.set("move_speed_tiles", monster.get("move_speed_tiles") * 1.6)
 	add_child(monster)
+	if phase == Phase.FLIGHT:
+		_make_pursuer(monster)
 	var dust: Node2D = DUST_SCENE.instantiate()
 	dust.position = monster.position
 	add_child(dust)
@@ -154,7 +155,7 @@ func _start_flight() -> void:
 	player.collision_mask = 1
 	# La horde s'emballe.
 	for enemy in get_tree().get_nodes_in_group("enemies"):
-		enemy.set("move_speed_tiles", enemy.get("move_speed_tiles") * 1.6)
+		_make_pursuer(enemy)
 	# Premier point du chemin devant le héros.
 	_path_index = 0
 	while _path_index < flight_path.size() - 1 and flight_path[_path_index].x <= player.global_position.x:
@@ -164,6 +165,38 @@ func _start_flight() -> void:
 	_flight_time = 0.0
 	Narration.cinematic(true)
 	Narration.say("Ils étaient trop nombreux. Épuisé, le héros n'avait plus qu'une issue : fuir !", 3.0)
+
+
+## Pendant la fuite, les monstres poursuivent le héros sans jamais le rattraper : un peu
+## moins rapides que lui, et ils ne se heurtent plus à son corps (sinon ils restent collés).
+func _make_pursuer(enemy: Node) -> void:
+	var hero_speed := get_player().walk_speed_tiles
+	enemy.set("move_speed_tiles", minf(float(enemy.get("move_speed_tiles")) * 1.6, hero_speed * 0.85))
+	var body := enemy as CollisionObject2D
+	if body:
+		body.collision_mask &= ~2
+
+
+## Écarte les monstres qui se retrouvent sur le héros (ceux qui surgissent devant lui).
+func _repel(player: Player, delta: float) -> void:
+	var reach := Game.TILE_SIZE * 1.2
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		var e := enemy as Node2D
+		if e == null:
+			continue
+		var away := e.global_position - player.global_position
+		if away.length() >= reach:
+			continue
+		if away.length() < 0.5:
+			away = Vector2.UP
+		# Sur le côté, pour laisser passer le héros.
+		var side := Vector2(0.0, signf(away.y) if absf(away.y) > 0.5 else -1.0)
+		var push := (away.normalized() + side).normalized() * Game.TILE_SIZE * 8.0 * delta
+		var body := e as CharacterBody2D
+		if body:
+			body.move_and_collide(push)
+		else:
+			e.global_position += push
 
 
 ## Si le héros n'avance plus (coincé contre un rocher), il passe à travers le temps de
