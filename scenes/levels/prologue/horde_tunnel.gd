@@ -43,6 +43,10 @@ var phase: Phase = Phase.HORDE
 var _time: float = 0.0
 var _spawn_timer: float = 1.0
 var _path_index: int = 0
+## Pendant la fuite : détection d'un héros bloqué (rocher, monstre...).
+var _stuck_timer: float = 0.0
+var _last_pos := Vector2.ZERO
+var _flight_time: float = 0.0
 
 
 func _ready() -> void:
@@ -71,6 +75,8 @@ func _process(delta: float) -> void:
 			if _time >= horde_duration or player.global_position.x >= flee_trigger_x:
 				_start_flight()
 		Phase.FLIGHT:
+			_flight_time += delta
+			_unstick(player, delta)
 			_steer(player)
 			_tick_spawns(delta, player, true)
 			if player.global_position.x >= scare_x:
@@ -153,8 +159,31 @@ func _start_flight() -> void:
 	_path_index = 0
 	while _path_index < flight_path.size() - 1 and flight_path[_path_index].x <= player.global_position.x:
 		_path_index += 1
+	_last_pos = player.global_position
+	_stuck_timer = 0.0
+	_flight_time = 0.0
 	Narration.cinematic(true)
 	Narration.say("Ils étaient trop nombreux. Épuisé, le héros n'avait plus qu'une issue : fuir !", 3.0)
+
+
+## Si le héros n'avance plus (coincé contre un rocher), il passe à travers le temps de
+## rejoindre le point suivant du chemin. En dernier recours, la suite se déclenche.
+func _unstick(player: Player, delta: float) -> void:
+	if player.global_position.distance_to(_last_pos) > 1.5:
+		_last_pos = player.global_position
+		_stuck_timer = 0.0
+		return
+	_stuck_timer += delta
+	if _stuck_timer > 0.35:
+		player.collision_mask = 0
+	if _flight_time > 15.0 and phase == Phase.FLIGHT:
+		# Toujours bloqué : on le pose sur le chemin, juste après le point du grondement.
+		var spot := flight_path[flight_path.size() - 1] if not flight_path.is_empty() else player.global_position
+		for p in flight_path:
+			if p.x >= scare_x:
+				spot = p
+				break
+		player.global_position = Vector2(maxf(spot.x, scare_x + 1.0), spot.y)
 
 
 func _steer(player: Player) -> void:
@@ -164,6 +193,8 @@ func _steer(player: Player) -> void:
 	var target := flight_path[_path_index]
 	if player.global_position.distance_to(target) < 6.0:
 		_path_index += 1
+		# Point atteint : il est de nouveau dans le couloir, les collisions reviennent.
+		player.collision_mask = 1
 		return
 	player.scripted_direction = player.global_position.direction_to(target)
 
@@ -174,6 +205,7 @@ func _scare() -> void:
 	phase = Phase.SCARE
 	var player := get_player()
 	player.scripted_direction = Vector2.ZERO
+	player.collision_mask = 1
 
 	# Le grondement de la tanière.
 	shake_camera(6.0, 1.8)
