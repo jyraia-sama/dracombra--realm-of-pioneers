@@ -3,8 +3,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/city/rubble_small.png" id="1_gwks1"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_447ii"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ack8m"]
-size = Vector2(16, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(19, 4)
 
 [node name="RubbleSmall" type="Node2D" unique_id=1762537158]
 
@@ -16,9 +16,9 @@ offset = Vector2(-10, -14)
 [node name="Body" type="StaticBody2D" parent="." unique_id=19817536]
 collision_mask = 0
 
-[node name="@CollisionShape2D@8" type="CollisionShape2D" parent="Body" unique_id=1045857175]
-position = Vector2(0.5, -4)
-shape = SubResource("RectangleShape2D_ack8m")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0.5, -2)
+shape = SubResource("Foot0")
 
 [node name="Harvest" type="Node2D" parent="." unique_id=833667260]
 script = ExtResource("2_447ii")

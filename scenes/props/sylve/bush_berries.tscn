@@ -3,22 +3,22 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/bush_berries.png" id="1_vhsaq"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_7afp5"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_sgyam"]
-size = Vector2(16, 6)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(14, 4)
 
 [node name="BushBerries" type="Node2D" unique_id=452040968]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2031303008]
 texture = ExtResource("1_vhsaq")
 centered = false
-offset = Vector2(-9, -18)
+offset = Vector2(-10, -18)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=259155664]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1999073823]
-position = Vector2(0, -3)
-shape = SubResource("RectangleShape2D_sgyam")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0, -2)
+shape = SubResource("Foot0")
 
 [node name="Harvest" type="Node2D" parent="." unique_id=2137722472]
 script = ExtResource("2_7afp5")

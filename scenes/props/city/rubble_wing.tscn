@@ -3,22 +3,22 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/city/rubble_wing.png" id="1_2k4a0"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_skfu0"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_8lb7t"]
-size = Vector2(22, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(27, 4)
 
 [node name="RubbleWing" type="Node2D" unique_id=264837792]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=122071697]
 texture = ExtResource("1_2k4a0")
 centered = false
-offset = Vector2(-13, -20)
+offset = Vector2(-16, -24)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=2127304011]
 collision_mask = 0
 
-[node name="@CollisionShape2D@3" type="CollisionShape2D" parent="Body" unique_id=29477116]
-position = Vector2(0, -4)
-shape = SubResource("RectangleShape2D_8lb7t")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0.5, -2)
+shape = SubResource("Foot0")
 
 [node name="Harvest" type="Node2D" parent="." unique_id=645741346]
 script = ExtResource("2_skfu0")

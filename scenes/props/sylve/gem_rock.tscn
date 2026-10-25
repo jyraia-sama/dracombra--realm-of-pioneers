@@ -1,25 +1,25 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/props/cave/crystal_blue.png" id="1_s17y7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/gem_rock.png" id="1_s17y7"]
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_h8ww7"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="3_8ht5j"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_h1rkl"]
-size = Vector2(12, 6)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(27, 5)
 
 [node name="GemRock" type="Node2D" unique_id=1561625848]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=600602607]
 texture = ExtResource("1_s17y7")
 centered = false
-offset = Vector2(-9, -20)
+offset = Vector2(-16, -30)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1444036693]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1545444680]
-position = Vector2(0, -3)
-shape = SubResource("RectangleShape2D_h1rkl")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(-0.5, -2.5)
+shape = SubResource("Foot0")
 
 [node name="Light" type="PointLight2D" parent="." unique_id=912933434]
 position = Vector2(0, -8)

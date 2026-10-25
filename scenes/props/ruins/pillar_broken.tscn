@@ -2,19 +2,20 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/pillar_broken.png" id="1_hrj01"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_4xlj3"]
-size = Vector2(12, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(21, 5)
 
 [node name="PillarBroken" type="Node2D" unique_id=612856881]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1251411844]
 texture = ExtResource("1_hrj01")
 centered = false
-offset = Vector2(-8, -34)
+offset = Vector2(-12, -32)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=270844816]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=655946025]
-position = Vector2(0, -4)
-shape = SubResource("RectangleShape2D_4xlj3")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(-0.5, -2.5)
+shape = SubResource("Foot0")
+

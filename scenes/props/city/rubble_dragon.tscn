@@ -3,22 +3,22 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/city/rubble_dragon.png" id="1_dlq7w"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_a8ns2"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_n058y"]
-size = Vector2(23, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(28, 4)
 
 [node name="RubbleDragon" type="Node2D" unique_id=486878799]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2025421735]
 texture = ExtResource("1_dlq7w")
 centered = false
-offset = Vector2(-13, -20)
+offset = Vector2(-16, -26)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=779180267]
 collision_mask = 0
 
-[node name="@CollisionShape2D@2" type="CollisionShape2D" parent="Body" unique_id=1683437181]
-position = Vector2(0, -4)
-shape = SubResource("RectangleShape2D_n058y")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0, -2)
+shape = SubResource("Foot0")
 
 [node name="Harvest" type="Node2D" parent="." unique_id=1679687449]
 script = ExtResource("2_a8ns2")

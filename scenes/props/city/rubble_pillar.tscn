@@ -3,22 +3,29 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/city/rubble_pillar.png" id="1_t2hif"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_606b6"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_26dqn"]
-size = Vector2(22, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(10, 4)
+
+[sub_resource type="RectangleShape2D" id="Foot1"]
+size = Vector2(6, 4)
 
 [node name="RubblePillar" type="Node2D" unique_id=300429334]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1863022663]
 texture = ExtResource("1_t2hif")
 centered = false
-offset = Vector2(-13, -17)
+offset = Vector2(-12, -18)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=368575797]
 collision_mask = 0
 
-[node name="@CollisionShape2D@5" type="CollisionShape2D" parent="Body" unique_id=507489023]
-position = Vector2(0, -4)
-shape = SubResource("RectangleShape2D_26dqn")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(-6, -2)
+shape = SubResource("Foot0")
+
+[node name="Foot1" type="CollisionShape2D" parent="Body"]
+position = Vector2(7, -2)
+shape = SubResource("Foot1")
 
 [node name="Harvest" type="Node2D" parent="." unique_id=1277174415]
 script = ExtResource("2_606b6")

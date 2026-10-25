@@ -7,4 +7,4 @@
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1272342505]
 texture = ExtResource("1_7fuyu")
 centered = false
-offset = Vector2(-6, -11)
+offset = Vector2(-8, -12)
