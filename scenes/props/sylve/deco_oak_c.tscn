@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/oak_c.png" id="1_113to"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(24, 8)
+size = Vector2(10, 6)
 
 [node name="DecoOakC" type="Node2D" unique_id=670835844]
 
@@ -16,6 +16,6 @@ offset = Vector2(-34, -72)
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(0, -4)
+position = Vector2(0, -3)
 shape = SubResource("Foot0")
 

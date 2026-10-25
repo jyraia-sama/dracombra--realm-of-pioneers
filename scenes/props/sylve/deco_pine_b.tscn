@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/pine_b.png" id="1_y1554"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(15, 8)
+size = Vector2(6, 6)
 
 [node name="DecoPineB" type="Node2D" unique_id=935256672]
 
@@ -16,6 +16,6 @@ offset = Vector2(-18, -52)
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(-0.5, -4)
+position = Vector2(0, -3)
 shape = SubResource("Foot0")
 

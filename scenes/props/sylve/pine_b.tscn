@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_k57c6"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(15, 8)
+size = Vector2(6, 6)
 
 [node name="PineB" type="Node2D" unique_id=2132851084]
 
@@ -17,7 +17,7 @@ offset = Vector2(-18, -52)
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(-0.5, -4)
+position = Vector2(0, -3)
 shape = SubResource("Foot0")
 
 [node name="Harvest" type="Node2D" parent="." unique_id=14953552]
