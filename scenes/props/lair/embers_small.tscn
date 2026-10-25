@@ -7,9 +7,10 @@
 [node name="EmbersSmall" type="Node2D" unique_id=1190645767]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1468326524]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_8crau")
 centered = false
-offset = Vector2(-8, -7)
+offset = Vector2(-10, -10)
 
 [node name="Light" type="PointLight2D" parent="." unique_id=889388214]
 position = Vector2(0, -4.4)

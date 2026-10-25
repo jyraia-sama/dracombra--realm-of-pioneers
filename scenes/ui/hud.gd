@@ -125,7 +125,9 @@ func _on_item_changed(item: ItemData, count: int) -> void:
 	if not _item_labels.has(item.id):
 		var icon := TextureRect.new()
 		icon.texture = item.icon
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.custom_minimum_size = Vector2(16, 16)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.tooltip_text = item.display_name
 		items_box.add_child(icon)
 		var label := Label.new()

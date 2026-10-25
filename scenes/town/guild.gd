@@ -10,7 +10,7 @@ const TEXTURES: Array[Texture2D] = [
 	preload("res://assets/sprites/buildings/guild_4.png"),
 ]
 ## Emprise au sol de chaque palier, en cases.
-const FOOTPRINTS: Array[Vector2] = [Vector2(1.0, 0.6), Vector2(3.0, 1.2), Vector2(5.0, 1.6), Vector2(6.0, 2.0), Vector2(8.0, 2.4)]
+const FOOTPRINTS: Array[Vector2] = [Vector2(1.0, 0.6), Vector2(3.0, 1.2), Vector2(3.2, 1.4), Vector2(3.8, 1.6), Vector2(5.6, 2.0)]
 ## Zone réservée à la guilde (sa plus grande emprise), pour que rien ne gêne ses agrandissements.
 const RESERVED := Rect2(-5.0, -3.0, 10.0, 4.0)
 
@@ -47,7 +47,9 @@ func refresh() -> void:
 	var sprite := Sprite2D.new()
 	sprite.texture = TEXTURES[tier]
 	sprite.centered = false
-	sprite.offset = Vector2(-sprite.texture.get_width() / 2.0, -sprite.texture.get_height() + 2)
+	# Dessin HD : deux pixels dessinés par pixel du monde.
+	sprite.scale = Vector2(0.5, 0.5)
+	sprite.offset = Vector2(-sprite.texture.get_width() / 2.0, -sprite.texture.get_height() + 4)
 	root.add_child(sprite)
 	# Le feu (ou les braseros) éclaire les alentours.
 	var light := PointLight2D.new()

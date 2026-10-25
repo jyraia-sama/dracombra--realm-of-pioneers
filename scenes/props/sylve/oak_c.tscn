@@ -3,22 +3,23 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/oak_c.png" id="1_e88a8"]
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_upxrs"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ssiqk"]
-size = Vector2(12, 6)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(10, 6)
 
 [node name="OakC" type="Node2D" unique_id=753318740]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1331410565]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_e88a8")
 centered = false
-offset = Vector2(-31, -72)
+offset = Vector2(-60, -118)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1269722897]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=2024062267]
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
 position = Vector2(0, -3)
-shape = SubResource("RectangleShape2D_ssiqk")
+shape = SubResource("Foot0")
 
 [node name="Harvest" type="Node2D" parent="." unique_id=358450918]
 script = ExtResource("2_upxrs")

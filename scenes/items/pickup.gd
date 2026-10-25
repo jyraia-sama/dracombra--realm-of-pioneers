@@ -18,6 +18,7 @@ var _collected := false
 func _ready() -> void:
 	if item != null:
 		sprite.texture = item.icon
+		sprite.scale = Vector2(0.5, 0.5)  # icône HD
 	_time = randf() * TAU
 
 

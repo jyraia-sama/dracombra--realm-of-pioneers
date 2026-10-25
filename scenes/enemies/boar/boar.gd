@@ -13,8 +13,8 @@ enum State { WANDER, IDLE, ALERT, CHARGE, HURT, DEAD }
 @export var hurt_duration: float = 0.2
 
 ## Planche boar.png (regard vers la droite) : marche, charge, puis touché (2) et mort (2).
-const ANIMS := {&"walk": [0, 4, 0.16], &"charge": [1, 4, 0.08], &"hurt": [2, 2, 0.1]}
-const COLUMNS := 4
+const ANIMS := {&"walk": [0, 6, 0.12], &"charge": [1, 6, 0.06], &"hurt": [2, 2, 0.1]}
+const COLUMNS := 6
 
 var state: State = State.IDLE
 var _timer := 1.0
@@ -148,7 +148,7 @@ func _on_died() -> void:
 	collision.set_deferred("disabled", true)
 	var tween := create_tween()
 	for i in [0, 1, 2, 3]:
-		tween.tween_callback(func(): sprite.frame = 2 * COLUMNS + i)
+		tween.tween_callback(func(): sprite.frame = 3 * COLUMNS + i)
 		tween.tween_interval(0.12 if i < 2 else 0.2)
 	tween.tween_interval(0.5)
 	tween.tween_property(visual, "modulate:a", 0.0, 0.4)

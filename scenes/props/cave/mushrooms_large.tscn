@@ -6,9 +6,10 @@
 [node name="MushroomsLarge" type="Node2D" unique_id=972322376]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1018170540]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_twlr6")
 centered = false
-offset = Vector2(-12, -22)
+offset = Vector2(-10, -18)
 
 [node name="Light" type="PointLight2D" parent="." unique_id=284744976]
 position = Vector2(0, -8.8)

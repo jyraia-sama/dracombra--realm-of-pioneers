@@ -2,19 +2,21 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/oak_big.png" id="1_oykd5"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_0apri"]
-size = Vector2(26, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(16, 6)
 
 [node name="OakBig" type="Node2D" unique_id=69794363]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1634590654]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_oykd5")
 centered = false
-offset = Vector2(-65, -103)
+offset = Vector2(-98, -180)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=2072691247]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1728600227]
-position = Vector2(0, -4)
-shape = SubResource("RectangleShape2D_0apri")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0, -3)
+shape = SubResource("Foot0")
+

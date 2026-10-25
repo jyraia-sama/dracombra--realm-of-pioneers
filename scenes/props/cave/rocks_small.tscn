@@ -3,19 +3,20 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/rocks_small.png" id="1_vkx36"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(10, 4)
+size = Vector2(4.5, 4)
 
 [node name="RocksSmall" type="Node2D" unique_id=610437490]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=376919415]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_vkx36")
 centered = false
-offset = Vector2(-7, -10)
+offset = Vector2(-6, -11)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=797481033]
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(0, -2)
+position = Vector2(0.25, -2)
 shape = SubResource("Foot0")
 

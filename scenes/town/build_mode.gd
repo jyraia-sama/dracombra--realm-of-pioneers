@@ -21,6 +21,7 @@ var _hint_layer: CanvasLayer
 func _ready() -> void:
 	z_index = 5
 	_ghost = Sprite2D.new()
+	_ghost.scale = Vector2(0.5, 0.5)  # dessins HD
 	_ghost.centered = false
 	_ghost.visible = false
 	add_child(_ghost)

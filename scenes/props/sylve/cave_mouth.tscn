@@ -5,6 +5,7 @@
 [node name="CaveMouth" type="Node2D" unique_id=1234441200]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1744635420]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_wyy4i")
 centered = false
-offset = Vector2(-28, -32)
+offset = Vector2(-48, -68)

@@ -4,20 +4,21 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_plwav"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(16, 4)
+size = Vector2(25.5, 4)
 
 [node name="DarkPool" type="Node2D" unique_id=1039073955]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1562635224]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_jd7rr")
 centered = false
-offset = Vector2(-24, -20)
+offset = Vector2(-36, -40)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=307892387]
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(0, -2)
+position = Vector2(-0.25, -2)
 shape = SubResource("Foot0")
 
 [node name="Light" type="PointLight2D" parent="." unique_id=1806770074]

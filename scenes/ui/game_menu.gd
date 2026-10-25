@@ -146,6 +146,7 @@ func _build_bag() -> void:
 	_bag_list.same_column_width = true
 	_bag_list.fixed_column_width = 140
 	_bag_list.add_theme_font_size_override("font_size", 11)
+	_bag_list.fixed_icon_size = Vector2i(16, 16)
 	_bag_list.item_selected.connect(_on_bag_selected)
 	_bag_list.item_activated.connect(func(_i: int) -> void: _on_bag_use())
 	box.add_child(_bag_list)
@@ -457,11 +458,23 @@ func _build_minimap() -> void:
 		_map_rect = _map_rect.merge(l.get_used_rect())
 	var img := Image.create(_map_rect.size.x, _map_rect.size.y, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0.05, 0.05, 0.07))
-	for l in layers:
-		for cell in l.get_used_cells():
-			var col := _tile_color(l, cell)
-			if col.a > 0.0:
-				img.set_pixelv(cell - _map_rect.position, col)
+	# Le sol dessiné (bords naturels, falaises) donne les vraies couleurs ; sinon, les tuiles.
+	var painter := scene.get_node_or_null("OrganicGround") as GroundPainter
+	var painted: Image = painter.cell_colors() if painter else null
+	if painted:
+		var at := painter.origin_cell - _map_rect.position
+		for y in painted.get_height():
+			for x in painted.get_width():
+				var c := painted.get_pixel(x, y)
+				var p := Vector2i(x, y) + at
+				if c.a > 0.5 and p.x >= 0 and p.y >= 0 and p.x < img.get_width() and p.y < img.get_height():
+					img.set_pixelv(p, Color(c.r, c.g, c.b))
+	else:
+		for l in layers:
+			for cell in l.get_used_cells():
+				var col := _tile_color(l, cell)
+				if col.a > 0.0:
+					img.set_pixelv(cell - _map_rect.position, col)
 	# Les arbres et les décors qui bloquent assombrissent la carte.
 	var props := scene.get_node_or_null("Props")
 	if props:

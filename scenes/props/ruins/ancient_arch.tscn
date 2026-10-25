@@ -2,19 +2,28 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/ruins/ancient_arch.png" id="1_aygb1"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_4wv2o"]
-size = Vector2(40, 8)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(10.5, 4)
+
+[sub_resource type="RectangleShape2D" id="Foot1"]
+size = Vector2(18, 4)
 
 [node name="AncientArch" type="Node2D" unique_id=1205774620]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1071440593]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_aygb1")
 centered = false
-offset = Vector2(-21, -34)
+offset = Vector2(-38, -77)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=2010576589]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=319587939]
-position = Vector2(0, -4)
-shape = SubResource("RectangleShape2D_4wv2o")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(-12.25, -2)
+shape = SubResource("Foot0")
+
+[node name="Foot1" type="CollisionShape2D" parent="Body"]
+position = Vector2(9, -2)
+shape = SubResource("Foot1")
+

@@ -41,6 +41,7 @@ func setup(building: BuildingData, site: Dictionary) -> void:
 	add_child(body)
 
 	_sprite = Sprite2D.new()
+	_sprite.scale = Vector2(0.5, 0.5)  # dessins HD
 	_sprite.centered = false
 	add_child(_sprite)
 

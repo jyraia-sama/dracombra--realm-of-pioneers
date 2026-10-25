@@ -7,22 +7,23 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_bhb2n"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(21, 4)
+size = Vector2(19.5, 4)
 
 [node name="CrystalPurpleLarge" type="Node2D" unique_id=287032521]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1711990090]
+scale = Vector2(0.5, 0.5)
 script = ExtResource("var_s")
 variants = Array[Texture2D]([ExtResource("var_b")])
 texture = ExtResource("1_jtycy")
 centered = false
-offset = Vector2(-12, -19)
+offset = Vector2(-20, -53)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1649936454]
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(-0.5, -2)
+position = Vector2(0.25, -2)
 shape = SubResource("Foot0")
 
 [node name="Light" type="PointLight2D" parent="." unique_id=806818073]

@@ -32,6 +32,9 @@ var _time: float = 0.0
 
 @onready var visual: Node2D = $Visual
 @onready var body_sprite: Sprite2D = $Visual/Body
+## Temps écoulé dans le coup de griffe (-1 = pas de coup en cours).
+var _claw_time := -1.0
+
 @onready var eye_light: PointLight2D = $Visual/EyeLight
 @onready var hurtbox: Hurtbox = $Hurtbox
 @onready var claw: Node2D = $Claw
@@ -63,6 +66,14 @@ func _process(delta: float) -> void:
 	# Respiration lente quand il dort, plus profonde et rapide une fois réveillé.
 	var breath := sin(_time * (3.0 if awake else 1.3)) * (0.02 if awake else 0.012)
 	visual.scale = Vector2(1.0 - breath * 0.5, 1.0 + breath)
+	# solakor.png (5 colonnes) : respiration 4 images, griffe 5, cabré 4, rugissement 3.
+	if _claw_time >= 0.0:
+		_claw_time += delta
+		body_sprite.frame = 5 + mini(int(_claw_time / (claw_telegraph / 4.0)), 4)
+	elif awake:
+		body_sprite.frame = int(_time / 0.22) % 4
+	else:
+		body_sprite.frame = 0
 
 
 func _physics_process(delta: float) -> void:
@@ -104,6 +115,7 @@ func stop_attacks() -> void:
 ## Avec `limit_reach` à false, la griffe frappe où que soit la cible (cinématique).
 func claw_attack(target: Vector2, color := Color(1.0, 0.15, 0.1, 0.35), limit_reach := true) -> void:
 	_busy = true
+	_claw_time = 0.0
 	var tile := float(Game.TILE_SIZE)
 	var local := to_local(target)
 	if limit_reach:
@@ -124,6 +136,7 @@ func claw_attack(target: Vector2, color := Color(1.0, 0.15, 0.1, 0.35), limit_re
 	await get_tree().create_timer(0.15).timeout
 	claw_hitbox.active = false
 	claw.visible = false
+	_claw_time = -1.0
 	_busy = false
 
 
@@ -141,9 +154,9 @@ func rock_volley(center: Vector2) -> void:
 		level.add_child(rock)
 
 
-func _set_eyes_open(open: bool) -> void:
-	# solakor.png : image 0 = endormi, image 1 = éveillé.
-	body_sprite.frame = 1 if open else 0
+func _set_eyes_open(_open: bool) -> void:
+	# Endormi : image fixe ; éveillé : il respire (voir _process).
+	body_sprite.frame = 0
 
 
 func _on_hit_received(hitbox: Hitbox) -> void:
