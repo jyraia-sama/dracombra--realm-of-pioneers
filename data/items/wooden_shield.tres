@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/items.png" id="2_icons"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icons")
+region = Rect2(768, 0, 32, 32)
+
+[resource]
+script = ExtResource("1_item")
+id = &"wooden_shield"
+display_name = "Bouclier de bois"
+icon = SubResource("AtlasTexture_icon")
+description = "Un bouclier rond cerclé de fer. Guerrier et clerc : pare plus souvent."
+category = &"equipment"
+slot = &"off"
+bonus = {&"def": 1, &"parry": 6}
+classes = Array[StringName]([&"warrior", &"cleric"])

@@ -16,6 +16,8 @@ enum State { WANDER, IDLE, ALERT, CHARGE, HURT, DEAD }
 const ANIMS := {&"walk": [0, 6, 0.12], &"charge": [1, 6, 0.06], &"hurt": [2, 2, 0.1]}
 const COLUMNS := 6
 
+## Hauteur de la barre de vie au-dessus de la tête.
+var overhead_height := 22.0
 var state: State = State.IDLE
 var _timer := 1.0
 var _dir := Vector2.RIGHT

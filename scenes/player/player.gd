@@ -17,6 +17,8 @@ enum State { NORMAL, DODGE, ATTACK, HURT, DEAD }
 @export var dodge_duration: float = 0.25
 ## Temps d'attente avant la prochaine esquive, en secondes.
 @export var dodge_cooldown: float = 0.4
+## Endurance dépensée par une roulade.
+const DODGE_COST := 4.0
 
 @export_group("Attaque")
 ## Durée d'une attaque, en secondes.
@@ -155,7 +157,11 @@ func _process_normal() -> void:
 	if input_locked or actions_locked:
 		return
 	if Input.is_action_just_pressed("dodge") and _dodge_cooldown_timer <= 0.0:
-		_start_dodge(direction)
+		if Hero.use_stamina(DODGE_COST):
+			_start_dodge(direction)
+		else:
+			_dodge_cooldown_timer = 0.5
+			Emote.show(self, "Endurance !", Color(0.55, 0.95, 0.5), 34.0)
 	elif Input.is_action_just_pressed("attack"):
 		_start_attack()
 
@@ -283,8 +289,13 @@ func _update_weapon(anim: StringName, dir: int, index: int) -> void:
 		angle = 0.0
 	_sword.rotation_degrees = angle * mirror
 	_sword.flip_h = sprite.flip_h
-	# De dos, l'épée passe derrière le corps.
-	_sword.z_index = -1 if dir == DIR_UP else 1
+	# De dos, l'épée passe derrière le corps. On change l'ordre des enfants (et non le
+	# z_index) : sinon l'arme passait devant les rochers et les murs placés devant le héros.
+	if dir == DIR_UP and _sword.get_index() > sprite.get_index():
+		visual.move_child(_sword, sprite.get_index())
+	elif dir != DIR_UP and _sword.get_index() < sprite.get_index():
+		visual.move_child(_sword, sprite.get_index())
+	_sword.z_index = 0
 
 
 func _start_attack() -> void:

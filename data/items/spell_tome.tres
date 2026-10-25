@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/items.png" id="2_icons"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icons")
+region = Rect2(832, 0, 32, 32)
+
+[resource]
+script = ExtResource("1_item")
+id = &"spell_tome"
+display_name = "Grimoire"
+icon = SubResource("AtlasTexture_icon")
+description = "Des formules recopiées sur toile. Mage et clerc : plus de mana."
+category = &"equipment"
+slot = &"off"
+bonus = {&"int": 2, &"mana": 10}
+classes = Array[StringName]([&"mage", &"cleric"])

@@ -150,6 +150,49 @@ func _run() -> void:
 	else:
 		_check(false, "sylve : un sanglier pour tester")
 
+	# --- Endurance et mana
+	var Inv := _g("Inventory")
+	HeroA.switch_to(&"warrior")
+	_check(not HeroA.uses_mana() and HeroA.mana_max() == 0.0 and HeroA.stamina_max() > 0.0, "guerrier : endurance, pas de mana")
+	HeroA.unlock(&"mage")
+	HeroA.switch_to(&"mage")
+	_check(HeroA.uses_mana() and HeroA.mana_max() > 0.0 and HeroA.stamina_max() > 0.0, "mage : endurance ET mana")
+	var st: float = HeroA.stamina
+	var mp: float = HeroA.mana
+	HeroA.energy = 1.0
+	_check(HeroA.mana == 1.0 and HeroA.stamina == st, "mage : les sorts puisent dans le mana, pas l'endurance")
+	HeroA.refill_energy()
+	_check(HeroA.use_stamina(4.0) and HeroA.stamina == HeroA.stamina_max() - 4.0, "la roulade coûte de l'endurance")
+	var hud := get_tree().current_scene.get_node_or_null("HUD")
+	if hud:
+		await _frames(2)
+		_check(hud.bars.show_mana, "HUD : barre de mana pour le mage")
+	HeroA.switch_to(&"warrior")
+	if hud:
+		await _frames(2)
+		_check(not hud.bars.show_mana and hud.bars.show_resources, "HUD : pas de barre de mana pour le guerrier")
+
+	# --- Équipement
+	var def0: int = HeroA.defense()
+	Inv.add_item(Inv.item_by_id(&"leather_armor"), 1)
+	Inv.add_item(Inv.item_by_id(&"quiver"), 1)
+	_check(HeroA.wear(&"leather_armor") and HeroA.defense() == def0 + 2, "armure de cuir : +2 défense (%d -> %d)" % [def0, HeroA.defense()])
+	_check(Inv.get_count(&"leather_armor") == 0, "l'armure portée quitte le sac")
+	_check(not HeroA.wear(&"quiver"), "le carquois ne se porte pas en guerrier")
+	var str0: int = HeroA.stat(&"str")
+	Inv.add_item(Inv.item_by_id(&"leather_gloves"), 1)
+	HeroA.wear(&"leather_gloves")
+	_check(HeroA.stat(&"str") == str0 + 1, "gants : +1 force")
+	menu.open(menu.TAB_GEAR)
+	await get_tree().process_frame
+	_check(menu._gear_buttons[&"body"].text.contains("Armure de cuir"), "menu : l'armure apparaît dans l'équipement")
+	menu._select_gear(&"body")
+	await get_tree().process_frame
+	(menu._gear_choices.get_child(0) as Button).pressed.emit()
+	_check(not HeroA.gear.has(&"body") and Inv.get_count(&"leather_armor") == 1, "menu : Retirer remet l'armure dans le sac")
+	HeroA.wear(&"leather_armor")
+	menu.close()
+
 	# --- Sauvegarde
 	SaveA.save_game()
 	var lvl: int = HeroA.level()
@@ -157,4 +200,5 @@ func _run() -> void:
 	SaveA.load_game()
 	await _until(func(): return get_tree().current_scene != null and not _g("Transition").is_busy and HeroA.level() == lvl, 400)
 	_check(HeroA.level() == 100 and HeroA.allocated(&"str") == 1 and HeroA.slots()[0] == &"whirlwind", "chargement : niveau, points et techniques restaurés")
+	_check(HeroA.gear.get(&"body") == &"leather_armor" and HeroA.gear.get(&"hands") == &"leather_gloves", "chargement : équipement restauré")
 	SaveA.delete_save()

@@ -18,3 +18,9 @@ extends Resource
 @export var use_heal: int = 0
 ## Catégorie, pour trier le sac : resource, food, equipment...
 @export var category: StringName = &"resource"
+## Équipement : emplacement où il se porte (head, body, hands, feet, main, off ; vide = ne se porte pas).
+@export var slot: StringName = &""
+## Bonus quand il est porté : {str, dex, int, wis, vit, def, dmg, parry, crit, stamina, mana}.
+@export var bonus: Dictionary = {}
+## Classes qui peuvent le porter (vide = toutes).
+@export var classes: Array[StringName] = []

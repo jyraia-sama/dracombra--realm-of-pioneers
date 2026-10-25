@@ -28,7 +28,7 @@ func _ready() -> void:
 	_sprite.vframes = 8
 	_sprite.centered = false
 	_sprite.scale = Vector2(0.5, 0.5)  # dessin HD
-	_sprite.offset = Vector2(-31, -64)
+	_sprite.offset = Vector2(-24, -50)
 	add_child(_sprite)
 	var body := StaticBody2D.new()
 	body.collision_layer = 1

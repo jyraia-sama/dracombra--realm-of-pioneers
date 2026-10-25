@@ -48,6 +48,8 @@ const ANIMS := {
 }
 const COLUMNS := 6
 
+## Hauteur de la barre de vie au-dessus de la tête.
+var overhead_height := 18.0
 var state: State = State.IDLE
 
 var _state_timer: float = 0.0

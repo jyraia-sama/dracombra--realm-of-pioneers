@@ -33,8 +33,8 @@ func _run() -> void:
 	var menu := get_tree().root.get_node("GameMenu")
 	await _key("pause")
 	_check(menu.is_open and get_tree().paused, "Échap ouvre le menu et met le jeu en pause")
-	await _key("move_right"); await _key("move_right"); await _key("move_right")
-	_check(menu._tabs.current_tab == 3, "D change d'onglet jusqu'à Système (%d)" % menu._tabs.current_tab)
+	await _key("move_right"); await _key("move_right"); await _key("move_right"); await _key("move_right")
+	_check(menu._tabs.current_tab == 4, "D change d'onglet jusqu'à Système (%d)" % menu._tabs.current_tab)
 	var focus := get_viewport().gui_get_focus_owner() as Button
 	_check(focus != null and focus.text.begins_with("Sauvegarder"), "le bouton Sauvegarder a le focus")
 	await _key("move_down")

@@ -42,6 +42,8 @@ const ROCK_SCENE := preload("res://scenes/enemies/rock_goblin/thrown_rock.tscn")
 @export_group("Dégâts reçus")
 @export var hurt_duration: float = 0.2
 
+## Hauteur de la barre de vie au-dessus de la tête.
+var overhead_height := 28.0
 var state: State = State.IDLE
 
 var _state_timer: float = 0.0

@@ -1,6 +1,6 @@
 extends CanvasLayer
-## Interface provisoire : points de vie, classe et jour, ressources, invite d'interaction.
-## Elle sera remplacée par de vrais cœurs et une vraie barre d'objets en pixel art.
+## Interface : cadre du héros (vie, endurance, mana, XP), classe et jour, objectif,
+## ressources du sac et invite d'interaction.
 
 @onready var health_label: Label = $HealthLabel
 @onready var items_box: HBoxContainer = $Items
@@ -10,19 +10,19 @@ var _item_labels: Dictionary[StringName, Label] = {}
 var _info: Label
 var _prompt: Label
 var _objective: Label
-var _xp_bar: Control
+var bars: StatBars
 var _hp := Vector2i(0, 0)
 
 
 func _ready() -> void:
-	_info = _make_label(Vector2(8, 22), 10)
-	_objective = _make_label(Vector2(8, 40), 10)
-	# Barre d'XP fine sous la ligne du héros.
-	_xp_bar = Control.new()
-	_xp_bar.position = Vector2(8, 37)
-	_xp_bar.size = Vector2(120, 3)
-	_xp_bar.draw.connect(_draw_xp)
-	add_child(_xp_bar)
+	# Le texte « PV : x / y » reste calculé (tests), mais ce sont les barres qu'on voit.
+	health_label.visible = false
+	bars = StatBars.new()
+	bars.name = "StatBars"
+	bars.position = Vector2(7, 6)
+	add_child(bars)
+	_info = _make_label(Vector2(8, 40), 9)
+	_objective = _make_label(Vector2(8, 52), 10)
 	_objective.add_theme_color_override("font_color", Color(1.0, 0.86, 0.5))
 	_prompt = _make_label(Vector2(0, 0), 12)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -47,7 +47,6 @@ func _ready() -> void:
 	bar_layer.layer = 21
 	add_child(bar_layer)
 	bar_layer.add_child(hotbar)
-	Hero.class_changed.connect(func(_c: StringName) -> void: hotbar.visible = Game.has_flag(&"prologue_done"))
 
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player == null:
@@ -80,8 +79,7 @@ func _make_label(at: Vector2, size: int) -> Label:
 func _process(_delta: float) -> void:
 	_objective.text = Quests.objective_text()
 	_refresh_health()
-	_xp_bar.visible = Game.has_flag(&"prologue_done")
-	_xp_bar.queue_redraw()
+	_refresh_bars()
 	var hotbar := get_node_or_null("HotbarLayer/Hotbar") as Control
 	if hotbar:
 		hotbar.visible = Game.has_flag(&"prologue_done")
@@ -92,7 +90,7 @@ func _refresh_info() -> void:
 		_info.text = ""
 		return
 	var pts := Hero.free_points()
-	_info.text = "%s · %s niv. %d · Jour %d%s" % [Hero.hero_name, Hero.info()["name"], Hero.level(), Game.day,
+	_info.text = "%s · %s · Jour %d%s" % [Hero.hero_name, Hero.info()["name"], Game.day,
 		"  (+%d points : menu Personnage)" % pts if pts > 0 else ""]
 
 
@@ -114,14 +112,28 @@ func _refresh_health() -> void:
 	health_label.text = text
 
 
-func _draw_xp() -> void:
+func _refresh_bars() -> void:
+	var done := Game.has_flag(&"prologue_done")
+	bars.visible = _hp.y > 0
+	bars.show_resources = done
+	bars.show_mana = done and Hero.uses_mana()
+	bars.set_values(_hp.x, _hp.y, Hero.stamina, Hero.stamina_max(), Hero.mana, Hero.mana_max())
 	var need := Hero.xp_to_next(Hero.level())
-	var ratio := 1.0 if need == 0 else clampf(float(Hero.xp.get(Hero.current, 0)) / need, 0.0, 1.0)
-	_xp_bar.draw_rect(Rect2(Vector2.ZERO, _xp_bar.size), Color(0, 0, 0, 0.6))
-	_xp_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(_xp_bar.size.x * ratio, _xp_bar.size.y)), Color(1.0, 0.82, 0.35))
+	bars.xp_ratio = 1.0 if need == 0 else clampf(float(Hero.xp.get(Hero.current, 0)) / need, 0.0, 1.0)
+	bars.level = Hero.level()
+	var key := int(Hero.info()["icon"]) if done else 272
+	if bars.icon == null or bars.icon.get_meta("cell", -1) != key:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = load("res://assets/sprites/items/items.png")
+		atlas.region = Rect2(key * 2, 0, 32, 32)
+		atlas.set_meta("cell", key)
+		bars.icon = atlas
 
 
 func _on_item_changed(item: ItemData, count: int) -> void:
+	# L'équipement à porter ne s'affiche pas en haut de l'écran (il est dans le menu).
+	if item.slot != &"":
+		return
 	if not _item_labels.has(item.id):
 		var icon := TextureRect.new()
 		icon.texture = item.icon

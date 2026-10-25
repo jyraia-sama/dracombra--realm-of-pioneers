@@ -11,6 +11,7 @@ signal leveled_up(id: StringName, level: int)
 signal stats_changed
 signal skill_learned(id: StringName)
 signal energy_changed(current: float, maximum: float)
+signal gear_changed
 
 ## Niveau maximum de chaque classe (à ajuster plus tard).
 const MAX_LEVEL := 100
@@ -73,8 +74,21 @@ var points: Dictionary = {}
 var unspent: Dictionary = {}
 ## Techniques placées dans la barre, par classe : {classe: [id, id, id]}.
 var equipped: Dictionary = {}
-## Endurance ou mana actuelle (remplie à chaque chargement).
-var energy: float = 0.0
+## Endurance : toutes les classes en ont (roulade, techniques des guerriers et archers).
+var stamina: float = 0.0
+## Mana : seulement les classes de magie (mage, clerc), pour leurs sorts.
+var mana: float = 0.0
+## La ressource des techniques de la classe : le mana pour la magie, sinon l'endurance.
+var energy: float:
+	get:
+		return mana if uses_mana() else stamina
+	set(value):
+		if uses_mana():
+			mana = value
+		else:
+			stamina = value
+## Équipement porté : {emplacement: identifiant de l'objet}. Partagé par toutes les classes.
+var gear: Dictionary = {}
 ## Effets temporaires : {stat: [valeur, fin en ms]}.
 var _buffs: Dictionary = {}
 
@@ -88,8 +102,9 @@ func reset() -> void:
 	unspent = {}
 	equipped = {}
 	_buffs.clear()
+	gear = {}
 	_auto_equip(&"warrior")
-	energy = energy_max()
+	refill_energy()
 
 
 func info(id: StringName = &"") -> Dictionary:
@@ -114,7 +129,7 @@ func stat(key: StringName, cls: StringName = &"") -> int:
 	var c := current if cls == &"" else cls
 	var data: Dictionary = CLASSES[c]
 	var base := float(data["stats"][key]) + float(data["growth"][key]) * (level(c) - 1)
-	return int(floor(base)) + allocated(key, c)
+	return int(floor(base)) + allocated(key, c) + gear_bonus(key)
 
 
 func allocated(key: StringName, cls: StringName = &"") -> int:
@@ -168,7 +183,7 @@ func damage() -> int:
 	var data := info()
 	var main: StringName = data["main"]
 	var gain := maxi(stat(main) - int(data["stats"][main]), 0)
-	return int(data["damage"]) + gain / 5
+	return int(data["damage"]) + gain / 5 + gear_bonus(&"dmg")
 
 
 ## Dégâts d'un coup, effets temporaires compris. crit : le coup est-il critique ?
@@ -181,30 +196,60 @@ func hit_damage(mult: float = 1.0, crit: bool = false) -> int:
 
 ## Réduction des dégâts reçus (toujours au moins 1 dégât).
 func defense() -> int:
-	return stat(&"vit") / 10
+	return stat(&"vit") / 10 + gear_bonus(&"def")
 
 
 ## Chance de parer complètement un coup, en %.
 func parry_chance() -> float:
-	return minf(25.0, stat(&"dex") * 0.25 + stat(&"vit") * 0.1)
+	return minf(30.0, stat(&"dex") * 0.25 + stat(&"vit") * 0.1 + gear_bonus(&"parry"))
 
 
 ## Chance de coup critique (double dégâts), en %.
 func crit_chance() -> float:
-	return minf(60.0, 2.0 + stat(&"dex") * 0.4 + buff(&"crit", 0.0))
+	return minf(60.0, 2.0 + stat(&"dex") * 0.4 + buff(&"crit", 0.0) + gear_bonus(&"crit"))
 
 
 func roll_crit() -> bool:
 	return randf() * 100.0 < crit_chance()
 
 
+func uses_mana(cls: StringName = &"") -> bool:
+	return info(cls)["resource"] == "Mana"
+
+
+## Endurance maximum : vitalité et dextérité (et le bonus de la classe qui s'en sert).
+func stamina_max() -> float:
+	var v := 12.0 + stat(&"vit") + stat(&"dex") + gear_bonus(&"stamina")
+	if not uses_mana():
+		v += stat(info()["res_stat"])
+	return v
+
+
+## Mana maximum (0 pour les classes sans magie).
+func mana_max() -> float:
+	if not uses_mana():
+		return 0.0
+	return 10.0 + 2.0 * stat(info()["res_stat"]) + gear_bonus(&"mana")
+
+
+## Maximum de la ressource des techniques de la classe.
 func energy_max() -> float:
-	return 10.0 + 2.0 * stat(info()["res_stat"])
+	return mana_max() if uses_mana() else stamina_max()
 
 
-## Endurance ou mana récupérée par seconde.
-func energy_regen() -> float:
+## Endurance récupérée par seconde (vite, dès qu'on souffle un peu).
+func stamina_regen() -> float:
+	return 3.0 + stat(&"dex") * 0.05 + stat(&"vit") * 0.05
+
+
+## Mana récupéré par seconde (lentement : la sagesse l'accélère).
+func mana_regen() -> float:
 	return 1.0 + stat(&"wis") * 0.1
+
+
+## Endurance ou mana récupérée par seconde (la ressource de la classe).
+func energy_regen() -> float:
+	return mana_regen() if uses_mana() else stamina_regen()
 
 
 func use_energy(amount: float) -> bool:
@@ -215,13 +260,101 @@ func use_energy(amount: float) -> bool:
 	return true
 
 
+## Dépense de l'endurance (roulade...). Pendant le prologue, rien n'est compté.
+func use_stamina(amount: float) -> bool:
+	if not Game.has_flag(&"prologue_done"):
+		return true
+	if stamina < amount:
+		return false
+	stamina -= amount
+	energy_changed.emit(energy, energy_max())
+	return true
+
+
+func refill_energy() -> void:
+	stamina = stamina_max()
+	mana = mana_max()
+
+
 func regen_energy(delta: float) -> void:
-	var top := energy_max()
-	if energy >= top:
-		energy = top
+	var s_top := stamina_max()
+	var m_top := mana_max()
+	if stamina >= s_top and mana >= m_top:
+		stamina = s_top
+		mana = m_top
 		return
-	energy = minf(energy + energy_regen() * delta, top)
-	energy_changed.emit(energy, top)
+	stamina = minf(stamina + stamina_regen() * delta, s_top)
+	mana = minf(mana + mana_regen() * delta, m_top)
+	energy_changed.emit(energy, energy_max())
+
+
+# ------------------------------------------------------------------ équipement
+
+## Emplacements d'équipement, dans l'ordre du menu.
+const GEAR_SLOTS: Array[StringName] = [&"head", &"body", &"hands", &"feet", &"main", &"off"]
+const GEAR_NAMES := {&"head": "Tête", &"body": "Armure", &"hands": "Gants", &"feet": "Bottes",
+	&"main": "Arme principale", &"off": "Arme secondaire"}
+## Noms des bonus d'équipement.
+const BONUS_NAMES := {&"str": "Force", &"dex": "Dextérité", &"int": "Intelligence", &"wis": "Sagesse",
+	&"vit": "Vitalité", &"def": "Défense", &"dmg": "Dégâts", &"parry": "Parade %", &"crit": "Critique %",
+	&"stamina": "Endurance", &"mana": "Mana"}
+const BONUS_SHORT := {&"str": "FOR", &"dex": "DEX", &"int": "INT", &"wis": "SAG", &"vit": "VIT", &"def": "DÉF",
+	&"dmg": "DÉG", &"parry": "% parade", &"crit": "% crit.", &"stamina": "END", &"mana": "Mana"}
+
+
+## L'objet peut-il être porté par la classe actuelle ?
+func can_wear(item: ItemData) -> bool:
+	if item == null or item.slot == &"":
+		return false
+	return item.classes.is_empty() or item.classes.has(current)
+
+
+## Bonus total de l'équipement porté pour une caractéristique (seulement les objets
+## utilisables par la classe actuelle).
+func gear_bonus(key: StringName) -> int:
+	var total := 0
+	for slot in gear:
+		var item := Inventory.item_by_id(gear[slot])
+		if item and can_wear(item):
+			total += int(item.bonus.get(key, 0))
+	return total
+
+
+func worn(slot: StringName) -> ItemData:
+	return Inventory.item_by_id(gear[slot]) if gear.has(slot) else null
+
+
+## Porte un objet du sac (l'objet déjà porté à cet endroit retourne dans le sac).
+func wear(id: StringName) -> bool:
+	var item := Inventory.item_by_id(id)
+	if not can_wear(item) or Inventory.get_count(id) <= 0:
+		return false
+	Inventory.remove_item(item, 1)
+	if gear.has(item.slot):
+		Inventory.add_item(Inventory.item_by_id(gear[item.slot]), 1)
+	gear[item.slot] = id
+	_gear_updated()
+	return true
+
+
+## Retire l'objet porté et le range dans le sac.
+func take_off(slot: StringName) -> bool:
+	if not gear.has(slot):
+		return false
+	var item := Inventory.item_by_id(gear[slot])
+	gear.erase(slot)
+	if item:
+		Inventory.add_item(item, 1)
+	_gear_updated()
+	return true
+
+
+func _gear_updated() -> void:
+	stamina = minf(stamina, stamina_max())
+	mana = minf(mana, mana_max())
+	_refresh_player(false)
+	gear_changed.emit()
+	stats_changed.emit()
 
 
 # ------------------------------------------------------------------ effets temporaires
@@ -314,7 +447,7 @@ func switch_to(id: StringName) -> bool:
 	current = id
 	_auto_equip(id)
 	clear_buffs()
-	energy = energy_max()
+	refill_energy()
 	class_changed.emit(id)
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:
@@ -332,7 +465,7 @@ func gain_xp(amount: int) -> void:
 		unspent[current] = free_points() + POINTS_PER_LEVEL
 		var player := get_tree().get_first_node_in_group("player") as Player
 		_refresh_player(true)
-		energy = energy_max()
+		refill_energy()
 		if player:
 			Emote.show(player, "Niv. %d" % level(), Color(1.0, 0.9, 0.4), 34.0)
 		leveled_up.emit(current, level())
@@ -385,8 +518,11 @@ func serialize() -> Dictionary:
 		for id in equipped[c]:
 			ids.append(String(id))
 		eq[String(c)] = ids
+	var worn_gear := {}
+	for slot in gear:
+		worn_gear[String(slot)] = String(gear[slot])
 	return {"name": hero_name, "current": String(current), "unlocked": u, "levels": lv, "xp": x,
-		"points": pts, "unspent": free, "equipped": eq}
+		"points": pts, "unspent": free, "equipped": eq, "gear": worn_gear}
 
 
 func deserialize(data: Dictionary) -> void:
@@ -420,4 +556,8 @@ func deserialize(data: Dictionary) -> void:
 		if not data.has("unspent"):
 			unspent[c] = (level(c) - 1) * POINTS_PER_LEVEL
 		_auto_equip(c)
-	energy = energy_max()
+	var worn_gear: Dictionary = data.get("gear", {})
+	for slot in worn_gear:
+		if Inventory.item_by_id(StringName(worn_gear[slot])):
+			gear[StringName(slot)] = StringName(worn_gear[slot])
+	refill_energy()

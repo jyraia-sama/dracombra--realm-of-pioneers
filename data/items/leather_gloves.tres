@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/items.png" id="2_icons"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icons")
+region = Rect2(704, 0, 32, 32)
+
+[resource]
+script = ExtResource("1_item")
+id = &"leather_gloves"
+display_name = "Gants de cuir"
+icon = SubResource("AtlasTexture_icon")
+description = "Des gants souples : meilleure prise sur l'arme, coups plus sûrs."
+category = &"equipment"
+slot = &"hands"
+bonus = {&"str": 1, &"dex": 1}
+classes = Array[StringName]([])

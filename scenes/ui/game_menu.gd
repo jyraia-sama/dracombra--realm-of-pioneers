@@ -1,9 +1,14 @@
 extends CanvasLayer
-## Menu du jeu (Échap / Start) : Sac, Personnage, Carte, Système.
+## Menu du jeu (Échap / Start) : Sac, Personnage, Équipement, Carte, Système.
 ## Raccourcis : I (ou LB) ouvre le sac, M (ou Select) ouvre la carte.
 ## Le jeu est en pause tant que le menu est ouvert.
 
-const TABS := ["Sac", "Personnage", "Carte", "Système"]
+const TABS := ["Sac", "Personnage", "Équipement", "Carte", "Système"]
+const TAB_BAG := 0
+const TAB_HERO := 1
+const TAB_GEAR := 2
+const TAB_MAP := 3
+const TAB_SYSTEM := 4
 
 var is_open := false
 
@@ -25,6 +30,14 @@ var _skill_box: VBoxContainer
 var _skill_info: Label
 var _slot_buttons: Array[Button] = []
 var _selected_skill: StringName = &""
+# Équipement
+var _gear_buttons: Dictionary = {}
+var _gear_slot: StringName = &"head"
+var _gear_title: Label
+var _gear_info: Label
+var _gear_choices: VBoxContainer
+var _gear_total: Label
+var _gear_portrait: TextureRect
 # Carte
 var _map_view: TextureRect
 var _map_marker: Control
@@ -58,6 +71,7 @@ func _ready() -> void:
 	_root.add_child(_tabs)
 	_build_bag()
 	_build_sheet()
+	_build_gear()
 	_build_map()
 	_build_system()
 	_tabs.tab_changed.connect(func(_i: int) -> void: _refresh())
@@ -72,8 +86,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel") \
-				or (event.is_action_pressed("bag") and _tabs.current_tab == 0) \
-				or (event.is_action_pressed("map") and _tabs.current_tab == 2):
+				or (event.is_action_pressed("bag") and _tabs.current_tab == TAB_BAG) \
+				or (event.is_action_pressed("map") and _tabs.current_tab == TAB_MAP):
 			get_viewport().set_input_as_handled()
 			close()
 		elif event.is_action_pressed("move_left"):
@@ -92,7 +106,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("bag"):
 		tab = 0
 	elif event.is_action_pressed("map"):
-		tab = 2
+		tab = TAB_MAP
 	if tab >= 0:
 		get_viewport().set_input_as_handled()
 		open(tab)
@@ -125,9 +139,12 @@ func _refresh() -> void:
 				if b is Button and not b.disabled:
 					b.grab_focus()
 					break
-		2:
+		TAB_GEAR:
+			_refresh_gear()
+			_gear_buttons[_gear_slot].grab_focus()
+		TAB_MAP:
 			_refresh_map()
-		3:
+		TAB_SYSTEM:
 			_save_button.disabled = not Game.has_flag(&"prologue_done")
 			_save_button.text = "Sauvegarder" if not _save_button.disabled else "Sauvegarder (après le prologue)"
 			_save_button.grab_focus()
@@ -190,8 +207,17 @@ func _on_bag_selected(index: int) -> void:
 	for cls in Hero.CLASSES:
 		if Hero.CLASSES[cls]["item"] == item.id:
 			text += "\n\nDébloque la classe %s." % Hero.CLASSES[cls]["name"]
+	if item.slot != &"":
+		text += "\n\n%s : %s" % [Hero.GEAR_NAMES.get(item.slot, ""), bonus_text(item)]
+		if not item.classes.is_empty():
+			var names: Array[String] = []
+			for c in item.classes:
+				names.append(Hero.CLASSES[c]["name"])
+			text += "\nClasses : %s" % ", ".join(names)
 	_bag_info.text = text
-	_bag_use.visible = item.use_heal > 0
+	_bag_use.text = "Porter" if item.slot != &"" else "Utiliser"
+	_bag_use.visible = item.use_heal > 0 or item.slot != &""
+	_bag_use.disabled = item.slot != &"" and not Hero.can_wear(item)
 
 
 func _on_bag_use() -> void:
@@ -200,7 +226,9 @@ func _on_bag_use() -> void:
 		return
 	var item := Inventory.item_by_id(_bag_ids[sel[0]])
 	var player := get_tree().get_first_node_in_group("player") as Player
-	if item.use_heal > 0 and player and player.health.current_health < player.health.max_health:
+	if item.slot != &"":
+		Hero.wear(item.id)
+	elif item.use_heal > 0 and player and player.health.current_health < player.health.max_health:
 		Inventory.remove_item(item, 1)
 		player.health.heal(item.use_heal)
 	var keep := sel[0]
@@ -318,8 +346,11 @@ func _refresh_sheet() -> void:
 	lines.append("[b]%s[/b] — %s, niveau %d / %d" % [Hero.hero_name, c["name"], lvl, Hero.MAX_LEVEL])
 	lines.append("XP : %s" % ("niveau maximum" if need == 0 else "%d / %d" % [int(Hero.xp.get(Hero.current, 0)), need]))
 	if player:
-		lines.append("PV : %d / %d    %s : %d / %d" % [player.health.current_health, player.health.max_health,
-			c["resource"], int(Hero.energy), int(Hero.energy_max())])
+		var res := "PV : %d / %d    Endurance : %d / %d" % [player.health.current_health, player.health.max_health,
+			int(Hero.stamina), int(Hero.stamina_max())]
+		if Hero.uses_mana():
+			res += "    Mana : %d / %d" % [int(Hero.mana), int(Hero.mana_max())]
+		lines.append(res)
 	var pts := Hero.free_points()
 	lines.append("[color=#ffd36e]Points à répartir : %d[/color]" % pts if pts > 0 else "Points à répartir : 0 (+%d par niveau)" % Hero.POINTS_PER_LEVEL)
 	_sheet.text = "\n".join(lines)
@@ -552,6 +583,171 @@ func _draw_markers() -> void:
 		var p: Vector2 = to_map.call(player.global_position)
 		_map_marker.draw_circle(p, 4.0, Color.BLACK)
 		_map_marker.draw_circle(p, 3.0, Color.WHITE)
+
+
+# ------------------------------------------------------------------ l'équipement
+
+func _build_gear() -> void:
+	var box := HBoxContainer.new()
+	box.name = "Équipement"
+	box.add_theme_constant_override("separation", 10)
+	_tabs.add_child(box)
+	# Les six emplacements.
+	var slots := VBoxContainer.new()
+	slots.custom_minimum_size = Vector2(190, 0)
+	slots.add_theme_constant_override("separation", 3)
+	box.add_child(slots)
+	for slot in Hero.GEAR_SLOTS:
+		var b := Button.new()
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.add_theme_font_size_override("font_size", 11)
+		b.expand_icon = false
+		b.add_theme_constant_override("icon_max_width", 16)
+		b.custom_minimum_size = Vector2(0, 22)
+		b.focus_entered.connect(func() -> void: _select_gear(slot))
+		b.pressed.connect(func() -> void:
+			_select_gear(slot)
+			for c in _gear_choices.get_children():
+				if c is Button and not c.disabled:
+					c.grab_focus()
+					return)
+		slots.add_child(b)
+		_gear_buttons[slot] = b
+	# Au milieu : le héros et le total des bonus.
+	var mid := VBoxContainer.new()
+	mid.custom_minimum_size = Vector2(130, 0)
+	mid.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_child(mid)
+	_gear_portrait = TextureRect.new()
+	_gear_portrait.custom_minimum_size = Vector2(128, 112)
+	_gear_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_gear_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_gear_portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	mid.add_child(_gear_portrait)
+	_gear_total = _small("", 10)
+	_gear_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_gear_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_gear_total.add_theme_color_override("font_color", Color(0.8, 0.78, 0.86))
+	mid.add_child(_gear_total)
+	# À droite : ce qu'on peut porter à l'emplacement choisi.
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.custom_minimum_size = Vector2(180, 0)
+	right.add_theme_constant_override("separation", 3)
+	box.add_child(right)
+	_gear_title = _small("", 12)
+	_gear_title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.45))
+	right.add_child(_gear_title)
+	_gear_info = _small("", 10)
+	_gear_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	right.add_child(_gear_info)
+	_gear_choices = VBoxContainer.new()
+	_gear_choices.add_theme_constant_override("separation", 2)
+	right.add_child(_gear_choices)
+
+
+static func bonus_text(item: ItemData, short: bool = false) -> String:
+	var parts: Array[String] = []
+	var names: Dictionary = Hero.BONUS_SHORT if short else Hero.BONUS_NAMES
+	for k in item.bonus:
+		parts.append("+%d %s" % [int(item.bonus[k]), names.get(k, String(k))])
+	return ", ".join(parts)
+
+
+var _blank: Texture2D
+
+
+## Case vide d'un emplacement (pour aligner le texte).
+func _empty_icon() -> Texture2D:
+	if _blank == null:
+		var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+		img.fill(Color(0, 0, 0, 0))
+		for i in 16:
+			for j in [0, 15]:
+				img.set_pixel(i, j, Color(1, 1, 1, 0.25))
+				img.set_pixel(j, i, Color(1, 1, 1, 0.25))
+		_blank = ImageTexture.create_from_image(img)
+	return _blank
+
+
+func _class_weapon() -> ItemData:
+	var ids := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"holy_symbol"}
+	return Inventory.item_by_id(ids.get(Hero.current, &"sword"))
+
+
+func _refresh_gear() -> void:
+	for slot in Hero.GEAR_SLOTS:
+		var b: Button = _gear_buttons[slot]
+		var item := Hero.worn(slot)
+		if slot == &"main" and item == null:
+			item = _class_weapon()
+		b.icon = item.icon if item else _empty_icon()
+		b.text = "%s : %s" % [Hero.GEAR_NAMES[slot], item.display_name if item else "—"]
+		var active := item == null or slot == &"main" or Hero.can_wear(item)
+		b.modulate = Color.WHITE if active else Color(1, 1, 1, 0.5)
+	# Portrait : la première image du héros (de face).
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player and player.sprite.texture:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = player.sprite.texture
+		var w := player.sprite.texture.get_width() / player.sprite.hframes
+		var h := player.sprite.texture.get_height() / player.sprite.vframes
+		atlas.region = Rect2(0, 0, w, h)
+		_gear_portrait.texture = atlas
+	var totals: Array[String] = ["Défense %d" % Hero.defense(), "Parade %d %%" % int(Hero.parry_chance()),
+		"Critique %d %%" % int(Hero.crit_chance()), "Endurance %d" % int(Hero.stamina_max())]
+	if Hero.uses_mana():
+		totals.append("Mana %d" % int(Hero.mana_max()))
+	_gear_total.text = "%s · %s\n%s\n%s" % [totals[0], totals[1], totals[2], " · ".join(totals.slice(3))]
+	_select_gear(_gear_slot)
+
+
+func _select_gear(slot: StringName) -> void:
+	_gear_slot = slot
+	_gear_title.text = Hero.GEAR_NAMES[slot]
+	for c in _gear_choices.get_children():
+		c.queue_free()
+	var worn := Hero.worn(slot)
+	var info := ""
+	if slot == &"main" and worn == null:
+		var w := _class_weapon()
+		info = "%s — l'arme du %s.\nL'arme principale suit la classe : changez de classe à la guilde de Dracombra." % [
+			w.display_name if w else "?", String(Hero.info()["name"]).to_lower()]
+	elif worn:
+		info = "Porté : %s\n%s" % [worn.display_name, bonus_text(worn)]
+		if not Hero.can_wear(worn):
+			info += "\n(sans effet pour un %s)" % String(Hero.info()["name"]).to_lower()
+		var off := _small_button("Retirer (ranger dans le sac)")
+		off.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		off.pressed.connect(func() -> void:
+			Hero.take_off(slot)
+			_refresh_gear()
+			_gear_buttons[slot].grab_focus())
+		_gear_choices.add_child(off)
+	else:
+		info = "Rien de porté."
+	var found := 0
+	for item in Inventory.get_items():
+		if item.slot != slot:
+			continue
+		found += 1
+		var b := _small_button("%s  %s" % [item.display_name, bonus_text(item, true)])
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
+		b.icon = item.icon
+		b.expand_icon = false
+		b.add_theme_constant_override("icon_max_width", 16)
+		b.disabled = not Hero.can_wear(item)
+		if b.disabled:
+			b.tooltip_text = "Pas pour cette classe."
+		b.pressed.connect(func() -> void:
+			Hero.wear(item.id)
+			_refresh_gear()
+			_gear_buttons[slot].grab_focus())
+		_gear_choices.add_child(b)
+	if found == 0 and slot != &"main":
+		info += "\n\nRien dans le sac pour cet emplacement. Fabriquez-en à l'établi (cuir, bois, toile...)."
+	_gear_info.text = info
 
 
 # ------------------------------------------------------------------ système

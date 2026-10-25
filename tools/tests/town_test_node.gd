@@ -188,7 +188,7 @@ func _run() -> void:
 	menu._tabs.current_tab = 1
 	await get_tree().process_frame
 	_check(menu._sheet.text.contains("Testeur") and menu._sheet.text.contains("Archer"), "menu : fiche du personnage")
-	menu._tabs.current_tab = 2
+	menu._tabs.current_tab = 3
 	await get_tree().process_frame
 	_check(menu._map_view.texture != null, "menu : carte de Dracombra")
 	menu.close()

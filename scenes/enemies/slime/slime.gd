@@ -21,6 +21,8 @@ enum State { IDLE, CHASE, HURT, DEAD }
 ## Durée pendant laquelle le slime est repoussé après un coup, en secondes.
 @export var hurt_duration: float = 0.2
 
+## Hauteur de la barre de vie au-dessus de la tête.
+var overhead_height := 14.0
 var state: State = State.IDLE
 
 var _state_timer: float = 0.0

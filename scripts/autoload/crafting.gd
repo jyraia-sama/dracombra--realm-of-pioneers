@@ -12,6 +12,14 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"staff", "n": 1, "station": &"workbench", "in": {&"wood": 3, &"gem": 1, &"cloth": 2}},
 	{"out": &"holy_symbol", "n": 1, "station": &"workbench", "in": {&"wood": 2, &"cloth": 2, &"balm": 1}},
 	{"out": &"leather", "n": 1, "station": &"drying_rack", "in": {&"hide": 1}},
+	# Équipement (menu Équipement : Tête, Armure, Gants, Bottes, Arme secondaire).
+	{"out": &"leather_hood", "n": 1, "station": &"workbench", "in": {&"leather": 2, &"cloth": 1}},
+	{"out": &"leather_armor", "n": 1, "station": &"workbench", "in": {&"leather": 4, &"rope": 1}},
+	{"out": &"leather_gloves", "n": 1, "station": &"workbench", "in": {&"leather": 2}},
+	{"out": &"leather_boots", "n": 1, "station": &"workbench", "in": {&"leather": 2, &"hide": 1}},
+	{"out": &"wooden_shield", "n": 1, "station": &"workbench", "in": {&"wood": 5, &"leather": 1, &"stone": 1}},
+	{"out": &"quiver", "n": 1, "station": &"workbench", "in": {&"leather": 2, &"rope": 1, &"wood": 2}},
+	{"out": &"spell_tome", "n": 1, "station": &"workbench", "in": {&"cloth": 2, &"leather": 1, &"gem": 1}},
 ]
 const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à peaux", &"camp": "Feu de camp"}
 

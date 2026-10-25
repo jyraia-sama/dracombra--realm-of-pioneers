@@ -11,6 +11,7 @@ var _panel: PanelContainer
 var _title: Label
 var _body: Label
 var _buttons: VBoxContainer
+var _scroll: ScrollContainer
 
 
 func _ready() -> void:
@@ -38,8 +39,14 @@ func _ready() -> void:
 	_body.add_theme_font_size_override("font_size", 12)
 	_body.custom_minimum_size = Vector2(280, 0)
 	box.add_child(_body)
+	# Les longues listes (recettes de l'établi) défilent au lieu de sortir de l'écran.
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
+	box.add_child(_scroll)
 	_buttons = VBoxContainer.new()
-	box.add_child(_buttons)
+	_buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll.add_child(_buttons)
 	_panel.visible = false
 
 
@@ -62,10 +69,16 @@ func ask(title: String, body: String, options: Array, bottom: bool = false) -> i
 		var b := Button.new()
 		b.text = options[i]
 		b.pressed.connect(func(): _picked.emit(i))
+		if options.size() > 7:
+			b.add_theme_font_size_override("font_size", 12)
 		_buttons.add_child(b)
+	_scroll.custom_minimum_size = Vector2.ZERO
+	_scroll.scroll_vertical = 0
 	_panel.visible = true
 	# Le panneau se recentre une fois sa taille connue.
 	await get_tree().process_frame
+	_scroll.custom_minimum_size = Vector2(0, minf(_buttons.get_combined_minimum_size().y, 230.0))
+	_panel.reset_size()
 	if bottom:
 		_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 10)
 	else:

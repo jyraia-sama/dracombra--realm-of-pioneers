@@ -53,6 +53,9 @@ func take_damage(amount: int) -> void:
 	_invulnerability_timer = invulnerability_duration
 	damaged.emit(amount)
 	health_changed.emit(current_health, max_health)
+	var body := get_parent() as Node2D
+	if body and body.is_in_group("enemies") and amount > 0:
+		EnemyOverhead.on_damaged(body, self, amount)
 	if current_health == 0:
 		died.emit()
 
