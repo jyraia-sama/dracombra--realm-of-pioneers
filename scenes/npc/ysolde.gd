@@ -6,6 +6,13 @@ extends Node2D
 ## habitante de la guilde.
 
 const SHEET := preload("res://assets/sprites/npc/ysolde.png")
+## Planche ysolde.png (6 colonnes) : [rangée, images, durée d'une image].
+const ANIMS := {
+	&"idle_down": [0, 4, 0.3], &"idle_up": [1, 4, 0.3], &"idle_side": [2, 4, 0.3],
+	&"walk_down": [3, 6, 0.12], &"walk_up": [4, 6, 0.12], &"walk_side": [5, 6, 0.12],
+	&"heal": [6, 4, 0.25], &"mortar": [7, 4, 0.22],
+}
+const COLUMNS := 6
 
 var _sprite: Sprite2D
 var _interact: Interactable
@@ -17,9 +24,10 @@ func _ready() -> void:
 	add_to_group("npc")
 	_sprite = Sprite2D.new()
 	_sprite.texture = SHEET
-	_sprite.hframes = 2
+	_sprite.hframes = COLUMNS
+	_sprite.vframes = 8
 	_sprite.centered = false
-	_sprite.offset = Vector2(-10, -30)
+	_sprite.offset = Vector2(-13, -30)
 	add_child(_sprite)
 	var body := StaticBody2D.new()
 	body.collision_layer = 1
@@ -41,10 +49,19 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	_sprite.frame = int(_time / 0.7) % 2
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player:
-		_sprite.flip_h = player.global_position.x < global_position.x
+	var anim := &"mortar"
+	_sprite.flip_h = false
+	if player and (_talking or player.global_position.distance_to(global_position) < Game.TILE_SIZE * 4.0):
+		# Elle se tourne vers le héros quand il approche.
+		var d := player.global_position - global_position
+		if absf(d.x) > absf(d.y):
+			anim = &"idle_side"
+			_sprite.flip_h = d.x < 0.0
+		else:
+			anim = &"idle_down" if d.y > 0.0 else &"idle_up"
+	# Sinon, elle pile des herbes dans son mortier.
+	_sprite.frame = SheetAnimation.frame(ANIMS, anim, COLUMNS, _time, true)
 	# Un « ! » quand elle a quelque chose à dire.
 	if Quests.ready_to_report and int(_time * 2.0) % 6 == 0 and not _talking and fmod(_time, 3.0) < delta:
 		Emote.show(self, "!", Color(1.0, 0.85, 0.3), 32.0)

@@ -24,6 +24,23 @@ func _ready() -> void:
 	_prompt.offset_right = 200
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
+	# Barre d'outils en bas, une fois le prologue terminé.
+	var hotbar := Hotbar.new()
+	hotbar.name = "Hotbar"
+	hotbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	hotbar.offset_left = -(Hotbar.SLOT * 6 + 10) / 2.0
+	hotbar.offset_right = (Hotbar.SLOT * 6 + 10) / 2.0
+	hotbar.offset_top = -Hotbar.SLOT - 4
+	hotbar.offset_bottom = -4
+	hotbar.visible = Game.has_flag(&"prologue_done")
+	# Sa propre couche, au-dessus des textes de narration.
+	var bar_layer := CanvasLayer.new()
+	bar_layer.name = "HotbarLayer"
+	bar_layer.layer = 21
+	add_child(bar_layer)
+	bar_layer.add_child(hotbar)
+	Hero.class_changed.connect(func(_c: StringName) -> void: hotbar.visible = Game.has_flag(&"prologue_done"))
+
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player == null:
 		health_label.text = ""
@@ -53,6 +70,9 @@ func _make_label(at: Vector2, size: int) -> Label:
 
 func _process(_delta: float) -> void:
 	_objective.text = Quests.objective_text()
+	var hotbar := get_node_or_null("HotbarLayer/Hotbar") as Control
+	if hotbar:
+		hotbar.visible = Game.has_flag(&"prologue_done")
 
 
 func _refresh_info() -> void:

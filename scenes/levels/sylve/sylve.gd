@@ -35,6 +35,10 @@ func _ready() -> void:
 	if gate:
 		gate.enabled = false
 	daylight.color = EVENING
+	# Pendant l'arrivée, le héros est à bout de forces : pas de combat possible.
+	# Les bêtes de la Sylve ne sortiront qu'une fois le prologue terminé.
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
 	wound = WoundedEffect.new()
 	wound.name = "Wound"
 	add_child(wound)
