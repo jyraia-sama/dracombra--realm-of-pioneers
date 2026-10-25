@@ -9,9 +9,10 @@ size = Vector2(10, 6)
 [node name="OakC" type="Node2D" unique_id=753318740]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1331410565]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_e88a8")
 centered = false
-offset = Vector2(-34, -72)
+offset = Vector2(-60, -118)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1269722897]
 collision_mask = 0

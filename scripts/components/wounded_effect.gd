@@ -13,10 +13,10 @@ const BLOOD_COLORS: Array[Color] = [Color(0.74, 0.08, 0.1), Color(0.56, 0.05, 0.
 ## Planche warrior_wounded.png (regard vers la droite) : [ligne, nombre d'images, durée d'une image].
 const ANIMS := {
 	&"limp": [0, 6, 0.14],
-	&"collapse": [1, 4, 0.18],
-	&"lying": [2, 2, 0.7],
-	&"sit": [3, 2, 0.9],
-	&"rise": [4, 4, 0.22],
+	&"collapse": [1, 5, 0.15],
+	&"lying": [2, 4, 0.6],
+	&"sit": [3, 4, 0.7],
+	&"rise": [4, 5, 0.18],
 }
 const COLUMNS := 6
 
@@ -67,7 +67,8 @@ func _attach_sprite() -> void:
 	_sprite.centered = false
 	_sprite.hframes = COLUMNS
 	_sprite.vframes = 5
-	_sprite.offset = Vector2(-29, -31)
+	_sprite.scale = Vector2(0.5, 0.5)  # dessin HD
+	_sprite.offset = Vector2(-31, -54)
 	player.visual.add_child(_sprite)
 	player.sprite.visible = false
 

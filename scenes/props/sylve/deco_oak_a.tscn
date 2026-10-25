@@ -8,9 +8,10 @@ size = Vector2(10, 6)
 [node name="DecoOakA" type="Node2D" unique_id=111163956]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1738323616]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_81drl")
 centered = false
-offset = Vector2(-33, -72)
+offset = Vector2(-60, -118)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=2107143671]
 collision_mask = 0

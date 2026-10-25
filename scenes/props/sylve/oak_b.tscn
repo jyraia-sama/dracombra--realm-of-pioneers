@@ -4,14 +4,15 @@
 [ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_70qqa"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(12, 6)
+size = Vector2(10, 6)
 
 [node name="OakB" type="Node2D" unique_id=633014598]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1650453130]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_w6e41")
 centered = false
-offset = Vector2(-48, -91)
+offset = Vector2(-60, -118)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=31567467]
 collision_mask = 0
