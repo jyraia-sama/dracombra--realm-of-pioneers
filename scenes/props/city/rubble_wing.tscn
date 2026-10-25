@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/city/rubble_wing.png" id="1_2k4a0"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_skfu0"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8lb7t"]
+size = Vector2(20, 8)
+
+[node name="RubbleWing" type="Node2D" unique_id=969156834]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=143692667]
+texture = ExtResource("1_2k4a0")
+centered = false
+offset = Vector2(-13, -20)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=38987878]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=939468966]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_8lb7t")
+
+[node name="Harvest" type="Node2D" parent="." unique_id=1729009380]
+script = ExtResource("2_skfu0")
+item_id = &"stone"
+min_amount = 3
+max_amount = 4
+hits = 4
+regrow_days = 0
+hit_size = Vector2(22, 16)

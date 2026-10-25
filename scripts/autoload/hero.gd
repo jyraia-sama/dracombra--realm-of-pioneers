@@ -10,9 +10,11 @@ signal leveled_up(id: StringName, level: int)
 ## Les classes de base. attack : melee (épée, masse), arrow (flèches), bolt (projectile magique).
 const CLASSES: Dictionary = {
 	&"warrior": {"name": "Guerrier", "role": "Corps à corps. Encaisse les coups.", "attack": "melee",
-		"damage": 1, "cooldown": 0.0, "hp": 2, "item": &"", "tint": Color(1, 1, 1), "icon": 272},
+		"damage": 1, "cooldown": 0.0, "hp": 2, "item": &"", "tint": Color(1, 1, 1), "icon": 272,
+		"sheet": "res://assets/sprites/hero/warrior.png"},
 	&"archer": {"name": "Archer", "role": "Tire des flèches à distance. Fragile au contact.", "attack": "arrow",
-		"damage": 1, "cooldown": 0.35, "hp": 0, "item": &"bow", "tint": Color(0.82, 1.0, 0.78), "icon": 224},
+		"damage": 1, "cooldown": 0.35, "hp": 0, "item": &"bow", "tint": Color(1, 1, 1), "icon": 224,
+		"sheet": "res://assets/sprites/hero/archer.png"},
 	&"mage": {"name": "Mage", "role": "Projectiles de mana lents mais puissants.", "attack": "bolt",
 		"damage": 2, "cooldown": 0.7, "hp": -1, "item": &"staff", "tint": Color(0.82, 0.85, 1.25), "icon": 240},
 	&"cleric": {"name": "Clerc", "role": "Frappe à la masse et referme lentement ses blessures.", "attack": "melee",

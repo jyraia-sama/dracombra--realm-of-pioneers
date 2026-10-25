@@ -84,9 +84,10 @@ const HARVEST := {
 	"bush": ["herb", 1, 2, 1, 2, 16, 14], "bush_berries": ["herb", 1, 2, 1, 2, 16, 14],
 	"tall_grass": ["herb", 1, 1, 1, 2, 12, 12], "tall_grass_b": ["herb", 1, 1, 1, 2, 12, 12],
 	"flax_plant": ["flax", 1, 2, 1, 2, 14, 14], "gem_rock": ["gem", 1, 1, 4, 6, 16, 16],
-	"debris_pillar": ["stone", 2, 3, 4, 0, 14, 24], "debris_stump": ["stone", 2, 3, 3, 0, 20, 16],
-	"debris_rocks": ["stone", 3, 4, 4, 0, 24, 14], "debris_small": ["stone", 1, 2, 2, 0, 16, 10],
-	"debris_wall": ["stone", 3, 5, 5, 0, 28, 16],
+	"rubble_dragon": ["stone", 3, 4, 4, 0, 22, 16], "rubble_wing": ["stone", 3, 4, 4, 0, 22, 16],
+	"rubble_blocks": ["stone", 2, 4, 4, 0, 20, 16], "rubble_pillar": ["stone", 2, 3, 3, 0, 20, 14],
+	"rubble_column": ["stone", 2, 3, 3, 0, 18, 14], "rubble_slab": ["stone", 2, 3, 3, 0, 20, 14],
+	"rubble_small": ["stone", 1, 2, 2, 0, 16, 10], "ruin_pillar_small": ["stone", 1, 2, 2, 0, 14, 12],
 }
 
 
@@ -118,7 +119,22 @@ func _make_prop_scene(prop_name: String, spec: Dictionary) -> PackedScene:
 	root.add_child(sprite)
 	sprite.owner = root
 
-	if spec["collision"] != null:
+	if spec.has("collision_parts"):
+		var body := StaticBody2D.new()
+		body.name = "Body"
+		body.collision_layer = 1
+		body.collision_mask = 0
+		root.add_child(body)
+		body.owner = root
+		for part in spec["collision_parts"]:
+			var cs := CollisionShape2D.new()
+			var rs := RectangleShape2D.new()
+			rs.size = Vector2(part[1], part[2])
+			cs.shape = rs
+			cs.position = Vector2(part[0], -rs.size.y / 2.0)
+			body.add_child(cs)
+			cs.owner = root
+	elif spec["collision"] != null:
 		var body := StaticBody2D.new()
 		body.name = "Body"
 		body.collision_layer = 1
@@ -1014,7 +1030,7 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 	# Les ruines de Dracombra autour du parvis.
 	var r: Vector2i = sp["R"][0]
 	var ruins := [
-		["rune_stones", Vector2i(0, -6)],
+
 		["ancient_arch", Vector2i(-7, 1)], ["carved_slab", Vector2i(5, 4)],
 		["rune_brazier", Vector2i(-3, -3)], ["rune_brazier", Vector2i(3, -3)],
 		["stone_wing", Vector2i(-6, 4)], ["carved_tablet", Vector2i(8, -1)],
@@ -1030,7 +1046,7 @@ func _decorate_sylve(sc: Scatter, sp: Dictionary, rows: PackedStringArray) -> vo
 				break
 
 	# La porte de Dracombra : une arche qui mène aux ruines de la capitale.
-	_instance_named(sc, "city_gate", _feet(r + Vector2i(0, -3)), "CityGate")
+	_instance_named(sc, "dracombra_gate", _feet(r + Vector2i(0, -3)), "DracombraGate")
 	# Le grand chêne sous lequel il s'effondrera.
 	var z: Vector2i = sp["Z"][0]
 	_place(sc, "oak_big", z + Vector2i(-1, -1), true)
@@ -1156,10 +1172,10 @@ func _build_dracombra(rows: PackedStringArray, _cave_tex: Texture2D) -> void:
 					var d := Vector2(x - w / 2.0, (y - h / 2.0) * 4.0 / 3.0).length()
 					var row := 1 if rng.randf() < clampf(d / 70.0, 0.15, 0.85) else 0
 					ground.set_cell(cell, 1, Vector2i(rng.randi_range(0, 7), row))
-				"P", "C":
-					ground.set_cell(cell, 1, Vector2i(rng.randi_range(0, 7), 2))
-				"d", "Z":
-					ground.set_cell(cell, 1, Vector2i(rng.randi_range(0, 3), 3))
+				"P", "C", "d", "Z":
+					# La grande place : dalles unies, quelques dalles sculptées.
+					var slab := rng.randi_range(2, 3) if rng.randf() < 0.85 else rng.randi_range(0, 1)
+					ground.set_cell(cell, 1, Vector2i(slab, 2))
 				"f":
 					ground.set_cell(cell, 0, forest.call(cell))
 				"X":
@@ -1199,17 +1215,23 @@ func _build_dracombra(rows: PackedStringArray, _cave_tex: Texture2D) -> void:
 				break
 	# Arches en ruine là où les avenues traversent les boulevards.
 	for k in 8:
-		var a := k * PI / 4.0
-		for radius in [24.0, 40.0]:
+		var a := k * PI / 4.0 + PI / 8.0
+		for radius in [24.0, 40.0, 58.0]:
 			var c := center + Vector2i(roundi(cos(a) * radius), roundi(sin(a) * radius * 0.75))
-			_instance(sc, "city_gate", _feet(c))
+			var pick: String = ["ruin_wall", "ruin_arch", "ruin_arch_dragon", "ruin_pillars"][(k + int(radius)) % 4]
+			for tries in [Vector2i.ZERO, Vector2i(0, 2), Vector2i(0, -2), Vector2i(2, 0)]:
+				if _place(sc, pick, c + tries, true):
+					break
+	# La grande porte de Dracombra, au sud.
+	_instance_named(sc, "dracombra_gate", _feet(special["G"][0]), "DracombraGate")
 
 	# Les décombres à déblayer et les arbres poussés dans les ruines.
 	sc.check_paths = false
 	for c in special.get("r", []):
-		var pick: String = ["debris_small", "debris_small", "debris_rocks", "debris_pillar", "debris_stump", "debris_wall"][rng.randi() % 6]
+		var pick: String = ["rubble_small", "rubble_small", "rubble_blocks", "rubble_pillar", "rubble_column",
+			"rubble_slab", "rubble_wing", "rubble_dragon", "ruin_pillar_small"][rng.randi() % 9]
 		if not _place(sc, pick, c, true):
-			_place(sc, "debris_small", c, true)
+			_place(sc, "rubble_small", c, true)
 	for c in special.get("t", []):
 		_place(sc, (OAKS + PINES)[rng.randi() % 5], c, true)
 	var forest_cells: Array[Vector2i] = []

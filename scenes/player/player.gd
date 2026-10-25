@@ -171,8 +171,12 @@ func apply_class(refill: bool = false) -> void:
 	var info: Dictionary = Hero.info()
 	health.set_max_health(Game.hero_max_health() + Hero.hp_bonus(), refill)
 	attack_hitbox.damage = Hero.damage() if Game.has_flag(&"prologue_done") else attack_damage
-	# En attendant les sprites de chaque classe, une teinte les distingue.
-	sprite.modulate = info["tint"] if Game.has_flag(&"prologue_done") else Color.WHITE
+	# Chaque classe a sa planche ; en attendant les leurs, mage et clerc gardent celle
+	# du guerrier avec une teinte.
+	var done := Game.has_flag(&"prologue_done")
+	var sheet: String = info.get("sheet", "res://assets/sprites/hero/warrior.png") if done else "res://assets/sprites/hero/warrior.png"
+	sprite.texture = load(sheet)
+	sprite.modulate = info["tint"] if done else Color.WHITE
 
 
 func _start_attack() -> void:

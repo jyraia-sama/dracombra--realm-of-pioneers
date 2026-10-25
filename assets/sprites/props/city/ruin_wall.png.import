@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bo7jceicfsy0u"
-path="res://.godot/imported/guild_tent.png-a624d79bbbce4b7965efbc48701efd1a.ctex"
+uid="uid://vw2omabffcqd"
+path="res://.godot/imported/ruin_wall.png-1992905a2ada02633b24e8820ab631fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/buildings/guild_tent.png"
-dest_files=["res://.godot/imported/guild_tent.png-a624d79bbbce4b7965efbc48701efd1a.ctex"]
+source_file="res://assets/sprites/props/city/ruin_wall.png"
+dest_files=["res://.godot/imported/ruin_wall.png-1992905a2ada02633b24e8820ab631fd.ctex"]
 
 [params]
 

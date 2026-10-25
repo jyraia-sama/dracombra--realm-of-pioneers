@@ -2,10 +2,10 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/rock_fragments.png" id="1_vee8a"]
 
-[node name="RockFragments" type="Node2D" unique_id=425009940]
+[node name="RockFragments" type="Node2D" unique_id=881764120]
 z_index = -1
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1395683518]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=8922198]
 texture = ExtResource("1_vee8a")
 centered = false
 offset = Vector2(-21, -9)

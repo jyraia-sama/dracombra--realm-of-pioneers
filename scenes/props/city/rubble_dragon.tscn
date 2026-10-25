@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/city/rubble_dragon.png" id="1_dlq7w"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_a8ns2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_n058y"]
+size = Vector2(21, 8)
+
+[node name="RubbleDragon" type="Node2D" unique_id=32941267]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=919684425]
+texture = ExtResource("1_dlq7w")
+centered = false
+offset = Vector2(-13, -20)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=1485124229]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=182531266]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_n058y")
+
+[node name="Harvest" type="Node2D" parent="." unique_id=1027289186]
+script = ExtResource("2_a8ns2")
+item_id = &"stone"
+min_amount = 3
+max_amount = 4
+hits = 4
+regrow_days = 0
+hit_size = Vector2(22, 16)

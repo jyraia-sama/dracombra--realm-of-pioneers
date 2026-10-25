@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/city/ruin_pillar_small.png" id="1_olg0f"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_bdsju"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cuwpn"]
+size = Vector2(12, 6)
+
+[node name="RuinPillarSmall" type="Node2D" unique_id=137185262]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=987339511]
+texture = ExtResource("1_olg0f")
+centered = false
+offset = Vector2(-8, -14)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=63875766]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1241055933]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_cuwpn")
+
+[node name="Harvest" type="Node2D" parent="." unique_id=244111171]
+script = ExtResource("2_bdsju")
+item_id = &"stone"
+min_amount = 1
+max_amount = 2
+hits = 2
+regrow_days = 0
+hit_size = Vector2(14, 12)

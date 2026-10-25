@@ -12,7 +12,8 @@ enum State { WANDER, IDLE, ALERT, CHARGE, HURT, DEAD }
 @export var charge_damage: int = 2
 @export var hurt_duration: float = 0.2
 
-const ANIMS := {&"walk": [0, 4, 0.16], &"charge": [1, 4, 0.07], &"die": [2, 4, 0.14]}
+## Planche boar.png (regard vers la droite) : marche, charge, puis touché (2) et mort (2).
+const ANIMS := {&"walk": [0, 4, 0.16], &"charge": [1, 4, 0.08], &"hurt": [2, 2, 0.1]}
 const COLUMNS := 4
 
 var state: State = State.IDLE
@@ -60,6 +61,8 @@ func _process(delta: float) -> void:
 			visual.position.x = sin(_time * 60.0) * 0.7
 		State.DEAD:
 			pass
+		State.HURT:
+			sprite.frame = SheetAnimation.frame(ANIMS, &"hurt", COLUMNS, _time, true)
 		_:
 			visual.position.x = 0.0
 			var moving := velocity.length() > 1.0
@@ -144,9 +147,9 @@ func _on_died() -> void:
 	hurtbox.set_deferred("monitorable", false)
 	collision.set_deferred("disabled", true)
 	var tween := create_tween()
-	for i in 4:
+	for i in [0, 1, 2, 3]:
 		tween.tween_callback(func(): sprite.frame = 2 * COLUMNS + i)
-		tween.tween_interval(0.14)
+		tween.tween_interval(0.12 if i < 2 else 0.2)
 	tween.tween_interval(0.5)
 	tween.tween_property(visual, "modulate:a", 0.0, 0.4)
 	tween.tween_callback(queue_free)

@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/city/dracombra_gate.png" id="1_bdy7v"]
+[ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_cublj"]
+[ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_ii0ad"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6bgvo"]
+size = Vector2(30, 10)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c66uc"]
+size = Vector2(30, 10)
+
+[node name="DracombraGate" type="Node2D" unique_id=694186264]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=878365076]
+texture = ExtResource("1_bdy7v")
+centered = false
+offset = Vector2(-44, -62)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=972275846]
+collision_mask = 0
+
+[node name="@CollisionShape2D@2" type="CollisionShape2D" parent="Body" unique_id=743565274]
+position = Vector2(-29, -5)
+shape = SubResource("RectangleShape2D_6bgvo")
+
+[node name="@CollisionShape2D@3" type="CollisionShape2D" parent="Body" unique_id=1548449504]
+position = Vector2(29, -5)
+shape = SubResource("RectangleShape2D_c66uc")
+
+[node name="Light" type="PointLight2D" parent="." unique_id=193885166]
+position = Vector2(0, -24.8)
+color = Color(1, 0.62, 0.3, 1)
+energy = 0.6
+texture = ExtResource("2_cublj")
+texture_scale = 0.625
+script = ExtResource("3_ii0ad")

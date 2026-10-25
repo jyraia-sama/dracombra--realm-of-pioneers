@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/city/ruin_column.png" id="1_a2qrx"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5oc6m"]
+size = Vector2(10, 6)
+
+[node name="RuinColumn" type="Node2D" unique_id=713018240]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=173301566]
+texture = ExtResource("1_a2qrx")
+centered = false
+offset = Vector2(-6, -20)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=1905442081]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1062262224]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_5oc6m")

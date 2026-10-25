@@ -6,21 +6,21 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j7d1r"]
 size = Vector2(8, 6)
 
-[node name="PineB" type="Node2D" unique_id=684009151]
+[node name="PineB" type="Node2D" unique_id=76090471]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1143172687]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1287536670]
 texture = ExtResource("1_uog2v")
 centered = false
 offset = Vector2(-13, -37)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1987093213]
+[node name="Body" type="StaticBody2D" parent="." unique_id=268519669]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=764854542]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=51744141]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_j7d1r")
 
-[node name="Harvest" type="Node2D" parent="." unique_id=2124742886]
+[node name="Harvest" type="Node2D" parent="." unique_id=1332186677]
 script = ExtResource("2_k57c6")
 min_amount = 1
 max_amount = 2

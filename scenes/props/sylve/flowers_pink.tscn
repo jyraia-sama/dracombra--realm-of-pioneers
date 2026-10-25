@@ -2,9 +2,9 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/sylve/flowers_pink.png" id="1_7fuyu"]
 
-[node name="FlowersPink" type="Node2D" unique_id=1470446674]
+[node name="FlowersPink" type="Node2D" unique_id=387017116]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1936623120]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1628982061]
 texture = ExtResource("1_7fuyu")
 centered = false
 offset = Vector2(-6, -11)

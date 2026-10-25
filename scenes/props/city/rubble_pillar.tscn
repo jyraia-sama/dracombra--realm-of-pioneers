@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/city/rubble_pillar.png" id="1_t2hif"]
+[ext_resource type="Script" path="res://scripts/components/harvestable.gd" id="2_606b6"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_26dqn"]
+size = Vector2(20, 8)
+
+[node name="RubblePillar" type="Node2D" unique_id=1198562657]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1105463850]
+texture = ExtResource("1_t2hif")
+centered = false
+offset = Vector2(-13, -17)
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=249377168]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1974043040]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_26dqn")
+
+[node name="Harvest" type="Node2D" parent="." unique_id=78654177]
+script = ExtResource("2_606b6")
+item_id = &"stone"
+regrow_days = 0
+hit_size = Vector2(20, 14)

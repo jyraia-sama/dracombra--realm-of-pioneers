@@ -3,8 +3,16 @@ extends Node2D
 ## Le cœur de Dracombra : d'abord un simple feu de camp, puis la tente de guilde,
 ## la maison, le hall et enfin la citadelle. On l'améliore ici même.
 
-const CAMPFIRE := preload("res://scenes/props/sylve/campfire.tscn")
-const GUILD_TENT := preload("res://assets/sprites/buildings/guild_tent.png")
+## Un sprite par palier (feu de camp, tente, maison, hall, citadelle).
+const TEXTURES: Array[Texture2D] = [
+	preload("res://assets/sprites/buildings/guild_0.png"), preload("res://assets/sprites/buildings/guild_1.png"),
+	preload("res://assets/sprites/buildings/guild_2.png"), preload("res://assets/sprites/buildings/guild_3.png"),
+	preload("res://assets/sprites/buildings/guild_4.png"),
+]
+## Emprise au sol de chaque palier, en cases.
+const FOOTPRINTS: Array[Vector2] = [Vector2(1.0, 0.6), Vector2(3.0, 1.2), Vector2(5.0, 1.6), Vector2(6.0, 2.0), Vector2(8.0, 2.4)]
+## Zone réservée à la guilde (sa plus grande emprise), pour que rien ne gêne ses agrandissements.
+const RESERVED := Rect2(-5.0, -3.0, 10.0, 4.0)
 
 var _visual: Node2D
 var _body: StaticBody2D
@@ -34,37 +42,48 @@ func refresh() -> void:
 	if _visual != null:
 		_visual.queue_free()
 	var t := float(Game.TILE_SIZE)
-	if Town.tier == 0:
-		_visual = CAMPFIRE.instantiate()
-		_shape.size = Vector2(t * 0.8, t * 0.4)
-		_interact.radius_tiles = 1.8
-		_interact.prompt = "Feu de camp"
-	else:
-		# En attendant les vrais sprites, les paliers supérieurs agrandissent la tente.
-		var sprite := Sprite2D.new()
-		sprite.texture = GUILD_TENT
-		sprite.centered = false
-		sprite.offset = Vector2(-GUILD_TENT.get_width() / 2.0, -GUILD_TENT.get_height())
-		var k := 1.0 + 0.25 * (Town.tier - 1)
-		sprite.scale = Vector2(k, k)
-		_visual = sprite
-		_shape.size = Vector2(t * 3.0 * k, t * 1.0)
-		_interact.radius_tiles = 2.6 * k
-		_interact.prompt = Town.guild_name()
+	var tier: int = clampi(Town.tier, 0, TEXTURES.size() - 1)
+	var root := Node2D.new()
+	var sprite := Sprite2D.new()
+	sprite.texture = TEXTURES[tier]
+	sprite.centered = false
+	sprite.offset = Vector2(-sprite.texture.get_width() / 2.0, -sprite.texture.get_height() + 2)
+	root.add_child(sprite)
+	# Le feu (ou les braseros) éclaire les alentours.
+	var light := PointLight2D.new()
+	light.texture = load("res://assets/lights/light_radial.tres")
+	light.color = Color(1.0, 0.62, 0.3)
+	light.energy = 0.9 if tier == 0 else 0.6
+	light.texture_scale = 1.2 + tier * 0.4
+	light.position = Vector2(0, -6)
+	light.set_script(load("res://scenes/props/flicker_light.gd"))
+	root.add_child(light)
+	_visual = root
+	_shape.size = FOOTPRINTS[tier] * t
+	_interact.radius_tiles = 1.8 + FOOTPRINTS[tier].x * 0.45
+	_interact.prompt = Town.guild_name()
 	add_child(_visual)
 	move_child(_visual, 0)
 	_body.get_child(0).position = Vector2(0, -_shape.size.y / 2.0)
 	_interact.position = Vector2(0, -4)
 
 
+## La zone réservée à la guilde, en coordonnées du monde.
+func reserved_rect() -> Rect2:
+	var t := float(Game.TILE_SIZE)
+	return Rect2(global_position + RESERVED.position * t, RESERVED.size * t)
+
+
 func _on_interacted() -> void:
-	var options := ["Dormir jusqu'au lendemain", "Améliorer la guilde", "Fermer"]
+	var options := ["Dormir jusqu'au lendemain", "Améliorer la guilde", "Changer de classe", "Fermer"]
 	var choice := await Choice.ask(Town.guild_name(), _status_text(), options)
 	match choice:
 		0:
 			Game.sleep()
 		1:
 			_upgrade()
+		2:
+			_change_class()
 
 
 func _status_text() -> String:
@@ -107,3 +126,18 @@ func _upgrade() -> void:
 		Narration.say("Matériaux déposés. Il manque encore : %s." % Building.cost_text(need), 3.0)
 	else:
 		Narration.say("Il manque : %s." % Building.cost_text(need), 2.6)
+
+
+func _change_class() -> void:
+	var ids: Array[StringName] = []
+	var options: Array[String] = []
+	for id in Hero.ORDER:
+		if Hero.unlocked.has(id):
+			ids.append(id)
+			var mark := " (actuelle)" if id == Hero.current else ""
+			options.append("%s — niveau %d%s" % [Hero.CLASSES[id]["name"], Hero.level(id), mark])
+	options.append("Fermer")
+	var body := "Fabriquez l'équipement d'une classe à l'établi pour la débloquer."
+	var choice := await Choice.ask("Changer de classe", body, options)
+	if choice >= 0 and choice < ids.size() and Hero.switch_to(ids[choice]):
+		Narration.say("%s : %s" % [Hero.CLASSES[ids[choice]]["name"], Hero.CLASSES[ids[choice]]["role"]], 2.6)

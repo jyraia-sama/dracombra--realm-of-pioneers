@@ -5,16 +5,16 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_686x4"]
 size = Vector2(64, 18)
 
-[node name="MonumentStatue" type="Node2D" unique_id=1820753430]
+[node name="MonumentStatue" type="Node2D" unique_id=729935781]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=197440641]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=642001968]
 texture = ExtResource("1_fyy7q")
 centered = false
 offset = Vector2(-38, -41)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=428515338]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1460487817]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1024631371]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1017097138]
 position = Vector2(0, -9)
 shape = SubResource("RectangleShape2D_686x4")

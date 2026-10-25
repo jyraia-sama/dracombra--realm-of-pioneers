@@ -137,9 +137,9 @@ func _check(rect: Rect2, player: Player) -> void:
 	if not get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
 		reason = "Place occupée : déblayez d'abord (décombres, arbres...)."
 		return
-	var guild := get_tree().get_first_node_in_group("guild") as Node2D
-	if guild and rect.grow(t).has_point(guild.global_position):
-		reason = "Trop près de la guilde."
+	var guild := get_tree().get_first_node_in_group("guild") as Guild
+	if guild and rect.intersects(guild.reserved_rect()):
+		reason = "Cet espace est réservé aux agrandissements de la guilde."
 		return
 	valid = true
 
