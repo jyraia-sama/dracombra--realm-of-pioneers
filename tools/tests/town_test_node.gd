@@ -50,10 +50,12 @@ func _g(n: String) -> Node:
 
 func _collect(level: Node, player: Player) -> void:
 	await _frames(40)
-	for p in level.find_children("*", "Pickup", true, false):
-		if is_instance_valid(p):
-			player.global_position = p.global_position
-			await _frames(6)
+	# Deux passages : un objet qui rebondit peut échapper au premier.
+	for pass_i in 2:
+		for p in level.find_children("*", "Pickup", true, false):
+			if is_instance_valid(p):
+				player.global_position = p.global_position
+				await _frames(8)
 
 
 func _hit(player: Player, target: Vector2, times: int) -> void:

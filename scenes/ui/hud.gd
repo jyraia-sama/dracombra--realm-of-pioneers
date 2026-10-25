@@ -10,11 +10,19 @@ var _item_labels: Dictionary[StringName, Label] = {}
 var _info: Label
 var _prompt: Label
 var _objective: Label
+var _xp_bar: Control
+var _hp := Vector2i(0, 0)
 
 
 func _ready() -> void:
 	_info = _make_label(Vector2(8, 22), 10)
-	_objective = _make_label(Vector2(8, 36), 10)
+	_objective = _make_label(Vector2(8, 40), 10)
+	# Barre d'XP fine sous la ligne du héros.
+	_xp_bar = Control.new()
+	_xp_bar.position = Vector2(8, 37)
+	_xp_bar.size = Vector2(120, 3)
+	_xp_bar.draw.connect(_draw_xp)
+	add_child(_xp_bar)
 	_objective.add_theme_color_override("font_color", Color(1.0, 0.86, 0.5))
 	_prompt = _make_label(Vector2(0, 0), 12)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -28,8 +36,8 @@ func _ready() -> void:
 	var hotbar := Hotbar.new()
 	hotbar.name = "Hotbar"
 	hotbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	hotbar.offset_left = -(Hotbar.SLOT * 6 + 10) / 2.0
-	hotbar.offset_right = (Hotbar.SLOT * 6 + 10) / 2.0
+	hotbar.offset_left = -Hotbar.width() / 2.0
+	hotbar.offset_right = Hotbar.width() / 2.0
 	hotbar.offset_top = -Hotbar.SLOT - 4
 	hotbar.offset_bottom = -4
 	hotbar.visible = Game.has_flag(&"prologue_done")
@@ -55,6 +63,7 @@ func _ready() -> void:
 	Game.day_changed.connect(func(_d: int) -> void: _refresh_info())
 	Hero.class_changed.connect(func(_c: StringName) -> void: _refresh_info())
 	Hero.xp_changed.connect(func(_c: StringName, _l: int, _x: int) -> void: _refresh_info())
+	Hero.stats_changed.connect(_refresh_info)
 	_refresh_info()
 
 
@@ -70,6 +79,9 @@ func _make_label(at: Vector2, size: int) -> Label:
 
 func _process(_delta: float) -> void:
 	_objective.text = Quests.objective_text()
+	_refresh_health()
+	_xp_bar.visible = Game.has_flag(&"prologue_done")
+	_xp_bar.queue_redraw()
 	var hotbar := get_node_or_null("HotbarLayer/Hotbar") as Control
 	if hotbar:
 		hotbar.visible = Game.has_flag(&"prologue_done")
@@ -79,7 +91,9 @@ func _refresh_info() -> void:
 	if not Game.has_flag(&"prologue_done"):
 		_info.text = ""
 		return
-	_info.text = "%s · %s niv. %d · Jour %d" % [Hero.hero_name, Hero.info()["name"], Hero.level(), Game.day]
+	var pts := Hero.free_points()
+	_info.text = "%s · %s niv. %d · Jour %d%s" % [Hero.hero_name, Hero.info()["name"], Hero.level(), Game.day,
+		"  (+%d points : menu Personnage)" % pts if pts > 0 else ""]
 
 
 func _on_focus(target: Interactable) -> void:
@@ -87,7 +101,24 @@ func _on_focus(target: Interactable) -> void:
 
 
 func _on_health_changed(current: int, maximum: int) -> void:
-	health_label.text = "PV : %d / %d" % [current, maximum]
+	_hp = Vector2i(current, maximum)
+	_refresh_health()
+
+
+func _refresh_health() -> void:
+	if _hp.y == 0:
+		return
+	var text := "PV : %d / %d" % [_hp.x, _hp.y]
+	if Game.has_flag(&"prologue_done"):
+		text += "    %s : %d / %d" % [Hero.info()["resource"], int(Hero.energy), int(Hero.energy_max())]
+	health_label.text = text
+
+
+func _draw_xp() -> void:
+	var need := Hero.xp_to_next(Hero.level())
+	var ratio := 1.0 if need == 0 else clampf(float(Hero.xp.get(Hero.current, 0)) / need, 0.0, 1.0)
+	_xp_bar.draw_rect(Rect2(Vector2.ZERO, _xp_bar.size), Color(0, 0, 0, 0.6))
+	_xp_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(_xp_bar.size.x * ratio, _xp_bar.size.y)), Color(1.0, 0.82, 0.35))
 
 
 func _on_item_changed(item: ItemData, count: int) -> void:

@@ -3,11 +3,19 @@ extends HBoxContainer
 ## Barre d'outils en bas de l'écran : l'arme de la classe, la hache, la pioche, puis les
 ## soins (baume, viande). Touches 1 à 6 pour utiliser un consommable ; H (ou RB) prend
 ## le meilleur soin disponible. Les outils servent tout seuls quand on frappe.
+## À droite, les trois techniques ou sorts placés (R, F, C) avec leur temps de recharge.
 
 const SLOTS: Array[StringName] = [&"__weapon", &"axe", &"pickaxe", &"balm", &"meat", &"herb"]
 const SLOT := 22
+const SKILL_KEYS := ["R", "F", "C"]
 
 var _cells: Array[Dictionary] = []
+var _skill_cells: Array[Control] = []
+
+
+## Largeur totale de la barre, en pixels.
+static func width() -> float:
+	return SLOT * (SLOTS.size() + SKILL_KEYS.size()) + 2 * (SLOTS.size() + SKILL_KEYS.size()) + 8
 var _flash := -1
 
 
@@ -34,9 +42,50 @@ func _ready() -> void:
 		panel.add_child(count)
 		add_child(panel)
 		_cells.append({"panel": panel, "style": style, "icon": icon, "count": count})
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(6, SLOT)
+	add_child(gap)
+	for i in SKILL_KEYS.size():
+		var cell := Control.new()
+		cell.custom_minimum_size = Vector2(SLOT, SLOT)
+		cell.draw.connect(_draw_skill.bind(cell, i))
+		add_child(cell)
+		_skill_cells.append(cell)
 	Inventory.item_changed.connect(func(_item: ItemData, _n: int) -> void: refresh())
 	Hero.class_changed.connect(func(_c: StringName) -> void: refresh())
 	refresh()
+
+
+func _process(_delta: float) -> void:
+	for c in _skill_cells:
+		c.queue_redraw()
+
+
+func _draw_skill(cell: Control, i: int) -> void:
+	var size := Vector2(SLOT, SLOT)
+	var font := get_theme_default_font()
+	var id: StringName = Hero.slots()[i] if i < Hero.slots().size() else &""
+	cell.draw_rect(Rect2(Vector2.ZERO, size), Color(0.12, 0.1, 0.18, 0.85))
+	if id != &"":
+		var s := SkillBook.get_skill(id)
+		var col: Color = s.get("color", Color.WHITE)
+		var player := get_tree().get_first_node_in_group("player") as Player
+		var cd := player.skills.cooldown_left(id) if player and player.skills else 0.0
+		var ready := cd <= 0.0 and Hero.energy >= float(s["cost"])
+		# Pastille de couleur et initiales de la technique (en attendant des icônes).
+		cell.draw_circle(size / 2.0, 8.0, Color(col, 0.9 if ready else 0.35))
+		var words: PackedStringArray = String(s["name"]).split(" ")
+		var initials := words[0].substr(0, 1) + (words[-1].substr(0, 1) if words.size() > 1 else "")
+		cell.draw_string(font, Vector2(0, 15), initials.to_upper(), HORIZONTAL_ALIGNMENT_CENTER, SLOT, 9, Color(0.1, 0.08, 0.12))
+		if cd > 0.0:
+			var ratio := clampf(cd / float(s["cooldown"]), 0.0, 1.0)
+			cell.draw_rect(Rect2(0, SLOT * (1.0 - ratio), SLOT, SLOT * ratio), Color(0, 0, 0, 0.55))
+			cell.draw_string_outline(font, Vector2(0, 21), "%d" % ceili(cd), HORIZONTAL_ALIGNMENT_RIGHT, SLOT - 1, 8, 3, Color.BLACK)
+			cell.draw_string(font, Vector2(0, 21), "%d" % ceili(cd), HORIZONTAL_ALIGNMENT_RIGHT, SLOT - 1, 8, Color.WHITE)
+		cell.tooltip_text = s["name"]
+	cell.draw_rect(Rect2(Vector2.ZERO, size), Color(0.55, 0.45, 0.75), false, 1.0)
+	cell.draw_string_outline(font, Vector2(1, 8), SKILL_KEYS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color.BLACK)
+	cell.draw_string(font, Vector2(1, 8), SKILL_KEYS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.85, 0.8, 0.9))
 
 
 func _label(text: String, at: Vector2, color: Color) -> Label:

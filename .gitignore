@@ -1,3 +1,6 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Les fichiers .uid des scripts de test sont recréés par Godot sur chaque machine.
+tools/tests/*.uid

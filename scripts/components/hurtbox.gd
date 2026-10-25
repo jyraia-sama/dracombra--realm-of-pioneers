@@ -7,6 +7,9 @@ signal hit_received(hitbox: Hitbox)
 
 ## Les points de vie qui encaissent les coups reçus par cette zone.
 @export var health: HealthComponent
+## Facultatif : modifie les dégâts reçus (défense, parade...). Reçoit les dégâts du coup,
+## renvoie ceux à encaisser ; 0 = coup paré (pas de dégâts ni de recul).
+var damage_filter: Callable
 
 
 func _ready() -> void:
@@ -18,6 +21,11 @@ func _ready() -> void:
 func receive_hit(hitbox: Hitbox) -> bool:
 	if health == null or health.is_dead() or health.is_invulnerable():
 		return false
-	health.take_damage(hitbox.damage)
+	var amount := hitbox.damage
+	if damage_filter.is_valid():
+		amount = int(damage_filter.call(amount))
+		if amount <= 0:
+			return true
+	health.take_damage(amount)
 	hit_received.emit(hitbox)
 	return true

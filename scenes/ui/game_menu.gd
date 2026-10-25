@@ -17,6 +17,14 @@ var _bag_ids: Array[StringName] = []
 # Personnage
 var _sheet: RichTextLabel
 var _class_box: HBoxContainer
+var _stat_rows: Dictionary = {}
+var _derived: Label
+var _reset_points: Button
+var _skill_title: Label
+var _skill_box: VBoxContainer
+var _skill_info: Label
+var _slot_buttons: Array[Button] = []
+var _selected_skill: StringName = &""
 # Carte
 var _map_view: TextureRect
 var _map_marker: Control
@@ -113,7 +121,7 @@ func _refresh() -> void:
 		1:
 			_refresh_sheet()
 			await get_tree().process_frame
-			for b in _class_box.get_children():
+			for b in _skill_box.get_children():
 				if b is Button and not b.disabled:
 					b.grab_focus()
 					break
@@ -203,58 +211,209 @@ func _on_bag_use() -> void:
 
 # ------------------------------------------------------------------ la fiche du personnage
 
+func _small(text: String, size: int = 11) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", size)
+	return l
+
+
+func _small_button(text: String) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.add_theme_font_size_override("font_size", 11)
+	return b
+
+
 func _build_sheet() -> void:
 	var box := VBoxContainer.new()
 	box.name = "Personnage"
+	box.add_theme_constant_override("separation", 4)
 	_tabs.add_child(box)
+	var cols := HBoxContainer.new()
+	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cols.add_theme_constant_override("separation", 10)
+	box.add_child(cols)
+
+	# Colonne de gauche : identité, caractéristiques, valeurs dérivées.
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(250, 0)
+	left.add_theme_constant_override("separation", 2)
+	cols.add_child(left)
 	_sheet = RichTextLabel.new()
 	_sheet.bbcode_enabled = true
-	_sheet.fit_content = false
-	_sheet.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_sheet.add_theme_font_size_override("normal_font_size", 12)
-	_sheet.add_theme_font_size_override("bold_font_size", 12)
-	box.add_child(_sheet)
+	_sheet.fit_content = true
+	_sheet.scroll_active = false
+	_sheet.add_theme_font_size_override("normal_font_size", 11)
+	_sheet.add_theme_font_size_override("bold_font_size", 11)
+	left.add_child(_sheet)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 0)
+	left.add_child(grid)
+	for k in Hero.STATS:
+		var name := _small("%s" % Hero.STAT_NAMES[k])
+		name.custom_minimum_size = Vector2(80, 0)
+		name.tooltip_text = Hero.STAT_HELP[k]
+		name.mouse_filter = Control.MOUSE_FILTER_PASS
+		grid.add_child(name)
+		var value := _small("")
+		value.custom_minimum_size = Vector2(60, 0)
+		grid.add_child(value)
+		var plus := _small_button("+")
+		plus.custom_minimum_size = Vector2(20, 0)
+		plus.tooltip_text = Hero.STAT_HELP[k]
+		plus.pressed.connect(func() -> void:
+			Hero.spend_point(k)
+			_refresh_sheet())
+		grid.add_child(plus)
+		_stat_rows[k] = {"value": value, "plus": plus}
+	_derived = _small("", 10)
+	_derived.add_theme_color_override("font_color", Color(0.8, 0.78, 0.86))
+	left.add_child(_derived)
+	_reset_points = _small_button("Redistribuer les points")
+	_reset_points.pressed.connect(func() -> void:
+		Hero.reset_points()
+		_refresh_sheet())
+	left.add_child(_reset_points)
+
+	# Colonne de droite : techniques ou sorts, et leur place dans la barre.
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 2)
+	cols.add_child(right)
+	_skill_title = _small("", 12)
+	_skill_title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.45))
+	right.add_child(_skill_title)
+	_skill_box = VBoxContainer.new()
+	_skill_box.add_theme_constant_override("separation", 1)
+	right.add_child(_skill_box)
+	_skill_info = _small("", 10)
+	_skill_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_skill_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(_skill_info)
+	var slots := HBoxContainer.new()
+	right.add_child(slots)
+	for i in Hero.SKILL_SLOTS:
+		var b := _small_button("")
+		b.pressed.connect(func() -> void:
+			if _selected_skill != &"":
+				Hero.equip(i, _selected_skill)
+				_refresh_sheet())
+		slots.add_child(b)
+		_slot_buttons.append(b)
+
 	_class_box = HBoxContainer.new()
 	box.add_child(_class_box)
 
 
 func _refresh_sheet() -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
+	var c: Dictionary = Hero.info()
+	var lvl := Hero.level()
+	var need := Hero.xp_to_next(lvl)
 	var lines: Array[String] = []
-	lines.append("[b]%s[/b] — ancien capitaine d'Elysia, fondateur de la guilde." % Hero.hero_name)
+	lines.append("[b]%s[/b] — %s, niveau %d / %d" % [Hero.hero_name, c["name"], lvl, Hero.MAX_LEVEL])
+	lines.append("XP : %s" % ("niveau maximum" if need == 0 else "%d / %d" % [int(Hero.xp.get(Hero.current, 0)), need]))
 	if player:
-		lines.append("PV : %d / %d    Dégâts : %d" % [player.health.current_health, player.health.max_health, Hero.damage()])
-	lines.append("Jour %d    Dracombra : %s (%s)" % [Game.day, Town.tier_name(), Town.guild_name()])
-	lines.append("")
-	lines.append("[b]Classes[/b] (chacune a son propre niveau) :")
-	for id in Hero.ORDER:
-		var c: Dictionary = Hero.CLASSES[id]
-		if Hero.unlocked.has(id):
-			var mark := "  ◄ actuelle" if id == Hero.current else ""
-			lines.append("• %s — niveau %d (%d / %d XP) — %s%s" % [c["name"], Hero.level(id), int(Hero.xp.get(id, 0)), Hero.xp_to_next(Hero.level(id)), c["role"], mark])
-		else:
-			var item := Inventory.item_by_id(c["item"])
-			var recipe := ""
-			for r in Crafting.RECIPES:
-				if r["out"] == c["item"]:
-					recipe = Building.cost_text(r["in"])
-			lines.append("• [color=#8a8494]%s — à débloquer : %s (établi : %s)[/color]" % [c["name"], item.display_name if item else "?", recipe])
-	lines.append("")
-	lines.append("On change de classe seulement à Dracombra (ici, ou au feu de camp de la guilde).")
+		lines.append("PV : %d / %d    %s : %d / %d" % [player.health.current_health, player.health.max_health,
+			c["resource"], int(Hero.energy), int(Hero.energy_max())])
+	var pts := Hero.free_points()
+	lines.append("[color=#ffd36e]Points à répartir : %d[/color]" % pts if pts > 0 else "Points à répartir : 0 (+%d par niveau)" % Hero.POINTS_PER_LEVEL)
 	_sheet.text = "\n".join(lines)
+	for k in Hero.STATS:
+		var row: Dictionary = _stat_rows[k]
+		var extra := Hero.allocated(k)
+		var main := "  ★" if c["main"] == k else ""
+		row["value"].text = "%d%s%s" % [Hero.stat(k), " (+%d)" % extra if extra > 0 else "", main]
+		row["plus"].disabled = pts <= 0
+	_derived.text = "Dégâts %d · Défense %d · Parade %d %% · Critique %d %% · %s +%.1f/s" % [
+		Hero.damage(), Hero.defense(), int(Hero.parry_chance()), int(Hero.crit_chance()), c["resource"], Hero.energy_regen()]
+	var spent := 0
+	for k in Hero.STATS:
+		spent += Hero.allocated(k)
+	_reset_points.disabled = spent == 0
+
+	# Techniques
+	_skill_title.text = "%s du %s" % [c["skill_word"], String(c["name"]).to_lower()]
+	for child in _skill_box.get_children():
+		_skill_box.remove_child(child)
+		child.queue_free()
+	var known := Hero.known_skills()
+	var slots := Hero.slots()
+	var list := SkillBook.of_class(Hero.current)
+	if _selected_skill == &"" or not list.has(_selected_skill):
+		_selected_skill = list[0]
+	for id in list:
+		var sk: Dictionary = SkillBook.SKILLS[id]
+		var b := _small_button("")
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var where := slots.find(id)
+		var tag := "  [%s]" % Hotbar.SKILL_KEYS[where] if where >= 0 else ""
+		if known.has(id):
+			b.text = "Niv. %d · %s%s" % [sk["level"], sk["name"], tag]
+		else:
+			b.text = "Niv. %d · ???" % sk["level"]
+			b.modulate = Color(1, 1, 1, 0.45)
+		b.toggle_mode = true
+		b.button_pressed = id == _selected_skill
+		b.focus_entered.connect(func() -> void: _select_skill(id))
+		b.pressed.connect(func() -> void: _select_skill(id))
+		_skill_box.add_child(b)
+	_select_skill(_selected_skill, false)
+
+	# Classes
 	for child in _class_box.get_children():
+		_class_box.remove_child(child)
 		child.queue_free()
 	var can_switch := Hero.can_switch_here()
+	var summary: Array[String] = []
 	for id in Hero.ORDER:
-		if not Hero.unlocked.has(id):
-			continue
-		var b := Button.new()
-		b.text = Hero.CLASSES[id]["name"]
-		b.disabled = not can_switch or id == Hero.current
-		b.pressed.connect(func() -> void:
-			Hero.switch_to(id)
-			_refresh_sheet())
-		_class_box.add_child(b)
+		var cd: Dictionary = Hero.CLASSES[id]
+		if Hero.unlocked.has(id):
+			summary.append("%s niv. %d" % [cd["name"], Hero.level(id)])
+			var b := _small_button("%s (niv. %d)" % [cd["name"], Hero.level(id)])
+			b.disabled = not can_switch or id == Hero.current
+			b.tooltip_text = cd["role"]
+			b.pressed.connect(func() -> void:
+				Hero.switch_to(id)
+				_selected_skill = &""
+				_refresh_sheet())
+			_class_box.add_child(b)
+		else:
+			var item := Inventory.item_by_id(cd["item"])
+			var l := _small("%s : %s" % [cd["name"], ("fabriquer " + item.display_name) if item else "?"], 10)
+			l.add_theme_color_override("font_color", Color(0.55, 0.52, 0.6))
+			_class_box.add_child(l)
+	_sheet.text += "\nClasses : " + ", ".join(summary)
+	if not can_switch:
+		var l := _small("  (changer de classe : à Dracombra)", 10)
+		l.add_theme_color_override("font_color", Color(0.55, 0.52, 0.6))
+		_class_box.add_child(l)
+
+
+func _select_skill(id: StringName, refresh_buttons: bool = true) -> void:
+	_selected_skill = id
+	var sk: Dictionary = SkillBook.SKILLS[id]
+	var known := Hero.known_skills().has(id)
+	var c := Hero.info()
+	if known:
+		_skill_info.text = "%s — %s %d · recharge %ss\n%s" % [sk["name"], c["resource"], sk["cost"],
+			String.num(float(sk["cooldown"]), 1).trim_suffix(".0"), sk["desc"]]
+	else:
+		_skill_info.text = "%s — appris au niveau %d.\n%s" % [sk["name"], sk["level"], sk["desc"]]
+	for i in _slot_buttons.size():
+		var b := _slot_buttons[i]
+		var current: StringName = Hero.slots()[i]
+		var cur_name := "vide" if current == &"" else String(SkillBook.SKILLS[current]["name"])
+		b.text = "%s : %s" % [Hotbar.SKILL_KEYS[i], cur_name]
+		b.tooltip_text = "Placer %s sur la touche %s" % [sk["name"], Hotbar.SKILL_KEYS[i]]
+		b.disabled = not known or current == id
+	if refresh_buttons:
+		for b in _skill_box.get_children():
+			if b is Button:
+				b.set_pressed_no_signal(b.get_index() == SkillBook.of_class(Hero.current).find(id))
 
 
 # ------------------------------------------------------------------ la carte

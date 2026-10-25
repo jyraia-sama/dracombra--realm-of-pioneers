@@ -96,7 +96,13 @@ func _process(_delta: float) -> void:
 
 
 ## Ysolde valide l'étape (appelé depuis son dialogue).
+## XP gagnée à chaque étape accomplie.
+const STEP_XP := 6
+
+
 func advance() -> void:
+	if step > 0:
+		Hero.gain_xp(STEP_XP)
 	step += 1
 	ready_to_report = false
 	step_changed.emit(step)

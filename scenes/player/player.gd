@@ -54,6 +54,11 @@ var _shot_cooldown: float = 0.0
 var _regen_timer: float = 0.0
 var _dodge_cooldown_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
+var _attack_crit := false
+var _knock_default := 0.0
+
+## Techniques et sorts (touches R, F, C).
+var skills: SkillCaster
 
 @onready var visual: Node2D = $Visual
 @onready var sprite: Sprite2D = $Visual/Sprite
@@ -88,6 +93,13 @@ func _ready() -> void:
 	attack_hitbox.knockback_tiles = attack_knockback_tiles
 	attack_hitbox.source = self
 	attack_hitbox.active = false
+
+	_knock_default = attack_knockback_tiles
+	attack_hitbox.hit_landed.connect(_on_attack_landed)
+	skills = SkillCaster.new()
+	skills.name = "Skills"
+	add_child(skills)
+	hurtbox.damage_filter = _filter_damage
 
 	health.set_max_health(Game.hero_max_health(), true)
 	apply_class(true)
@@ -169,7 +181,7 @@ func _process_dodge(delta: float) -> void:
 ## Applique la classe du héros : PV max, dégâts, teinte provisoire du sprite.
 func apply_class(refill: bool = false) -> void:
 	var info: Dictionary = Hero.info()
-	health.set_max_health(Game.hero_max_health() + Hero.hp_bonus(), refill)
+	health.set_max_health(Hero.max_hp(), refill)
 	attack_hitbox.damage = Hero.damage() if Game.has_flag(&"prologue_done") else attack_damage
 	# Chaque classe a sa planche ; en attendant les leurs, mage et clerc gardent celle
 	# du guerrier avec une teinte.
@@ -180,21 +192,92 @@ func apply_class(refill: bool = false) -> void:
 
 
 func _start_attack() -> void:
-	var kind: String = Hero.info()["attack"] if Game.has_flag(&"prologue_done") else "melee"
+	start_attack()
+
+
+## Une attaque de l'arme. mult : multiplicateur de dégâts (techniques) ; knock : recul en
+## tiles (-1 = celui de l'arme).
+func start_attack(mult: float = 1.0, knock: float = -1.0) -> void:
+	var done := Game.has_flag(&"prologue_done")
+	var kind: String = Hero.info()["attack"] if done else "melee"
 	_state_timer = attack_duration
 	state = State.ATTACK
+	_attack_crit = done and Hero.roll_crit()
+	var dmg := Hero.hit_damage(mult, _attack_crit) if done else attack_damage
 	if kind == "melee":
+		attack_hitbox.damage = dmg
+		attack_hitbox.knockback_tiles = knock if knock >= 0.0 else _knock_default
 		attack_pivot.rotation = facing.angle()
 		attack_hitbox.active = true
 		_play_lunge()
 		return
-	if _shot_cooldown > 0.0:
+	if _shot_cooldown > 0.0 and mult <= 1.0:
 		state = State.NORMAL
 		return
 	_shot_cooldown = float(Hero.info()["cooldown"])
 	var from := global_position + Vector2(0, -Game.TILE_SIZE) + facing * 6.0
-	var shot := HeroProjectile.create(StringName(kind), from, facing, Hero.damage(), self)
+	var shot := HeroProjectile.create(StringName(kind), from, facing, dmg, self)
+	if _attack_crit:
+		shot.hit_landed.connect(func(h: Hurtbox) -> void: _show_crit(h), CONNECT_ONE_SHOT)
 	get_parent().add_child(shot)
+
+
+func _on_attack_landed(h: Hurtbox) -> void:
+	if _attack_crit:
+		_show_crit(h)
+
+
+func _show_crit(h: Hurtbox) -> void:
+	var target := h.get_parent() as Node2D
+	if target and is_instance_valid(target):
+		Emote.show(target, "Critique !", Color(1.0, 0.6, 0.3), 26.0)
+
+
+## Pose de lancement d'un sort ou d'une technique : le héros s'arrête un instant.
+func play_cast(duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_state_timer = duration
+	state = State.ATTACK
+	attack_hitbox.active = false
+
+
+## Ruée vers l'avant (Charge du guerrier) : invincible pendant la course.
+func dash(distance_tiles: float, duration: float) -> void:
+	_dodge_velocity = facing.normalized() * distance_tiles * Game.TILE_SIZE / duration
+	_state_timer = duration
+	state = State.DODGE
+	health.set_invulnerable(duration + 0.1)
+
+
+## Saut instantané (Clignement, Tir de repli) ; négatif = en arrière. S'arrête aux murs.
+func blink(distance_tiles: float) -> void:
+	var dir := facing.normalized() * signf(distance_tiles)
+	var total := absf(distance_tiles) * Game.TILE_SIZE
+	var step := 4.0
+	var moved := 0.0
+	while moved + step <= total:
+		if test_move(global_transform, dir * step):
+			break
+		global_position += dir * step
+		moved += step
+	health.set_invulnerable(0.25)
+
+
+## Défense, parade et effets protecteurs, appliqués à chaque coup reçu.
+func _filter_damage(amount: int) -> int:
+	if not Game.has_flag(&"prologue_done"):
+		return amount
+	if randf() * 100.0 < Hero.parry_chance():
+		Emote.show(self, "Paré !", Color(0.8, 0.9, 1.0), 34.0)
+		health.set_invulnerable(0.4)
+		return 0
+	var guard := Hero.buff(&"guard", 1.0)
+	if guard <= 0.0:
+		health.set_invulnerable(0.3)
+		return 0
+	var reduced := int(round(amount * guard)) - Hero.defense()
+	return maxi(reduced, 1)
 
 
 func _process_attack(delta: float) -> void:
