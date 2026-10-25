@@ -34,6 +34,17 @@ func _ready() -> void:
 	var installed := installed_version()
 	if not running_update() and installed != "" and is_newer(installed, version()):
 		_relaunch()
+		return
+	# Vérification automatique de bout en bout (outil de test : « -- --update-selftest »).
+	if OS.get_cmdline_user_args().has("--update-selftest"):
+		print("UPDATER version=%s update=%s" % [version(), running_update()])
+		if running_update():
+			get_tree().quit()
+			return
+		update_available.connect(func(_v: String, _n: String) -> void: download())
+		ready_to_restart.connect(restart)
+		status_changed.connect(func(t: String) -> void: print("UPDATER ", t))
+		check.call_deferred()
 
 
 ## Les mises à jour ne concernent que le jeu exporté (.exe), pas l'éditeur Godot.
@@ -151,5 +162,7 @@ func restart() -> void:
 
 func _relaunch() -> void:
 	var args := PackedStringArray(["--main-pack", ProjectSettings.globalize_path(PACK)])
+	if OS.get_cmdline_user_args().has("--update-selftest"):
+		args.append_array(["--headless", "--", "--update-selftest"])
 	OS.create_process(OS.get_executable_path(), args)
 	get_tree().quit()
