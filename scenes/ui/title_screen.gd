@@ -16,6 +16,8 @@ func _ready() -> void:
 	add_child(bg)
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Le bas de l'écran est réservé aux mises à jour (version, nouveautés, bouton).
+	center.offset_bottom = -92
 	add_child(center)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
@@ -72,45 +74,46 @@ var _update_bar: ProgressBar
 func _build_updates() -> void:
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	box.offset_left = -200
-	box.offset_right = 200
-	box.offset_top = -64
+	box.offset_left = -190
+	box.offset_right = 190
+	box.offset_top = -8
 	box.offset_bottom = -8
+	# Le bloc grandit vers le haut, jamais sur les côtés.
+	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	box.alignment = BoxContainer.ALIGNMENT_END
+	box.add_theme_constant_override("separation", 3)
 	add_child(box)
 	_update_label = Label.new()
 	_update_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_update_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_update_label.custom_minimum_size = Vector2(380, 0)
+	# Au plus 4 lignes : les nouveautés trop longues sont coupées.
+	_update_label.max_lines_visible = 4
+	_update_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_update_label.add_theme_font_size_override("font_size", 10)
 	_update_label.add_theme_color_override("font_color", Color(0.7, 0.66, 0.78))
 	_update_label.text = "Version %s" % Updater.version()
 	box.add_child(_update_label)
 	_update_bar = ProgressBar.new()
 	_update_bar.custom_minimum_size = Vector2(220, 6)
+	_update_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_update_bar.show_percentage = false
 	_update_bar.max_value = 1.0
 	_update_bar.visible = false
 	box.add_child(_update_bar)
 	_update_button = Button.new()
 	_update_button.visible = false
+	_update_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_update_button.custom_minimum_size = Vector2(220, 0)
 	_update_button.add_theme_font_size_override("font_size", 11)
 	box.add_child(_update_button)
-	Updater.status_changed.connect(func(t: String) -> void: _update_label.text = t)
-	Updater.progress.connect(func(r: float) -> void:
-		_update_bar.visible = true
-		_update_bar.value = r)
-	Updater.update_available.connect(func(v: String, notes: String) -> void:
-		if notes != "":
-			_update_label.text += "\n" + notes
-		_set_update_button("Mettre à jour (%s)" % v, func() -> void:
-			_update_button.disabled = true
-			Updater.download()))
-	Updater.ready_to_restart.connect(func() -> void:
-		_update_bar.visible = false
-		_set_update_button("Redémarrer le jeu", Updater.restart))
-	Updater.status_changed.connect(func(t: String) -> void:
-		# Un échec : on peut réessayer.
-		if t.contains("Réessayez") or t.contains("Impossible"):
-			_update_button.disabled = false)
+	# Liaisons vers l'Updater (qui reste chargé) : coupées quand l'écran titre disparaît,
+	# sinon un retour au menu garderait celles de l'ancien écran.
+	_link(Updater.status_changed, _on_update_status)
+	_link(Updater.progress, _on_update_progress)
+	_link(Updater.update_available, _on_update_available)
+	_link(Updater.ready_to_restart, _on_ready_to_restart)
 	# Lancé depuis Téléchargements ou le Bureau : on propose de l'installer d'abord.
 	if Updater.can_install():
 		_update_label.text = "Version %s — installez le jeu pour recevoir les mises à jour." % Updater.version()
@@ -122,6 +125,46 @@ func _build_updates() -> void:
 				_update_button.disabled = false)
 		return
 	Updater.check()
+
+
+var _links: Array = []
+
+
+func _link(sig: Signal, callable: Callable) -> void:
+	sig.connect(callable)
+	_links.append([sig, callable])
+
+
+func _exit_tree() -> void:
+	for l in _links:
+		if (l[0] as Signal).is_connected(l[1]):
+			(l[0] as Signal).disconnect(l[1])
+	_links.clear()
+
+
+func _on_update_status(t: String) -> void:
+	_update_label.text = t
+	# Un échec : on peut réessayer.
+	if t.contains("Réessayez") or t.contains("Impossible"):
+		_update_button.disabled = false
+
+
+func _on_update_progress(r: float) -> void:
+	_update_bar.visible = true
+	_update_bar.value = r
+
+
+func _on_update_available(v: String, notes: String) -> void:
+	if notes != "":
+		_update_label.text += "\n" + notes
+	_set_update_button("Mettre à jour (%s)" % v, func() -> void:
+		_update_button.disabled = true
+		Updater.download())
+
+
+func _on_ready_to_restart() -> void:
+	_update_bar.visible = false
+	_set_update_button("Redémarrer le jeu", Updater.restart)
 
 
 func _set_update_button(text: String, action: Callable) -> void:
