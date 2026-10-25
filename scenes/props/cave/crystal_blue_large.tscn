@@ -12,17 +12,18 @@ size = Vector2(21, 4)
 [node name="CrystalBlueLarge" type="Node2D" unique_id=48825542]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=525036999]
+scale = Vector2(0.5, 0.5)
 script = ExtResource("var_s")
 variants = Array[Texture2D]([ExtResource("var_b")])
 texture = ExtResource("1_1j1hh")
 centered = false
-offset = Vector2(-12, -20)
+offset = Vector2(-22, -53)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1240985265]
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(-0.5, -2)
+position = Vector2(0, -2)
 shape = SubResource("Foot0")
 
 [node name="Light" type="PointLight2D" parent="." unique_id=1907357718]
