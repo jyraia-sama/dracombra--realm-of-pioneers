@@ -179,49 +179,76 @@ func _process_dodge(delta: float) -> void:
 		visual.modulate = Color.WHITE
 
 
-## Applique la classe du héros : PV max, dégâts, planche d'animation.
+## Applique la classe du héros : PV max, dégâts, arme en main.
+## Toutes les classes partagent le corps du héros (planche HD) ; seule l'arme change.
 func apply_class(refill: bool = false) -> void:
-	var info: Dictionary = Hero.info()
 	health.set_max_health(Hero.max_hp(), refill)
 	attack_hitbox.damage = Hero.damage() if Game.has_flag(&"prologue_done") else attack_damage
-	var done := Game.has_flag(&"prologue_done")
-	var cls: StringName = Hero.current if done else &"warrior"
-	if HD_SHEETS.has(cls):
-		_use_hd_sheet(HD_SHEETS[cls])
-		sprite.modulate = Color.WHITE
-		return
-	# Les classes pas encore redessinées gardent leur ancienne planche.
-	_hd = {}
-	sprite.texture = load(info.get("sheet", "res://assets/sprites/hero/warrior.png"))
-	sprite.scale = Vector2.ONE
-	sprite.offset = Vector2(-28, -34)
-	sprite.hframes = COLUMNS
-	sprite.vframes = 18
-	sprite.modulate = info["tint"]
-	_sword.visible = false
+	var cls: StringName = Hero.current if Game.has_flag(&"prologue_done") else &"warrior"
+	_use_hd_sheet(HD_SHEET)
+	sprite.modulate = Color.WHITE
+	_class_weapon = CLASS_WEAPON.get(cls, &"sword")
+	_set_weapon(_class_weapon)
 
 
-# ------------------------------------------------------------------ planches HD et arme en main
+# ------------------------------------------------------------------ planche HD et arme en main
 
-## Planches HD (2 pixels dessinés par pixel du monde) : [image, table des mains].
-const HD_SHEETS := {
-	&"warrior": ["res://assets/sprites/hero/warrior_hd.png", "res://assets/sprites/hero/warrior_hd.json"],
+## Planche HD (2 pixels dessinés par pixel du monde) : [image, table des mains].
+const HD_SHEET := ["res://assets/sprites/hero/warrior_hd.png", "res://assets/sprites/hero/warrior_hd.json"]
+## Armes : image, poignée (pixels HD de l'image), tenue.
+##   swing   : suit l'angle de la table (épée, masse, outils)
+##   upright : toujours droite dans la main (arc)
+##   staff   : droite au repos, suit le geste pendant l'attaque (bâton)
+const WEAPONS := {
+	&"sword": ["res://assets/sprites/weapons/hero_sword.png", Vector2(3.5, 21), "swing"],
+	&"bow": ["res://assets/sprites/weapons/bow.png", Vector2(2, 18), "upright"],
+	&"staff": ["res://assets/sprites/weapons/staff.png", Vector2(4.5, 29), "staff"],
+	&"mace": ["res://assets/sprites/weapons/mace.png", Vector2(5.5, 16), "swing"],
+	&"axe": ["res://assets/sprites/weapons/axe.png", Vector2(3, 18), "swing"],
+	&"pickaxe": ["res://assets/sprites/weapons/pickaxe.png", Vector2(8.5, 16), "swing"],
 }
-const SWORD_TEXTURE := preload("res://assets/sprites/weapons/hero_sword.png")
-## Point de la poignée dans l'image de l'épée (pixels HD).
-const SWORD_GRIP := Vector2(4, 21)
+const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"mace"}
+## Outil sorti pour récolter : ressource -> outil.
+const HARVEST_TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe"}
 
-## Planche HD active : {"hands": {"walk_0": [[x, y, angle], ...]}, ...} ; vide = ancienne planche.
+## Planche HD active : {"hands": {"walk_0": [[x, y, angle], ...]}, ...}.
 var _hd: Dictionary = {}
 var _sword: Sprite2D
+var _weapon_mode := "swing"
+var _class_weapon: StringName = &"sword"
+
+
+func _set_weapon(id: StringName) -> void:
+	var spec: Array = WEAPONS[id]
+	_sword.texture = load(spec[0])
+	_sword.offset = -spec[1]
+	_weapon_mode = spec[2]
+
+
+## Avant un coup : la hache devant un arbre, la pioche devant la pierre (si on les a).
+func _pick_tool_for_attack() -> void:
+	_set_weapon(_class_weapon)
+	if not Game.has_flag(&"prologue_done"):
+		return
+	var reach := Game.TILE_SIZE * 1.8
+	var best: Harvestable = null
+	var best_d := reach
+	for h in get_tree().get_nodes_in_group("harvestable"):
+		var hv := h as Harvestable
+		if hv == null or not hv.is_visible_in_tree():
+			continue
+		var d: float = hv.global_position.distance_to(global_position)
+		if d < best_d and (hv.global_position - global_position).dot(facing) > 0.0:
+			best = hv
+			best_d = d
+	if best and HARVEST_TOOLS.has(best.item_id) and best.has_tool():
+		_set_weapon(HARVEST_TOOLS[best.item_id])
 
 
 func _make_sword() -> void:
 	_sword = Sprite2D.new()
 	_sword.name = "Weapon"
-	_sword.texture = SWORD_TEXTURE
 	_sword.centered = false
-	_sword.offset = -SWORD_GRIP
 	_sword.scale = Vector2(0.5, 0.5)
 	_sword.visible = false
 	visual.add_child(_sword)
@@ -251,7 +278,10 @@ func _update_weapon(anim: StringName, dir: int, index: int) -> void:
 	var mirror := -1.0 if sprite.flip_h else 1.0
 	_sword.visible = true
 	_sword.position = Vector2(float(hand[0]) * mirror, float(hand[1])) * 0.5
-	_sword.rotation_degrees = float(hand[2]) * mirror
+	var angle := float(hand[2])
+	if _weapon_mode == "upright" or (_weapon_mode == "staff" and anim != &"attack"):
+		angle = 0.0
+	_sword.rotation_degrees = angle * mirror
 	_sword.flip_h = sprite.flip_h
 	# De dos, l'épée passe derrière le corps.
 	_sword.z_index = -1 if dir == DIR_UP else 1
@@ -264,6 +294,7 @@ func _start_attack() -> void:
 ## Une attaque de l'arme. mult : multiplicateur de dégâts (techniques) ; knock : recul en
 ## tiles (-1 = celui de l'arme).
 func start_attack(mult: float = 1.0, knock: float = -1.0) -> void:
+	_pick_tool_for_attack()
 	var done := Game.has_flag(&"prologue_done")
 	var kind: String = Hero.info()["attack"] if done else "melee"
 	_state_timer = attack_duration
@@ -356,6 +387,8 @@ func _process_attack(delta: float) -> void:
 
 func _end_attack() -> void:
 	attack_hitbox.active = false
+	if _sword and _class_weapon != &"" and WEAPONS.has(_class_weapon):
+		_set_weapon(_class_weapon)
 	visual.position = Vector2.ZERO
 	visual.scale = Vector2.ONE
 

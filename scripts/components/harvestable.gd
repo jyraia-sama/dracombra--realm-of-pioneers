@@ -27,6 +27,7 @@ var _hits_taken := 0
 
 
 func _ready() -> void:
+	add_to_group("harvestable")
 	_sprite = get_parent().get_node_or_null("Sprite2D") as CanvasItem
 	if Game.is_harvested(_key(), regrow_days):
 		_set_present(false)
