@@ -37,6 +37,9 @@ func _ready() -> void:
 	if not can_update():
 		return
 	_remove_old_exe()
+	if OS.get_cmdline_user_args().has("--install-selftest") and can_install():
+		print("INSTALL ", install())
+		return
 	# Vérification de bout en bout (outil de test : « -- --update-selftest »).
 	if OS.get_cmdline_user_args().has("--update-selftest"):
 		print("UPDATER version=%s" % version())
@@ -203,3 +206,60 @@ func restart() -> void:
 		args.append("--after-update")
 	OS.create_process(_exe, args)
 	get_tree().quit()
+
+
+# ------------------------------------------------------------------ installation sur le PC
+
+## Dossier d'installation : dans le profil de l'utilisateur, où le jeu peut se mettre à jour
+## sans droits d'administrateur.
+func install_dir() -> String:
+	var base := OS.get_environment("LOCALAPPDATA")
+	if base == "":
+		base = OS.get_environment("HOME").path_join(".local/share")
+	return base.path_join("Programs").path_join("Dracombra")
+
+
+func installed_exe() -> String:
+	return install_dir().path_join(_exe.get_file() if OS.has_feature("windows") else "Dracombra")
+
+
+## Le jeu tourne-t-il depuis son dossier d'installation ?
+func is_installed() -> bool:
+	return _exe.get_base_dir().simplify_path().to_lower() == install_dir().simplify_path().to_lower()
+
+
+## Le jeu propose de s'installer quand il est lancé d'ailleurs (Téléchargements, Bureau...).
+func can_install() -> bool:
+	var test := OS.get_cmdline_user_args().has("--install-selftest")
+	return can_update() and (OS.has_feature("windows") or test) and not is_installed()
+
+
+## Copie le programme dans son dossier, crée les raccourcis (Bureau et menu Démarrer),
+## puis relance le jeu installé. Renvoie un message d'erreur, ou "" si tout va bien.
+func install() -> String:
+	var dir := install_dir()
+	if DirAccess.make_dir_recursive_absolute(dir) != OK:
+		return "Impossible de créer le dossier d'installation."
+	var dest := dir.path_join("Dracombra.exe" if OS.has_feature("windows") else "Dracombra")
+	if FileAccess.file_exists(dest):
+		var old := dest.get_basename() + ".old.exe"
+		DirAccess.remove_absolute(old)
+		DirAccess.rename_absolute(dest, old)
+	if DirAccess.copy_absolute(_exe, dest) != OK:
+		return "Impossible de copier le jeu."
+	var ps := (
+		"$w = New-Object -ComObject WScript.Shell; "
+		+ "foreach ($d in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) { "
+		+ "$s = $w.CreateShortcut((Join-Path $d 'Dracombra.lnk')); "
+		+ "$s.TargetPath = '%s'; $s.WorkingDirectory = '%s'; $s.Description = 'Dracombra : Realm of Pioneers'; $s.Save() }"
+	) % [dest.replace("/", "\\"), dir.replace("/", "\\")]
+	if OS.has_feature("windows"):
+		OS.execute("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps])
+	else:
+		OS.execute("chmod", ["+x", dest])
+	var args := PackedStringArray()
+	if OS.get_cmdline_user_args().has("--install-selftest"):
+		args.append_array(["--headless", "--", "--update-selftest", "--after-update"])
+	OS.create_process(dest, args)
+	get_tree().quit()
+	return ""

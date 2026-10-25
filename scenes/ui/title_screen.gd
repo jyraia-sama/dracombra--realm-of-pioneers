@@ -111,6 +111,16 @@ func _build_updates() -> void:
 		# Un échec : on peut réessayer.
 		if t.contains("Réessayez") or t.contains("Impossible"):
 			_update_button.disabled = false)
+	# Lancé depuis Téléchargements ou le Bureau : on propose de l'installer d'abord.
+	if Updater.can_install():
+		_update_label.text = "Version %s — installez le jeu pour recevoir les mises à jour." % Updater.version()
+		_set_update_button("Installer le jeu sur ce PC", func() -> void:
+			_update_button.disabled = true
+			var err := Updater.install()
+			if err != "":
+				_update_label.text = err
+				_update_button.disabled = false)
+		return
 	Updater.check()
 
 
