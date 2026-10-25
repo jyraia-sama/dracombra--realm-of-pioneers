@@ -2,19 +2,20 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/boulder.png" id="1_pk0su"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_taf8o"]
-size = Vector2(26, 12)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(21, 4)
 
 [node name="Boulder" type="Node2D" unique_id=14741937]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1703374211]
 texture = ExtResource("1_pk0su")
 centered = false
-offset = Vector2(-17, -25)
+offset = Vector2(-12, -19)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1952445242]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1075368313]
-position = Vector2(0, -6)
-shape = SubResource("RectangleShape2D_taf8o")
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
+position = Vector2(0.5, -2)
+shape = SubResource("Foot0")
+

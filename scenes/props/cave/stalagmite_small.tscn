@@ -2,19 +2,20 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/stalagmite_small.png" id="1_fdh8e"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_86iy6"]
-size = Vector2(8, 4)
+[sub_resource type="RectangleShape2D" id="Foot0"]
+size = Vector2(10, 4)
 
 [node name="StalagmiteSmall" type="Node2D" unique_id=1518194655]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1733501431]
 texture = ExtResource("1_fdh8e")
 centered = false
-offset = Vector2(-6, -12)
+offset = Vector2(-6, -15)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=970143770]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1278117743]
+[node name="Foot0" type="CollisionShape2D" parent="Body"]
 position = Vector2(0, -2)
-shape = SubResource("RectangleShape2D_86iy6")
+shape = SubResource("Foot0")
+

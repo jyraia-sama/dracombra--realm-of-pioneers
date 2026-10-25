@@ -3,7 +3,8 @@ et les formes de collision (d'après la base visible du dessin)."""
 import re, glob, shutil, sys, numpy as np
 from PIL import Image
 ROOT='/home/claude/dracombra--realm-of-pioneers/'
-SRC='/tmp/claude-0/-home-claude/98826a0e-b8e6-5cf3-abe9-36d613febf38/scratchpad/props2/final/'
+import os
+SRC=os.environ.get('PROPS_SRC','/tmp/claude-0/-home-claude/98826a0e-b8e6-5cf3-abe9-36d613febf38/scratchpad/props2/final/')
 
 def runs(cols, gap=2):
     xs=np.where(cols)[0]; out=[]
@@ -25,7 +26,16 @@ def footprint(png):
 def fix_scene(tscn, png, collide=True):
     w,h,cx,rs,band=footprint(png)
     s=open(tscn).read()
-    s=re.sub(r'offset = Vector2\([-\d.]+, [-\d.]+\)', f'offset = Vector2({-cx}, {-h})', s, count=1)
+    old=re.search(r'offset = Vector2\(([-\d.]+), ([-\d.]+)\)', s)
+    if 'z_index = -1' in s:
+        # à plat sur le sol : centré
+        new=(-(w // 2), -(h // 2)); collide=False
+    elif old and float(old.group(2)) == -12 and '/roots_' in s:
+        # pend du haut de la paroi
+        new=(-(w // 2), -12); collide=False
+    else:
+        new=(-cx, -h)
+    s=re.sub(r'offset = Vector2\([-\d.]+, [-\d.]+\)', f'offset = Vector2({new[0]}, {new[1]})', s, count=1)
     if collide and '[node name="Body"' in s:
         secs=re.split(r'(?m)^(?=\[)', s)
         drop_ids=set(); keep=[]
@@ -65,10 +75,6 @@ if __name__=='__main__':
             rel='sylve/gem_rock.png'
         MAP['res://assets/sprites/props/'+rel]=p
         shutil.copy(p, ROOT+'assets/sprites/props/'+rel)
-    # le rocher à cristaux de la Sylve prend sa propre image (celle de la grotte ne change pas)
-    gem=ROOT+'scenes/props/sylve/gem_rock.tscn'
-    s=open(gem).read().replace('res://assets/sprites/props/cave/crystal_blue.png','res://assets/sprites/props/sylve/gem_rock.png')
-    open(gem,'w').write(s)
     for f in glob.glob(ROOT+'scenes/props/**/*.tscn', recursive=True):
         s=open(f).read()
         m=re.search(r'path="(res://assets/sprites/props/[^"]+\.png)"', s)

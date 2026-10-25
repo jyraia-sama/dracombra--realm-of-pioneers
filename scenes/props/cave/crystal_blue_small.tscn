@@ -1,14 +1,19 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://scenes/props/variant_sprite.gd" id="var_s"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/cave/crystal_blue_small_b.png" id="var_b"]
+
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/crystal_blue_small.png" id="1_edob3"]
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_8l3sn"]
 
 [node name="CrystalBlueSmall" type="Node2D" unique_id=1135071223]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1082035355]
+script = ExtResource("var_s")
+variants = Array[Texture2D]([ExtResource("var_b")])
 texture = ExtResource("1_edob3")
 centered = false
-offset = Vector2(-6, -13)
+offset = Vector2(-7, -11)
 
 [node name="Light" type="PointLight2D" parent="." unique_id=933733056]
 position = Vector2(0, -5.2)
