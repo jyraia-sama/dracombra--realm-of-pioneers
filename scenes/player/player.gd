@@ -102,6 +102,7 @@ func _ready() -> void:
 	hurtbox.damage_filter = _filter_damage
 
 	health.set_max_health(Game.hero_max_health(), true)
+	_make_sword()
 	apply_class(true)
 	health.invulnerability_duration = hurt_invulnerability
 	hurtbox.hit_received.connect(_on_hit_received)
@@ -178,17 +179,82 @@ func _process_dodge(delta: float) -> void:
 		visual.modulate = Color.WHITE
 
 
-## Applique la classe du héros : PV max, dégâts, teinte provisoire du sprite.
+## Applique la classe du héros : PV max, dégâts, planche d'animation.
 func apply_class(refill: bool = false) -> void:
 	var info: Dictionary = Hero.info()
 	health.set_max_health(Hero.max_hp(), refill)
 	attack_hitbox.damage = Hero.damage() if Game.has_flag(&"prologue_done") else attack_damage
-	# Chaque classe a sa planche ; en attendant les leurs, mage et clerc gardent celle
-	# du guerrier avec une teinte.
 	var done := Game.has_flag(&"prologue_done")
-	var sheet: String = info.get("sheet", "res://assets/sprites/hero/warrior.png") if done else "res://assets/sprites/hero/warrior.png"
-	sprite.texture = load(sheet)
-	sprite.modulate = info["tint"] if done else Color.WHITE
+	var cls: StringName = Hero.current if done else &"warrior"
+	if HD_SHEETS.has(cls):
+		_use_hd_sheet(HD_SHEETS[cls])
+		sprite.modulate = Color.WHITE
+		return
+	# Les classes pas encore redessinées gardent leur ancienne planche.
+	_hd = {}
+	sprite.texture = load(info.get("sheet", "res://assets/sprites/hero/warrior.png"))
+	sprite.scale = Vector2.ONE
+	sprite.offset = Vector2(-28, -34)
+	sprite.hframes = COLUMNS
+	sprite.vframes = 18
+	sprite.modulate = info["tint"]
+	_sword.visible = false
+
+
+# ------------------------------------------------------------------ planches HD et arme en main
+
+## Planches HD (2 pixels dessinés par pixel du monde) : [image, table des mains].
+const HD_SHEETS := {
+	&"warrior": ["res://assets/sprites/hero/warrior_hd.png", "res://assets/sprites/hero/warrior_hd.json"],
+}
+const SWORD_TEXTURE := preload("res://assets/sprites/weapons/hero_sword.png")
+## Point de la poignée dans l'image de l'épée (pixels HD).
+const SWORD_GRIP := Vector2(4, 21)
+
+## Planche HD active : {"hands": {"walk_0": [[x, y, angle], ...]}, ...} ; vide = ancienne planche.
+var _hd: Dictionary = {}
+var _sword: Sprite2D
+
+
+func _make_sword() -> void:
+	_sword = Sprite2D.new()
+	_sword.name = "Weapon"
+	_sword.texture = SWORD_TEXTURE
+	_sword.centered = false
+	_sword.offset = -SWORD_GRIP
+	_sword.scale = Vector2(0.5, 0.5)
+	_sword.visible = false
+	visual.add_child(_sword)
+
+
+func _use_hd_sheet(spec: Array) -> void:
+	_hd = JSON.parse_string(FileAccess.get_file_as_string(spec[1]))
+	sprite.texture = load(spec[0])
+	sprite.centered = false
+	sprite.hframes = COLUMNS
+	sprite.vframes = 18
+	sprite.scale = Vector2(0.5, 0.5)
+	var anchor: Array = _hd["anchor"]
+	sprite.offset = Vector2(-float(anchor[0]), -float(anchor[1]))
+
+
+## Place l'épée dans la main pour l'image affichée (table calculée depuis les planches).
+func _update_weapon(anim: StringName, dir: int, index: int) -> void:
+	if _hd.is_empty() or not sprite.visible:
+		_sword.visible = false
+		return
+	var list: Array = _hd["hands"].get("%s_%d" % [anim, dir], [])
+	var hand = list[index] if index < list.size() else null
+	if hand == null:
+		_sword.visible = false
+		return
+	var mirror := -1.0 if sprite.flip_h else 1.0
+	_sword.visible = true
+	_sword.position = Vector2(float(hand[0]) * mirror, float(hand[1])) * 0.5
+	_sword.rotation_degrees = float(hand[2]) * mirror
+	_sword.flip_h = sprite.flip_h
+	# De dos, l'épée passe derrière le corps.
+	_sword.z_index = -1 if dir == DIR_UP else 1
 
 
 func _start_attack() -> void:
@@ -399,6 +465,7 @@ func _update_sprite(delta: float) -> void:
 			index = mini(int(_anim_time / ANIMS[anim][2]), ANIMS[anim][1] - 1)
 	var first_row: int = ANIMS[anim][0]
 	sprite.frame = (first_row + dir) * COLUMNS + index
+	_update_weapon(anim, dir, index)
 
 
 
