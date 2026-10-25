@@ -7,7 +7,7 @@ shader_type canvas_item;
 //   R = source de la tuile, G = colonne, B = ligne dans l'atlas (x / 255),
 //   A = matériau + 1 (0 = case vide).
 
-render_mode unshaded;
+
 
 uniform sampler2D types : filter_nearest;
 uniform sampler2D atlas0 : filter_nearest;
@@ -28,6 +28,9 @@ const int FORD = 5;
 const int PAVING = 6;
 const int SLABS = 7;
 const int RUBBLE = 8;
+const int ROCK = 9;
+const int CAVE = 10;
+const int LAIR = 11;
 
 float hash(ivec2 p) {
 	int h = p.x * 374761393 + p.y * 668265263 + seed * 2147483;
@@ -59,7 +62,7 @@ int material_of(vec4 d) {
 }
 
 bool organic(int m) {
-	return m == GRASS || m == FOREST || m == DIRT || m == RUBBLE || m == PAVING;
+	return m == GRASS || m == FOREST || m == DIRT || m == RUBBLE || m == PAVING || m == ROCK || m == CAVE || m == LAIR;
 }
 
 // La case dont on prend le dessin pour le pixel `px` (coordonnées en pixels du calque).
@@ -136,6 +139,17 @@ bool greenish(int m) {
 // taches douces, quelques touffes et fleurs. Les détails et le contraste sont laissés
 // aux objets (arbres, ruines, maisons), qui ressortent sur un sol tranquille.
 uniform bool painted = true;
+// Falaises (roche du calque Walls) : dessus, pan de roche tourné vers la caméra.
+uniform vec3 rock_top = vec3(0.16, 0.14, 0.19);
+uniform vec3 rock_top_light = vec3(0.22, 0.20, 0.26);
+uniform vec3 rock_face = vec3(0.42, 0.38, 0.44);
+uniform vec3 rock_face_dark = vec3(0.30, 0.27, 0.33);
+uniform vec3 rock_face_light = vec3(0.55, 0.50, 0.55);
+uniform int face_height = 14;
+// Sol de grotte.
+uniform vec3 cave_floor = vec3(0.42, 0.36, 0.34);
+uniform vec3 cave_floor_dark = vec3(0.37, 0.31, 0.30);
+uniform vec3 cave_floor_light = vec3(0.47, 0.41, 0.38);
 
 vec3 rgb(int r, int g, int b) {
 	return vec3(float(r), float(g), float(b)) / 255.0;
@@ -303,6 +317,18 @@ vec3 painted_color(int m, ivec2 px) {
 		}
 		return c;
 	}
+	if (m == CAVE || m == LAIR) {
+		int lv = patch_level(px, 61);
+		vec3 c = lv == 0 ? cave_floor_dark : (lv == 2 ? cave_floor_light : cave_floor);
+		if (m == LAIR) {
+			c = mix(c, vec3(0.50, 0.24, 0.18), 0.35);
+		}
+		int d = decal(px, 9, 0.14, 6, k);
+		if (d > 0 && k != 1) {
+			c = d == 2 ? c * 1.18 : c * 0.78;
+		}
+		return c;
+	}
 	if (m == PAVING) {
 		return cobble(px);
 	}
@@ -313,14 +339,76 @@ vec3 painted_color(int m, ivec2 px) {
 }
 
 bool is_painted(int m) {
-	return painted && m >= GRASS && m <= RUBBLE && m != FORD;
+	return painted && m >= GRASS && m != FORD && m != ROCK;
+}
+
+// Une falaise : le dessus de la roche, et sur son bord sud un pan vertical de
+// `face_height` pixels, avec des strates, des fissures et une arête claire.
+vec4 rock_color(ivec2 px) {
+	int below = 0;
+	for (int i = 1; i <= 28; i++) {
+		if (i > face_height) {
+			break;
+		}
+		if (material_at(px + ivec2(0, i)) != ROCK) {
+			below = i;
+			break;
+		}
+	}
+	if (below > 0) {
+		// Le pan de roche. depth : 0 en haut du pan, face_height - 1 au pied.
+		int depth = face_height - below;
+		// Facettes de roche irrégulières (cellules de Voronoï étirées), fissures sombres,
+		// arête claire en haut de chaque facette, plus sombre vers le pied.
+		vec2 q = vec2(float(px.x) / 1.35, float(depth) + float(px.y) * 0.0);
+		q.y = float(px.y);
+		float d1;
+		float d2;
+		ivec2 cell = cobble_cell(q * vec2(7.0 / 10.0, 7.0 / 9.0) + vec2(0.5), d1, d2);
+		float a1;
+		float a2;
+		ivec2 above = cobble_cell((q + vec2(0.0, -1.0)) * vec2(7.0 / 10.0, 7.0 / 9.0) + vec2(0.5), a1, a2);
+		float t = hash(cell + ivec2(13, 31));
+		vec3 c = t < 0.33 ? rock_face : (t < 0.66 ? mix(rock_face, rock_face_light, 0.35) : mix(rock_face, rock_face_dark, 0.4));
+		if (above != cell) {
+			c = mix(c, rock_face_light, 0.6);
+		}
+		if (d2 - d1 < 0.8) {
+			c = rock_face_dark;
+		}
+		if (depth <= 1) {
+			c = rock_face_light;
+		} else if (depth >= face_height - 6) {
+			c = mix(c, rock_face_dark, 0.35);
+		}
+		// Le pied du pan s'assombrit.
+		if (below <= 2) {
+			c *= 0.75;
+		}
+		return vec4(c, 1.0);
+	}
+	// Dessus de la roche, avec un liseré clair là où il borde le sol (nord, est, ouest).
+	bool edge = material_at(px + ivec2(0, -1)) != ROCK || material_at(px + ivec2(1, 0)) != ROCK
+		|| material_at(px + ivec2(-1, 0)) != ROCK;
+	if (edge) {
+		return vec4(rock_face_light * 0.8, 1.0);
+	}
+	int lv = patch_level(px, 91);
+	return vec4(lv == 2 ? rock_top_light : rock_top, 1.0);
 }
 
 void fragment() {
 	ivec2 size = textureSize(types, 0) * tile;
 	ivec2 px = ivec2(floor(UV * vec2(size)));
 	int m = material_at(px);
+	if (m == ROCK) {
+		COLOR = rock_color(px);
+	} else {
 	vec4 col = is_painted(m) ? vec4(painted_color(m, px), 1.0) : tile_pixel(px);
+	// Ombre portée au pied des falaises.
+	if (material_at(px + ivec2(0, -1)) == ROCK || material_at(px + ivec2(0, -2)) == ROCK) {
+		col.rgb *= 0.7;
+	}
 	int up = material_at(px + ivec2(0, -1));
 	int dn = material_at(px + ivec2(0, 1));
 	int lf = material_at(px + ivec2(-1, 0));
@@ -350,4 +438,5 @@ void fragment() {
 		col.rgb *= 0.85;
 	}
 	COLOR = col;
+	}
 }

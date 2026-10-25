@@ -32,6 +32,8 @@ var _told_no_effect := false
 
 func _ready() -> void:
 	super()
+	# Sol et parois dessinés (bords naturels, falaises).
+	GroundPainter.apply(self, $Ground, &"cave", $Walls)
 	var player := get_player()
 	# Le héros ne peut pas mourir ici : c'est une scène d'histoire.
 	player.health.min_health = 1

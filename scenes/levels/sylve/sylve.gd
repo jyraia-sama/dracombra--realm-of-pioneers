@@ -28,7 +28,7 @@ var wound: WoundedEffect
 func _ready() -> void:
 	super()
 	# Sol aux bords organiques (plus d'effet de grille).
-	GroundPainter.apply(self, $Ground, &"sylve")
+	GroundPainter.apply(self, $Ground, &"sylve", $Walls)
 	var gate := get_node_or_null("ExitToDracombra") as LevelExit
 	if Game.has_flag(&"prologue_done"):
 		_start_free_play()

@@ -22,6 +22,8 @@ var _dark_color: Color
 
 func _ready() -> void:
 	super()
+	# Sol et parois dessinés (bords naturels, falaises).
+	GroundPainter.apply(self, $Ground, &"cave", $Walls)
 	_darkness = get_node_or_null("Darkness") as CanvasModulate
 	if _darkness:
 		_dark_color = _darkness.color

@@ -17,6 +17,8 @@ var _rubble_tiles: Dictionary[Vector2i, Vector2i] = {}
 
 func _ready() -> void:
 	super()
+	# Sol et parois dessinés (bords naturels, falaises).
+	GroundPainter.apply(self, $Ground, &"cave", $Walls)
 	if Game.has_flag(&"prologue_intro_done"):
 		get_player().global_position = respawn_position
 		return

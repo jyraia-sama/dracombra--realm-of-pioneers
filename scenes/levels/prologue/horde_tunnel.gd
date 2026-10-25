@@ -51,6 +51,8 @@ var _flight_time: float = 0.0
 
 func _ready() -> void:
 	super()
+	# Sol et parois dessinés (bords naturels, falaises).
+	GroundPainter.apply(self, $Ground, &"cave", $Walls)
 	var player := get_player()
 	# Le héros ne peut pas mourir ici : il doit fuir, pas tomber.
 	player.health.min_health = 1
