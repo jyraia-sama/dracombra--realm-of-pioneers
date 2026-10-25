@@ -4,3 +4,4 @@
 
 # Les fichiers .uid des scripts de test sont recréés par Godot sur chaque machine.
 tools/tests/*.uid
+build/
