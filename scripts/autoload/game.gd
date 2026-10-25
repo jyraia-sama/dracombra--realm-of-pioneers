@@ -110,3 +110,15 @@ func deserialize(data: Dictionary) -> void:
 		flags[StringName(k)] = bool(data["flags"][k])
 	day = int(data.get("day", 1))
 	harvested = data.get("harvested", {}).duplicate()
+
+
+## F11 (ou Alt+Entrée) : plein écran. En 1080p plein écran, chaque pixel du dessin HD
+## fait exactement 2 pixels d'écran.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.keycode == KEY_F11 or (key.keycode == KEY_ENTER and key.alt_pressed):
+		var full := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+		get_viewport().set_input_as_handled()

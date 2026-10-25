@@ -3,26 +3,27 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/city/ruin_arch.png" id="1_c6yps"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(15, 7)
+size = Vector2(16, 4)
 
 [sub_resource type="RectangleShape2D" id="Foot1"]
-size = Vector2(16, 7)
+size = Vector2(16.5, 4)
 
 [node name="RuinArch" type="Node2D" unique_id=449145940]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1096861186]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_c6yps")
 centered = false
-offset = Vector2(-20, -42)
+offset = Vector2(-40, -83)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=1088731132]
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(-11.5, -3.5)
+position = Vector2(-11.5, -2)
 shape = SubResource("Foot0")
 
 [node name="Foot1" type="CollisionShape2D" parent="Body"]
-position = Vector2(11, -3.5)
+position = Vector2(10.75, -2)
 shape = SubResource("Foot1")
 

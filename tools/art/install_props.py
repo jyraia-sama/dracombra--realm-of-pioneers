@@ -23,6 +23,9 @@ def footprint(png):
     cx=(min(r[0] for r in rs)+max(r[1] for r in rs)+1)/2 if rs else w/2
     return w,h,int(round(cx)),rs,band
 
+HD=os.environ.get('PROPS_HD')=='1'
+K=0.5 if HD else 1.0
+
 def fix_scene(tscn, png, collide=True):
     w,h,cx,rs,band=footprint(png)
     s=open(tscn).read()
@@ -36,6 +39,8 @@ def fix_scene(tscn, png, collide=True):
     else:
         new=(-cx, -h)
     s=re.sub(r'offset = Vector2\([-\d.]+, [-\d.]+\)', f'offset = Vector2({new[0]}, {new[1]})', s, count=1)
+    # dessin HD : deux pixels dessinés par pixel du monde
+    s=re.sub(r'(\[node name="Sprite2D"[^\n]*\n)(scale = Vector2\([^)]*\)\n)?', lambda m: m.group(1)+('scale = Vector2(0.5, 0.5)\n' if HD else ''), s, count=1)
     if collide and '[node name="Body"' in s:
         secs=re.split(r'(?m)^(?=\[)', s)
         drop_ids=set(); keep=[]
@@ -46,12 +51,12 @@ def fix_scene(tscn, png, collide=True):
                 continue
             keep.append(sec)
         keep=[sec for sec in keep if not any(f'id="{i}"' in sec.split('\n')[0] for i in drop_ids)]
-        hh=max(4,min(8,band))
+        hh=max(4,min(8,band*K))
         subs=''; nodes=''
         for i,(x0,x1) in enumerate(rs):
-            sw=max(3,x1-x0+1-2)
-            subs+=f'[sub_resource type="RectangleShape2D" id="Foot{i}"]\nsize = Vector2({sw}, {hh})\n\n'
-            px=(x0+x1+1)/2-cx
+            sw=max(3,(x1-x0+1-2)*K)
+            subs+=f'[sub_resource type="RectangleShape2D" id="Foot{i}"]\nsize = Vector2({sw:g}, {hh:g})\n\n'
+            px=((x0+x1+1)/2-cx)*K
             nodes+=f'[node name="Foot{i}" type="CollisionShape2D" parent="Body"]\nposition = Vector2({px:g}, {-hh/2:g})\nshape = SubResource("Foot{i}")\n\n'
         out=''
         for sec in keep:

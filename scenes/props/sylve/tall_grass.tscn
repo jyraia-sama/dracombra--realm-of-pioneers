@@ -6,9 +6,10 @@
 [node name="TallGrass" type="Node2D" unique_id=1675316780]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1954418069]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_3b3q8")
 centered = false
-offset = Vector2(-9, -16)
+offset = Vector2(-18, -32)
 
 [node name="Harvest" type="Node2D" parent="." unique_id=625984199]
 script = ExtResource("2_owc5l")

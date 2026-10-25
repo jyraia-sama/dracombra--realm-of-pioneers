@@ -3,19 +3,20 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/city/ruin_wall.png" id="1_3behw"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(32, 6)
+size = Vector2(32.5, 4)
 
 [node name="RuinWall" type="Node2D" unique_id=1855806791]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2076954020]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_3behw")
 centered = false
-offset = Vector2(-17, -34)
+offset = Vector2(-34, -68)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=833228044]
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(0, -3)
+position = Vector2(-0.25, -2)
 shape = SubResource("Foot0")
 

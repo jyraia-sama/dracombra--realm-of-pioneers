@@ -3,26 +3,27 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/city/ruin_arch_dragon.png" id="1_7bc4p"]
 
 [sub_resource type="RectangleShape2D" id="Foot0"]
-size = Vector2(11, 7)
+size = Vector2(12, 4)
 
 [sub_resource type="RectangleShape2D" id="Foot1"]
-size = Vector2(11, 7)
+size = Vector2(11.5, 4)
 
 [node name="RuinArchDragon" type="Node2D" unique_id=1223860201]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1002128043]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_7bc4p")
 centered = false
-offset = Vector2(-16, -44)
+offset = Vector2(-31, -88)
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=533845522]
 collision_mask = 0
 
 [node name="Foot0" type="CollisionShape2D" parent="Body"]
-position = Vector2(-9.5, -3.5)
+position = Vector2(-9, -2)
 shape = SubResource("Foot0")
 
 [node name="Foot1" type="CollisionShape2D" parent="Body"]
-position = Vector2(8.5, -3.5)
+position = Vector2(9.25, -2)
 shape = SubResource("Foot1")
 

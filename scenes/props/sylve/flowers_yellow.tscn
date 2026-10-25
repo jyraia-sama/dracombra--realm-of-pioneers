@@ -5,6 +5,7 @@
 [node name="FlowersYellow" type="Node2D" unique_id=1023264124]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=939779302]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_opftg")
 centered = false
-offset = Vector2(-7, -13)
+offset = Vector2(-14, -25)

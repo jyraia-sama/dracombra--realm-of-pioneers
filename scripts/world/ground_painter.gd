@@ -82,7 +82,8 @@ func _build(kind: StringName) -> void:
 		if source:
 			sm.set_shader_parameter("atlas%d" % _layer.tile_set.get_source_id(i), source.texture)
 	var look: Dictionary = LOOKS.get(kind, {})
-	sm.set_shader_parameter("face_height", 22 if kind == &"cave" else 18)
+	sm.set_shader_parameter("hd", HD)
+	sm.set_shader_parameter("face_height", (22 if kind == &"cave" else 18) * HD)
 	for key in look:
 		var col: Color = look[key]
 		sm.set_shader_parameter(key, Vector3(col.r, col.g, col.b))
@@ -94,6 +95,8 @@ func _build(kind: StringName) -> void:
 
 
 const CHUNK := 12
+## Pixels dessinés par pixel du monde : le sol est dessiné aussi finement que les décors HD.
+const HD := 2
 
 
 func _split_in_chunks(cells: Vector2i, sm: ShaderMaterial) -> void:
@@ -111,6 +114,51 @@ func _split_in_chunks(cells: Vector2i, sm: ShaderMaterial) -> void:
 			part.material = sm
 			add_child(part)
 	material = null
+	_bake.call_deferred()
+
+
+## Le sol ne bouge jamais : on le calcule une seule fois en images ordinaires (morceau par
+## morceau, plusieurs par image), puis le shader n'est plus utilisé. Sans cela, chaque
+## pixel du sol serait recalculé à chaque image, ce qui coûte cher aux petites cartes graphiques.
+func _bake() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var parts: Array[Sprite2D] = []
+	for c in get_children():
+		if c is Sprite2D:
+			parts.append(c)
+	var px_per_cell := _layer.tile_set.tile_size.x * HD
+	const BATCH := 16
+	for start in range(0, parts.size(), BATCH):
+		var views: Array[SubViewport] = []
+		for part in parts.slice(start, start + BATCH):
+			var vp := SubViewport.new()
+			vp.size = Vector2i(part.region_rect.size) * px_per_cell
+			vp.transparent_bg = true
+			vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+			vp.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
+			var copy := Sprite2D.new()
+			copy.texture = part.texture
+			copy.centered = false
+			copy.region_enabled = true
+			copy.region_rect = part.region_rect
+			copy.scale = Vector2(px_per_cell, px_per_cell)
+			copy.material = part.material
+			vp.add_child(copy)
+			add_child(vp)
+			views.append(vp)
+		await RenderingServer.frame_post_draw
+		for i in views.size():
+			var part := parts[start + i]
+			var img := views[i].get_texture().get_image()
+			views[i].queue_free()
+			if img == null or img.is_empty() or not is_instance_valid(part):
+				continue
+			part.material = null
+			part.region_enabled = false
+			part.texture = ImageTexture.create_from_image(img)
+			# Une image HD : px_per_cell pixels par case, la case fait 1 unité ici.
+			part.scale = Vector2.ONE / float(px_per_cell)
 
 
 ## [matériau, coordonnées de la tuile à dessiner].

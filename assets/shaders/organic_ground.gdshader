@@ -13,6 +13,8 @@ uniform sampler2D types : filter_nearest;
 uniform sampler2D atlas0 : filter_nearest;
 uniform sampler2D atlas1 : filter_nearest;
 uniform int tile = 16;
+// Finesse du dessin : pixels dessinés par pixel du monde (2 = pixel art HD).
+uniform int hd = 2;
 // Amplitude des ondulations des bords, en pixels.
 uniform float wobble = 5.0;
 // Taille des « vagues » du bruit, en pixels.
@@ -70,11 +72,12 @@ bool organic(int m) {
 // (interpolation bilinéaire), plus un peu de bruit propre à ce terrain. Le plus fort
 // l'emporte : les angles s'arrondissent, les diagonales en escalier deviennent des courbes.
 ivec2 pick_cell(ivec2 px) {
-	ivec2 cell0 = px / tile;
+	ivec2 cell0 = px / (tile * hd);
 	int m0 = material_of(cell_data(cell0));
-	vec2 p = vec2(px) / noise_scale;
+	vec2 wp = vec2(px) / float(hd);
+	vec2 p = wp / noise_scale;
 	vec2 n = vec2(value_noise(p, 1), value_noise(p, 2)) - 0.5;
-	vec2 g = (vec2(px) + n * wobble) / float(tile) - 0.5;
+	vec2 g = (wp + n * wobble) / float(tile) - 0.5;
 	ivec2 base = ivec2(floor(g));
 	vec2 f = fract(g);
 	ivec2 cells[4] = ivec2[4](base, base + ivec2(1, 0), base + ivec2(0, 1), base + ivec2(1, 1));
@@ -122,7 +125,8 @@ vec4 tile_pixel(ivec2 px) {
 	if (material_of(d) < 0) {
 		return vec4(0.0);
 	}
-	ivec2 local = ivec2(((px % tile) + tile) % tile);
+	ivec2 wpx = px / hd;
+	ivec2 local = ivec2(((wpx % tile) + tile) % tile);
 	ivec2 at = ivec2(round(vec2(d.g, d.b) * 255.0)) * tile + local;
 	if (d.r * 255.0 > 0.5) {
 		return texelFetch(atlas1, at, 0);
@@ -157,7 +161,7 @@ vec3 rgb(int r, int g, int b) {
 
 // Grandes taches : 0 = sombre, 1 = normal, 2 = clair.
 int patch_level(ivec2 px, int salt) {
-	vec2 p = vec2(px);
+	vec2 p = vec2(px) / float(hd);
 	float n = value_noise(p / 42.0, salt) * 0.7 + value_noise(p / 15.0, salt + 5) * 0.3;
 	return n < 0.36 ? 0 : (n > 0.64 ? 2 : 1);
 }
@@ -165,6 +169,7 @@ int patch_level(ivec2 px, int salt) {
 // Petit motif posé au hasard dans une case de `cell` pixels. Renvoie 0 (rien) ou 1..n.
 // Motifs (5 x 3, lignes de haut en bas) : touffe d'herbe, fleur, cailloux.
 int decal(ivec2 px, int cell, float chance, int salt, out int kind) {
+	cell *= hd;
 	ivec2 b = ivec2(floor(vec2(px) / float(cell)));
 	float h = hash(b + ivec2(salt * 97, salt * 31));
 	kind = 0;
@@ -216,21 +221,21 @@ ivec2 cobble_cell(vec2 p, out float d1, out float d2) {
 vec3 cobble(ivec2 px) {
 	float d1;
 	float d2;
-	vec2 p = vec2(px) + 0.5;
+	vec2 p = (vec2(px) + 0.5) / float(hd);
 	ivec2 c = cobble_cell(p, d1, d2);
-	if (d2 - d1 < 1.1) {
+	if (d2 - d1 < 0.6) {
 		return rgb(104, 98, 90);
 	}
 	float a;
 	float b;
-	ivec2 above = cobble_cell(p + vec2(0.0, -1.0), a, b);
+	ivec2 above = cobble_cell(p + vec2(0.0, -1.0 / float(hd)), a, b);
 	float t = hash(c + ivec2(23, 5));
 	vec3 col = t < 0.33 ? rgb(170, 162, 142) : (t < 0.66 ? rgb(181, 173, 152) : rgb(160, 152, 134));
 	// Mousse : les pavés gagnés par l'herbe, par plaques.
-	if (value_noise(vec2(px) / 30.0, 71) > 0.66 && hash(c + ivec2(1, 99)) < 0.6) {
+	if (value_noise(p / 30.0, 71) > 0.66 && hash(c + ivec2(1, 99)) < 0.6) {
 		col = mix(col, rgb(128, 146, 72), 0.55);
 	}
-	if (above != c || b - a < 1.1) {
+	if (above != c || b - a < 0.6) {
 		col += vec3(0.06);
 	}
 	return col;
@@ -238,10 +243,11 @@ vec3 cobble(ivec2 px) {
 
 // Dalles de la grande place : 16 px, rangées décalées, joints, quelques fissures.
 vec3 slab(ivec2 px) {
-	int row = px.y / 16;
-	int sx = px.x + (row % 2) * 8;
-	ivec2 c = ivec2(sx / 16, row);
-	ivec2 l = ivec2(sx % 16, px.y % 16);
+	int S = 16 * hd;
+	int row = px.y / S;
+	int sx = px.x + (row % 2) * (S / 2);
+	ivec2 c = ivec2(sx / S, row);
+	ivec2 l = ivec2(sx % S, px.y % S);
 	if (l.x == 0 || l.y == 0) {
 		return rgb(98, 90, 80);
 	}
@@ -250,13 +256,13 @@ vec3 slab(ivec2 px) {
 	if (l.y == 1 || l.x == 1) {
 		col += vec3(0.05);
 	}
-	if (l.y == 15 || l.x == 15) {
+	if (l.y == S - 1 || l.x == S - 1) {
 		col -= vec3(0.05);
 	}
 	// Une fissure de temps en temps.
 	if (hash(c + ivec2(3, 77)) < 0.25) {
-		int fx = 3 + int(hash(c + ivec2(9, 9)) * 9.0);
-		if (abs(l.x - fx - (l.y / 4) % 2) < 1 && l.y > 2 && l.y < 12) {
+		int fx = (3 + int(hash(c + ivec2(9, 9)) * 9.0)) * hd;
+		if (abs(l.x - fx - (l.y / (3 * hd)) % 2) < 1 && l.y > 2 * hd && l.y < 12 * hd) {
 			col = rgb(132, 124, 112);
 		}
 	}
@@ -300,10 +306,11 @@ vec3 painted_color(int m, ivec2 px) {
 		int lv = patch_level(px, 57);
 		vec3 c = lv == 0 ? rgb(66, 104, 128) : (lv == 2 ? rgb(88, 128, 148) : rgb(76, 116, 138));
 		// Reflets : petits traits horizontaux.
-		ivec2 b = ivec2(px.x / 12, px.y / 5);
+		ivec2 b = ivec2(px.x / (12 * hd), px.y / (5 * hd));
 		float h = hash(b + ivec2(5, 9));
-		int start = int(hash(b) * 7.0);
-		if (h < 0.12 && px.y % 5 == 2 && (px.x % 12) >= start && (px.x % 12) < start + 4) {
+		int start = int(hash(b) * 7.0) * hd;
+		int lx = px.x % (12 * hd);
+		if (h < 0.12 && px.y % (5 * hd) == 2 * hd && lx >= start && lx < start + 4 * hd) {
 			c = rgb(150, 186, 196);
 		}
 		return c;
@@ -346,7 +353,7 @@ bool is_painted(int m) {
 // `face_height` pixels, avec des strates, des fissures et une arête claire.
 vec4 rock_color(ivec2 px) {
 	int below = 0;
-	for (int i = 1; i <= 28; i++) {
+	for (int i = 1; i <= 56; i++) {
 		if (i > face_height) {
 			break;
 		}
@@ -360,29 +367,28 @@ vec4 rock_color(ivec2 px) {
 		int depth = face_height - below;
 		// Facettes de roche irrégulières (cellules de Voronoï étirées), fissures sombres,
 		// arête claire en haut de chaque facette, plus sombre vers le pied.
-		vec2 q = vec2(float(px.x) / 1.35, float(depth) + float(px.y) * 0.0);
-		q.y = float(px.y);
+		vec2 q = vec2(float(px.x) / 1.35, float(px.y)) / float(hd);
 		float d1;
 		float d2;
 		ivec2 cell = cobble_cell(q * vec2(7.0 / 10.0, 7.0 / 9.0) + vec2(0.5), d1, d2);
 		float a1;
 		float a2;
-		ivec2 above = cobble_cell((q + vec2(0.0, -1.0)) * vec2(7.0 / 10.0, 7.0 / 9.0) + vec2(0.5), a1, a2);
+		ivec2 above = cobble_cell((q + vec2(0.0, -1.0 / float(hd))) * vec2(7.0 / 10.0, 7.0 / 9.0) + vec2(0.5), a1, a2);
 		float t = hash(cell + ivec2(13, 31));
 		vec3 c = t < 0.33 ? rock_face : (t < 0.66 ? mix(rock_face, rock_face_light, 0.35) : mix(rock_face, rock_face_dark, 0.4));
 		if (above != cell) {
 			c = mix(c, rock_face_light, 0.6);
 		}
-		if (d2 - d1 < 0.8) {
+		if (d2 - d1 < 0.45) {
 			c = rock_face_dark;
 		}
 		if (depth <= 1) {
 			c = rock_face_light;
-		} else if (depth >= face_height - 6) {
+		} else if (depth >= face_height - 6 * hd) {
 			c = mix(c, rock_face_dark, 0.35);
 		}
 		// Le pied du pan s'assombrit.
-		if (below <= 2) {
+		if (below <= 2 * hd) {
 			c *= 0.75;
 		}
 		return vec4(c, 1.0);
@@ -398,7 +404,7 @@ vec4 rock_color(ivec2 px) {
 }
 
 void fragment() {
-	ivec2 size = textureSize(types, 0) * tile;
+	ivec2 size = textureSize(types, 0) * tile * hd;
 	ivec2 px = ivec2(floor(UV * vec2(size)));
 	int m = material_at(px);
 	if (m == ROCK) {
@@ -406,7 +412,7 @@ void fragment() {
 	} else {
 	vec4 col = is_painted(m) ? vec4(painted_color(m, px), 1.0) : tile_pixel(px);
 	// Ombre portée au pied des falaises.
-	if (material_at(px + ivec2(0, -1)) == ROCK || material_at(px + ivec2(0, -2)) == ROCK) {
+	if (material_at(px + ivec2(0, -2)) == ROCK || material_at(px + ivec2(0, -2 * hd)) == ROCK) {
 		col.rgb *= 0.7;
 	}
 	int up = material_at(px + ivec2(0, -1));
@@ -423,8 +429,8 @@ void fragment() {
 			// Liseré clair au bord de l'eau.
 			col.rgb = rgb(214, 228, 222);
 		} else {
-			int up2 = material_at(px + ivec2(0, -2));
-			int up3 = material_at(px + ivec2(0, -3));
+			int up2 = material_at(px + ivec2(0, -2 * hd));
+			int up3 = material_at(px + ivec2(0, -3 * hd));
 			if (up2 != WATER || up3 != WATER) {
 				// L'ombre de la berge sur l'eau, côté nord.
 				col.rgb *= 0.8;
