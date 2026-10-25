@@ -2,9 +2,9 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/cave/roots_a.png" id="1_2gd0y"]
 
-[node name="RootsA" type="Node2D" unique_id=1880223595]
+[node name="RootsA" type="Node2D" unique_id=1197969176]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=263670051]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=911894319]
 texture = ExtResource("1_2gd0y")
 centered = false
 offset = Vector2(-7, -12)

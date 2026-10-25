@@ -2,10 +2,10 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/lair/scorched_ground.png" id="1_3bbjc"]
 
-[node name="ScorchedGround" type="Node2D" unique_id=1810997339]
+[node name="ScorchedGround" type="Node2D" unique_id=582156488]
 z_index = -1
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1776392636]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1644476405]
 texture = ExtResource("1_3bbjc")
 centered = false
 offset = Vector2(-18, -9)

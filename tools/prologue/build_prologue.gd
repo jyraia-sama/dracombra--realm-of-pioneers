@@ -1251,6 +1251,12 @@ func _build_dracombra(rows: PackedStringArray, _cave_tex: Texture2D) -> void:
 	guild.set_script(load("res://scenes/town/guild.gd"))
 	guild.position = _feet(center)
 	_add(root, guild)
+	# Ysolde, l'herboriste qui a recueilli le héros, de l'autre côté du feu.
+	var ysolde := Node2D.new()
+	ysolde.name = "Ysolde"
+	ysolde.set_script(load("res://scenes/npc/ysolde.gd"))
+	ysolde.position = _feet(center) + Vector2(26, 2)
+	_add(root, ysolde)
 	var town := Node2D.new()
 	town.name = "Town"
 	town.set_script(load("res://scenes/town/town_layer.gd"))

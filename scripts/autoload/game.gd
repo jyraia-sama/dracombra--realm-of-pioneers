@@ -49,6 +49,7 @@ func reset() -> void:
 	pending_position = null
 	Inventory.clear()
 	Town.reset()
+	Quests.reset()
 
 
 # ------------------------------------------------------------------ récoltes

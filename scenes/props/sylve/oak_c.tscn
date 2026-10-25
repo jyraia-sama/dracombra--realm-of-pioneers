@@ -6,20 +6,20 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ssiqk"]
 size = Vector2(12, 6)
 
-[node name="OakC" type="Node2D" unique_id=564871691]
+[node name="OakC" type="Node2D" unique_id=753318740]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2031226386]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1331410565]
 texture = ExtResource("1_e88a8")
 centered = false
 offset = Vector2(-24, -52)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=1465707259]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1269722897]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1784881779]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=2024062267]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_ssiqk")
 
-[node name="Harvest" type="Node2D" parent="." unique_id=1840411419]
+[node name="Harvest" type="Node2D" parent="." unique_id=358450918]
 script = ExtResource("2_upxrs")
 hit_size = Vector2(14, 18)

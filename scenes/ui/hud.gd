@@ -9,10 +9,13 @@ extends CanvasLayer
 var _item_labels: Dictionary[StringName, Label] = {}
 var _info: Label
 var _prompt: Label
+var _objective: Label
 
 
 func _ready() -> void:
 	_info = _make_label(Vector2(8, 22), 10)
+	_objective = _make_label(Vector2(8, 36), 10)
+	_objective.add_theme_color_override("font_color", Color(1.0, 0.86, 0.5))
 	_prompt = _make_label(Vector2(0, 0), 12)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.offset_top = -52
@@ -46,6 +49,10 @@ func _make_label(at: Vector2, size: int) -> Label:
 	label.add_theme_constant_override("outline_size", 4)
 	add_child(label)
 	return label
+
+
+func _process(_delta: float) -> void:
+	_objective.text = Quests.objective_text()
 
 
 func _refresh_info() -> void:

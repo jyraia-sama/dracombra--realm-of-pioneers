@@ -43,7 +43,8 @@ func _ready() -> void:
 	_panel.visible = false
 
 
-func ask(title: String, body: String, options: Array) -> int:
+## bottom = true : en bas de l'écran (dialogues), pour ne pas cacher les personnages.
+func ask(title: String, body: String, options: Array, bottom: bool = false) -> int:
 	if is_open:
 		return -1
 	is_open = true
@@ -65,7 +66,10 @@ func ask(title: String, body: String, options: Array) -> int:
 	_panel.visible = true
 	# Le panneau se recentre une fois sa taille connue.
 	await get_tree().process_frame
-	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+	if bottom:
+		_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 10)
+	else:
+		_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 	if _buttons.get_child_count() > 0:
 		(_buttons.get_child(0) as Button).grab_focus()
 	var index: int = await _picked

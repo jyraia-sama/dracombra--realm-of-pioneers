@@ -3,6 +3,8 @@ extends Node
 ##     Crafting.open(&"workbench")  -> menu des recettes de l'établi
 
 const RECIPES: Array[Dictionary] = [
+	{"out": &"axe", "n": 1, "station": &"camp", "in": {&"wood": 3, &"stone": 2}},
+	{"out": &"pickaxe", "n": 1, "station": &"camp", "in": {&"wood": 3, &"stone": 3}},
 	{"out": &"rope", "n": 1, "station": &"workbench", "in": {&"flax": 3}},
 	{"out": &"cloth", "n": 1, "station": &"workbench", "in": {&"flax": 4}},
 	{"out": &"balm", "n": 1, "station": &"workbench", "in": {&"herb": 3}},
@@ -11,7 +13,7 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"holy_symbol", "n": 1, "station": &"workbench", "in": {&"wood": 2, &"cloth": 2, &"balm": 1}},
 	{"out": &"leather", "n": 1, "station": &"drying_rack", "in": {&"hide": 1}},
 ]
-const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à peaux"}
+const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à peaux", &"camp": "Feu de camp"}
 
 
 func recipes_for(station: StringName) -> Array[Dictionary]:

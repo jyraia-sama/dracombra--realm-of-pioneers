@@ -27,6 +27,7 @@ Narration="*res://scenes/ui/narration.tscn"
 Transition="*res://scenes/ui/transition.tscn"
 Choice="*res://scripts/autoload/choice.gd"
 Crafting="*res://scripts/autoload/crafting.gd"
+Quests="*res://scripts/autoload/quests.gd"
 GameMenu="*res://scenes/ui/game_menu.gd"
 
 [display]

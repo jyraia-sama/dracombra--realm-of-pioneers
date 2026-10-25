@@ -285,7 +285,11 @@ func _run() -> void:
 	_check(in_city, "réveil : quelques jours plus tard, il se réveille à Dracombra")
 	var city := get_tree().current_scene
 	p = city.get_node("Player")
-	var free := await _wait_until(func(): return city.phase == 1 and not p.input_locked, 3000)
+	var choice := get_tree().root.get_node("Choice")
+	var free := await _wait_until(func():
+		if choice.is_open:
+			choice._picked.emit(0)
+		return city.phase == 1 and not p.input_locked, 6000)
 	_check(free, "réveil : il se relève, le chapitre 1 commence")
 	_check(p.global_position.distance_to(city.get_node("Guild").global_position) < 64.0, "réveil : près du feu de camp de la future guilde")
 	_check(p.health.current_health == p.health.max_health, "réveil : ses blessures sont guéries (%d PV)" % p.health.current_health)

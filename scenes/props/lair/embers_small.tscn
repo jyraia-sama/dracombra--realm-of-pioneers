@@ -4,14 +4,14 @@
 [ext_resource type="Texture2D" path="res://assets/lights/light_radial.tres" id="2_2hghh"]
 [ext_resource type="Script" path="res://scenes/props/flicker_light.gd" id="3_tn6ls"]
 
-[node name="EmbersSmall" type="Node2D" unique_id=1821750016]
+[node name="EmbersSmall" type="Node2D" unique_id=1190645767]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1849780390]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1468326524]
 texture = ExtResource("1_8crau")
 centered = false
 offset = Vector2(-9, -11)
 
-[node name="Light" type="PointLight2D" parent="." unique_id=1213921872]
+[node name="Light" type="PointLight2D" parent="." unique_id=889388214]
 position = Vector2(0, -4.4)
 color = Color(1, 0.5, 0.18, 1)
 energy = 0.8

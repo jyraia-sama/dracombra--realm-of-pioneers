@@ -93,7 +93,10 @@ func _run() -> void:
 				tree = p
 	_check(tree != null, "récolte : des arbres poussent dans les ruines")
 	await _hit(player, tree.global_position, 3)
-	_check(not tree.visible, "récolte : l'arbre tombe après 3 coups")
+	_check(tree.visible, "récolte : sans hache, 3 coups ne suffisent pas")
+	await _hit(player, tree.global_position, 3)
+	await _frames(30)
+	_check(not tree.visible, "récolte : sans hache, l'arbre tombe après 6 coups")
 	await _collect(city, player)
 	_check(Inv.get_count(&"wood") >= 2, "récolte : du bois dans le sac (%d)" % Inv.get_count(&"wood"))
 	var debris: Node2D = null
@@ -102,8 +105,10 @@ func _run() -> void:
 		if h and h.item_id == &"stone" and p.visible:
 			if debris == null or p.global_position.distance_to(player.global_position) < debris.global_position.distance_to(player.global_position):
 				debris = p
+	Inv.add_item(Inv.item_by_id(&"pickaxe"), 1)
 	var hits_needed: int = debris.get_node("Harvest").hits
 	await _hit(player, debris.global_position, hits_needed)
+	await _frames(30)
 	await _collect(city, player)
 	_check(not debris.visible and Inv.get_count(&"stone") >= 1, "déblayage : des décombres donnent de la pierre (%d)" % Inv.get_count(&"stone"))
 

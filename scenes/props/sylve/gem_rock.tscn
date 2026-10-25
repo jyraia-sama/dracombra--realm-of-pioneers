@@ -7,28 +7,28 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h1rkl"]
 size = Vector2(12, 6)
 
-[node name="GemRock" type="Node2D" unique_id=1874438932]
+[node name="GemRock" type="Node2D" unique_id=1561625848]
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=483024120]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=600602607]
 texture = ExtResource("1_s17y7")
 centered = false
 offset = Vector2(-9, -20)
 
-[node name="Body" type="StaticBody2D" parent="." unique_id=617351911]
+[node name="Body" type="StaticBody2D" parent="." unique_id=1444036693]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1988366687]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=1545444680]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_h1rkl")
 
-[node name="Light" type="PointLight2D" parent="." unique_id=1310652054]
+[node name="Light" type="PointLight2D" parent="." unique_id=912933434]
 position = Vector2(0, -8)
 color = Color(0.45, 0.75, 1, 1)
 energy = 0.7
 texture = ExtResource("2_h8ww7")
 texture_scale = 0.625
 
-[node name="Harvest" type="Node2D" parent="." unique_id=121120346]
+[node name="Harvest" type="Node2D" parent="." unique_id=1260904714]
 script = ExtResource("3_8ht5j")
 item_id = &"gem"
 min_amount = 1

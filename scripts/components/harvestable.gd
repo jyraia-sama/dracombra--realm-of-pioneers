@@ -18,8 +18,12 @@ const DUST_SCENE := preload("res://scenes/props/dust_puff.tscn")
 ## Taille de la zone qu'on peut frapper, en pixels, posée au pied du décor.
 @export var hit_size: Vector2 = Vector2(14, 14)
 
+## Outil qui rend la récolte deux fois plus rapide (et plus généreuse), selon la ressource.
+const TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe"}
+
 var health: HealthComponent
 var _sprite: CanvasItem
+var _hits_taken := 0
 
 
 func _ready() -> void:
@@ -29,7 +33,8 @@ func _ready() -> void:
 		return
 	health = HealthComponent.new()
 	health.name = "Health"
-	health.max_health = hits
+	# Les coups sont comptés ici (sans outil, il en faut deux fois plus).
+	health.max_health = 9999
 	health.invulnerability_duration = 0.15
 	add_child(health)
 	var hurtbox := Hurtbox.new()
@@ -45,7 +50,6 @@ func _ready() -> void:
 	hurtbox.add_child(shape)
 	add_child(hurtbox)
 	hurtbox.hit_received.connect(_on_hit)
-	health.died.connect(_on_depleted)
 
 
 func _key() -> String:
@@ -54,7 +58,18 @@ func _key() -> String:
 	return "%s:%s" % [level, scene.get_path_to(get_parent()) if scene else get_parent().name]
 
 
+func has_tool() -> bool:
+	return not TOOLS.has(item_id) or Inventory.get_count(TOOLS[item_id]) > 0
+
+
+func hits_needed() -> int:
+	return hits if has_tool() else hits * 2
+
+
 func _on_hit(_hitbox: Hitbox) -> void:
+	_hits_taken += 1
+	if _hits_taken >= hits_needed():
+		_on_depleted.call_deferred()
 	# Le décor tremble sous le coup.
 	if _sprite is Node2D:
 		var node := _sprite as Node2D
@@ -68,10 +83,16 @@ func _on_hit(_hitbox: Hitbox) -> void:
 
 
 func _on_depleted() -> void:
+	if Game.is_harvested(_key(), regrow_days):
+		return
 	Game.mark_harvested(_key())
+	for child in get_children():
+		if child is Hurtbox:
+			child.set_deferred("monitorable", false)
 	var item := Inventory.item_by_id(item_id)
+	var bonus := 1 if TOOLS.has(item_id) and has_tool() else 0
 	if item != null:
-		for i in randi_range(min_amount, max_amount):
+		for i in randi_range(min_amount, max_amount) + bonus:
 			var pickup: Pickup = PICKUP_SCENE.instantiate()
 			pickup.item = item
 			var at := global_position + Vector2(0, -2)

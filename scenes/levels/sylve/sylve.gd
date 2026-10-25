@@ -78,9 +78,9 @@ func _collapse() -> void:
 		wound.drop_blood(player.global_position + Vector2(randf_range(-6.0, 10.0), randf_range(-3.0, 2.0)), true)
 	await Narration.say("Ses jambes cédèrent. Il s'effondra au pied du grand chêne, devant une arche de pierre.", 3.2)
 	await Transition.fade_out(1.6)
-	await Transition.story_text("Il resta là plusieurs jours, entre fièvre et sommeil.", 2.6)
-	await Transition.story_text("Les vieilles pierres l'abritaient du vent. La rivière, toute proche, étanchait sa soif.", 3.2)
-	await Transition.story_text("Quand il put enfin marcher, il franchit l'arche... et découvrit ce qu'elle gardait.", 3.2)
+	await Transition.story_text("Des pas dans l'herbe. Une silhouette encapuchonnée se pencha sur lui.", 3.0)
+	await Transition.story_text("« Encore vivant... Tiens bon, étranger. »", 2.4)
+	await Transition.story_text("On le traîna à travers l'arche. Puis vinrent la fièvre, l'odeur des herbes, et le sommeil.", 3.4)
 	await Transition.story_text("Quelques jours plus tard...", 2.2)
 	# Le réveil se joue à l'intérieur de Dracombra (l'écran reste noir pendant le chargement).
 	Game.set_flag(&"wake_in_dracombra")

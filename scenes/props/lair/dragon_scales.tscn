@@ -2,10 +2,10 @@
 
 [ext_resource type="Texture2D" path="res://assets/sprites/props/lair/dragon_scales.png" id="1_863re"]
 
-[node name="DragonScales" type="Node2D" unique_id=299037599]
+[node name="DragonScales" type="Node2D" unique_id=1148983002]
 z_index = -1
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=394784473]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=508264811]
 texture = ExtResource("1_863re")
 centered = false
 offset = Vector2(-26, -9)

@@ -75,14 +75,16 @@ func reserved_rect() -> Rect2:
 
 
 func _on_interacted() -> void:
-	var options := ["Dormir jusqu'au lendemain", "Améliorer la guilde", "Changer de classe", "Fermer"]
+	var options := ["Dormir jusqu'au lendemain", "Fabriquer des outils", "Améliorer la guilde", "Changer de classe", "Fermer"]
 	var choice := await Choice.ask(Town.guild_name(), _status_text(), options)
 	match choice:
 		0:
 			Game.sleep()
 		1:
-			_upgrade()
+			Crafting.open(&"camp")
 		2:
+			_upgrade()
+		3:
 			_change_class()
 
 

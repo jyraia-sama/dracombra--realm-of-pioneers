@@ -42,16 +42,23 @@ func _wake_up() -> void:
 	player.face(Vector2.RIGHT)
 	await get_tree().process_frame
 	await Transition.fade_in(1.6)
-	await Narration.say("Ses blessures s'étaient refermées. Il était vivant.", 2.8)
-	await Narration.say("Mais la griffe de Solakor avait laissé une marque brûlante : il n'avait plus la force d'autrefois.", 3.6)
+	var hero := Hero.hero_name
+	await Ysolde.lines("Ysolde", ["Ah... tu ouvres enfin les yeux. Quatre jours que tu dors, étranger."])
+	await Ysolde.lines(hero, ["Où... suis-je ?"])
+	await Ysolde.lines("Ysolde", ["Je t'ai trouvé devant la grande porte, à moitié vidé de ton sang. Une griffe de dragon, hein ? Tu as de la chance d'être en vie.",
+		"Mes herbes ont refermé la plaie. Mais la brûlure restera : tu n'auras plus la force d'autrefois.",
+		"Je m'appelle Ysolde. Herboriste... et exilée, comme toi je suppose. Je vis cachée dans ces ruines depuis des années."])
 	await wound.play(&"rise")
 	wound.release_pose()
 	wound.queue_free()
 	player.face(Vector2.UP)
-	await Narration.say("Autour de lui, des avenues pavées, des dragons sculptés dans la pierre... Ce ne pouvait être que Dracombra.", 4.0)
+	await Ysolde.lines(hero, ["Je m'appelle %s. Ces ruines... ces dragons sculptés dans la pierre..." % hero])
+	await Ysolde.lines("Ysolde", ["Dracombra. L'ancienne capitale des hommes et des dragons. Il n'en reste que des pierres... et nous."])
 	await Narration.title_card("DRACOMBRA", "Chapitre 1 — Les Pionniers", 3.0)
-	await Narration.say("Ici, il bâtirait un camp. Puis un village. Puis une cité, et une guilde pour les oubliés d'Aethelgard.", 4.0)
+	await Ysolde.lines(hero, ["Alors c'est ici que je bâtirai. Un camp, puis un village, puis une cité. Une guilde pour tous les oubliés d'Aethelgard."])
+	await Ysolde.lines("Ysolde", ["Ha ! Ambitieux, pour un homme qui tenait à peine debout hier. Bien. Je vais t'apprendre à vivre ici."])
 	phase = Phase.FREE
 	player.input_locked = false
+	Quests.reset()
 	Save.save_game()
-	Narration.say("B : construire · E : interagir · Échap : menu (sac, personnage, carte)", 5.0)
+	Narration.say("E : interagir · B : construire · Échap : menu (sac, personnage, carte). Parlez à Ysolde.", 5.0)
