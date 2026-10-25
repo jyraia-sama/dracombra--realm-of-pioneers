@@ -59,7 +59,7 @@ int material_of(vec4 d) {
 }
 
 bool organic(int m) {
-	return m == GRASS || m == FOREST || m == DIRT || m == RUBBLE;
+	return m == GRASS || m == FOREST || m == DIRT || m == RUBBLE || m == PAVING;
 }
 
 // La case dont on prend le dessin pour le pixel `px` (coordonnées en pixels du calque).
