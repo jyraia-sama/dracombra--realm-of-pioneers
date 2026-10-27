@@ -1,14 +1,18 @@
 [
  {
-  "tag_name": "atelier-v1.9.1",
-  "name": "Atelier Dracombra 1.9.1",
-  "body": "Animation : outil Articuler (déplacer une partie du corps en ligne droite ou la tourner autour de son articulation).",
+  "tag_name": "atelier-v1.10.0",
+  "name": "Atelier Dracombra 1.10.0",
+  "body": "Menu Fichier dans tous les onglets : fichiers .atelier (Enregistrer, Enregistrer sous, Ouvrir, récents, double-clic), sauvegarde automatique, copies de secours, planche en PNG.\n\nlauncher: 1.10.0",
   "draft": false,
   "prerelease": false,
   "assets": [
    {
     "name": "atelier-index.html",
-    "browser_download_url": "https://raw.githubusercontent.com/jyraia-sama/dracombra--realm-of-pioneers/atelier-updates/atelier-index.html?v=1.9.1"
+    "browser_download_url": "https://raw.githubusercontent.com/jyraia-sama/dracombra--realm-of-pioneers/atelier-updates/atelier-index.html?v=1.10.0"
+   },
+   {
+    "name": "AtelierDracombra.exe",
+    "browser_download_url": "https://raw.githubusercontent.com/jyraia-sama/dracombra--realm-of-pioneers/atelier-updates/AtelierDracombra.exe?v=1.10.0"
    }
   ]
  }
