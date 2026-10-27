@@ -1,18 +1,14 @@
 [
  {
-  "tag_name": "atelier-v1.8.0",
-  "name": "Atelier Dracombra 1.8.0",
-  "body": "Première version avec mises à jour automatiques : onglets de travail, guide.\n\nlauncher: 1.8.0",
+  "tag_name": "atelier-v1.9.0",
+  "name": "Atelier Dracombra 1.9.0",
+  "body": "Onglet Décors et ressources (états, pied, collision, récolte, repousse, export Godot) et onglet Scène d'essai (sol, bâtiments, décors et héros ensemble).",
   "draft": false,
   "prerelease": false,
   "assets": [
    {
     "name": "atelier-index.html",
-    "browser_download_url": "https://raw.githubusercontent.com/jyraia-sama/dracombra--realm-of-pioneers/atelier-updates/atelier-index.html?v=1.8.0"
-   },
-   {
-    "name": "AtelierDracombra.exe",
-    "browser_download_url": "https://raw.githubusercontent.com/jyraia-sama/dracombra--realm-of-pioneers/atelier-updates/AtelierDracombra.exe?v=1.8.0"
+    "browser_download_url": "https://raw.githubusercontent.com/jyraia-sama/dracombra--realm-of-pioneers/atelier-updates/atelier-index.html?v=1.9.0"
    }
   ]
  }
