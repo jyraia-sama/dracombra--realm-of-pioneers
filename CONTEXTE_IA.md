@@ -33,7 +33,7 @@ par l'herboriste Ysolde (tuto).
 - Héros : 4 classes de base (guerrier, archer, mage, clerc), 8 directions, outil équipé visible en main (héros dessiné mains vides,
   outil posé par le jeu).
 
-## 2. L'Atelier Dracombra (outil de pixel art, v1.10.0)
+## 2. L'Atelier Dracombra (outil de pixel art, v1.11.0)
 
 Transforme les planches ChatGPT (fond magenta) en sprites propres pour Godot, avec retouche.
 
@@ -109,6 +109,9 @@ Garder la même taille `w×h`, des alphas 0 ou 255 et peu de couleurs. Pour ajou
 calque `{"name":"Tiamat","visible":true,"data":…}`.
 
 ### Brancher Tiamat sur l'Atelier en marche
+- **Pont (Atelier 1.11.0 et plus)** : l'Atelier ouvert se relie tout seul à Tiamat (`ws://127.0.0.1:47801`) ;
+  Tiamat lui envoie des ordres (`etat`, `ouvrir`, `capture`) qu'il exécute avec ses propres outils.
+  Détails dans `atelier/BUILD.md`.
 - `GET http://127.0.0.1:47613/api/info` → `{"app":true,"version":"1.10.0",…}` si l'Atelier est ouvert.
 - `GET /api/projects` (liste), `GET /api/projects/<nom>`, `PUT /api/projects/<nom>` (corps = le JSON ci-dessus) :
   pas d'en-tête spécial. Après un PUT, rouvrir le projet dans l'Atelier (Fichier > Projets rangés dans l'Atelier…).

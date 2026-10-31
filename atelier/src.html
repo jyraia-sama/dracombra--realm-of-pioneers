@@ -622,7 +622,7 @@ body[data-tab="scene"] .scene{display:grid}
 (()=>{
 "use strict";
 const SAMPLE_SRC = "__SAMPLE__";
-const APP_VERSION = "1.10.0";
+const APP_VERSION = "1.11.0";
 const $ = id => document.getElementById(id);
 const DIRS = ["bas","bas_droite","droite","haut_droite","haut","haut_gauche","gauche","bas_gauche"];
 const MIRROR = {droite:"gauche",gauche:"droite",bas_droite:"bas_gauche",bas_gauche:"bas_droite",haut_droite:"haut_gauche",haut_gauche:"haut_droite",bas:"bas",haut:"haut"};
@@ -2629,10 +2629,65 @@ setTab("dessin");
   stage.addEventListener("pointerup",up,{capture:true}); stage.addEventListener("pointercancel",up,{capture:true});
 }
 
+/* ---------- pont avec Tiamat (l'assistante de Laurent) ----------
+   Tiamat écoute sur ws://127.0.0.1:47801 quand elle est lancée. L'Atelier (.exe) s'y connecte
+   tout seul, exécute les ordres de TIAMAT_ORDRES et lui renvoie ce qu'il voit. Rien d'autre :
+   aucun ordre ne touche aux fichiers du disque. Sans Tiamat, rien ne change. */
+const TIAMAT={ws:null, ok:false};
+function tiamatEtat(){
+  const k=typeof docKind==="function"?docKind():"proj", f=typeof fileOf==="function"?fileOf(k):null;
+  return {version:APP_VERSION, onglet:document.body.dataset.tab||"", type:$("projType").value, projet:S.project||"",
+    fichier:(f&&f.path)||"", planches:S.sheets.map(s=>s.name), planche:S.srcName||"", source:[S.srcW||0,S.srcH||0],
+    grille:S.grid, fond:S.key, case:[S.cellW,S.cellH], couleurs:(S.palette||[]).length,
+    images:S.frames.map(f=>({anim:f.anim, dir:f.dir, w:f.w, h:f.h})), choisie:S.sel, modifie:!!S.dirty};
+}
+function tiamatCanvas(w,h,data){ const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(data),w,h),0,0); return c }
+const TIAMAT_ORDRES={
+  etat:async()=>tiamatEtat(),
+  // ouvre une planche (PNG, WebP, JPG) ou un projet .atelier que Tiamat envoie (octets en base64)
+  ouvrir:async({nom,donnees})=>{
+    if(!nom||!donnees) throw new Error("fichier manquant");
+    const b=Uint8Array.from(atob(donnees),c=>c.charCodeAt(0));
+    const type=/\.webp$/i.test(nom)?"image/webp":/\.jpe?g$/i.test(nom)?"image/jpeg":/\.(atelier|json)$/i.test(nom)?"application/json":"image/png";
+    await openFile(new File([b],nom,{type}));
+    return tiamatEtat();
+  },
+  // ce que l'Atelier affiche : l'image choisie (« image »), la planche réduite (« reduite ») ou d'origine (« planche »)
+  capture:async({quoi})=>{
+    let c=null;
+    if((quoi||"image")==="image"&&S.frames[S.sel]){ const f=S.frames[S.sel]; c=tiamatCanvas(f.w,f.h,comp(f)) }
+    else if(quoi==="reduite"&&S.small) c=tiamatCanvas(S.small.width,S.small.height,S.small.data);
+    else if(S.srcCanvas) c=S.srcCanvas;
+    if(!c) throw new Error("rien à montrer");
+    return {png:c.toDataURL("image/png"), largeur:c.width, hauteur:c.height};
+  },
+};
+function tiamatVoyant(){
+  let b=$("tiamatBadge");
+  if(!b){ const brand=document.querySelector(".brand"); if(!brand) return; b=document.createElement("span"); b.id="tiamatBadge"; b.style.cssText="margin-left:10px;font-size:12px"; brand.appendChild(b) }
+  b.textContent=TIAMAT.ok?"● Tiamat":"○ Tiamat"; b.style.color=TIAMAT.ok?"#34d399":"#8390ad";
+  b.title=TIAMAT.ok?"Tiamat est reliée à l'Atelier":"Tiamat n'est pas lancée (elle se reliera toute seule)";
+}
+function tiamatConnecter(){
+  if(location.hostname!=="127.0.0.1") return;      // seulement dans le .exe
+  let ws; try{ ws=new WebSocket("ws://127.0.0.1:47801") }catch(e){ setTimeout(tiamatConnecter,5000); return }
+  ws.onopen=()=>{ TIAMAT.ws=ws; TIAMAT.ok=true; tiamatVoyant(); ws.send(JSON.stringify({type:"bonjour",...tiamatEtat()})) };
+  ws.onmessage=async ev=>{
+    let m; try{ m=JSON.parse(ev.data) }catch(e){ return }
+    const ordre=Object.prototype.hasOwnProperty.call(TIAMAT_ORDRES,m.cmd)?TIAMAT_ORDRES[m.cmd]:null; let rep;
+    if(!ordre) rep={id:m.id,ok:false,erreur:"ordre inconnu : "+m.cmd};
+    else try{ rep={id:m.id,ok:true,resultat:await ordre(m.args||{})} }catch(e){ rep={id:m.id,ok:false,erreur:String((e&&e.message)||e)} }
+    if(ws.readyState===1) ws.send(JSON.stringify(rep));
+  };
+  ws.onclose=()=>{ if(TIAMAT.ws===ws){ TIAMAT.ws=null; TIAMAT.ok=false; tiamatVoyant() } setTimeout(tiamatConnecter,5000) };
+  ws.onerror=()=>{};
+}
+
 $("verPage").textContent=APP_VERSION;
 refreshToolList(); renderPartChips(); refreshTileLists(); refreshMotionLists(); $("mvTpl").onchange();
 renderFrames(); renderProps(); renderSheets(); applyType();
 markTab("perso");
 detectApp().then(async()=>{ if(APP&&await appPing()) return true; return restoreSession() }).then(ok=>{ if(!ok) return loadImageFromURL(SAMPLE_SRC,"heros.png").then(()=>{S.dirty=false; showSaveState()}) }).then(()=>syncTabToType()).catch(()=>{});
+if(location.hostname==="127.0.0.1"){ tiamatVoyant(); tiamatConnecter() }
 })();
 </script>

@@ -1,6 +1,6 @@
 # Atelier Dracombra — sources et fabrication
 
-Version actuelle : 1.10.0 (27/10/2026). Copie de référence des sources, rangée dans le dépôt du jeu
+Version actuelle : 1.11.0 (31/10/2026). Copie de référence des sources, rangée dans le dépôt du jeu
 pour que n'importe quelle session Claude Code (Tiamat compris) puisse les lire. Le dossier contient
 un `.gdignore` : Godot ne l'importe pas.
 
@@ -41,3 +41,15 @@ construire `dist/release/atelier-index.html` (+ .exe), puis `./publier.sh X.Y.Z 
 - Copies de secours : `<dossier>\sauvegardes\<nom>\<nom>_AAAA-MM-JJ_hh-mm-ss.atelier`, 10 gardées.
 - Double-clic : association HKCU `.atelier` -> `AtelierDracombra.Projet`.
 - Tests hors Windows : `ATELIER_TEST_FILE`, `ATELIER_TEST_OPEN`, `ATELIER_TEST_PNG`, `ATELIER_NO_WINDOW`, `ATELIER_DATA_DIR`.
+
+## Pont avec Tiamat (depuis 1.11.0)
+Tiamat (l'assistante de Laurent, dépôt `jyraia-sama/tiamat`) écoute sur `ws://127.0.0.1:47801`.
+Dans le .exe (page servie par `http://127.0.0.1:476xx`), le module « pont avec Tiamat » de `src.html`
+s'y connecte tout seul (nouvel essai toutes les 5 s) et affiche un voyant « ● Tiamat » dans l'en-tête.
+- Messages : la page envoie `{type:"bonjour", …état}` ; Tiamat envoie `{id, cmd, args}` ; la page répond
+  `{id, ok, resultat | erreur}`.
+- Ordres (liste fermée `TIAMAT_ORDRES`) : `etat` (onglet, projet, planche, grille, fond, case, images…),
+  `ouvrir` (`nom` + `donnees` en base64 : planche PNG/WebP/JPG ou projet .atelier, ouvert comme un
+  glisser-déposer), `capture` (`quoi` : image choisie, planche réduite ou d'origine, en PNG).
+- Aucun ordre n'écrit sur le disque. Tiamat n'accepte que l'origine `http://127.0.0.1:47613…47639`.
+- La page publiée en ligne (https) ne se connecte pas : seulement le .exe.
