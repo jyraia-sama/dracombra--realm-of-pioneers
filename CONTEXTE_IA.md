@@ -9,6 +9,8 @@ Dépôt public : `https://github.com/jyraia-sama/dracombra--realm-of-pioneers`
 - `atelier-updates` : versions publiées de l'Atelier (`atelier-index.html` = page complète, `AtelierDracombra.exe`, `releases.json`). Ne pas fusionner.
 - `updates` : canal de mises à jour du jeu.
 
+Toutes les tailles en pixels (personnages, tuiles, cartes, décors, bâtiments, armes) : **`TAILLES.md`**.
+
 Lecture seule suffit : `git clone --depth 1 https://github.com/jyraia-sama/dracombra--realm-of-pioneers`.
 
 ---
