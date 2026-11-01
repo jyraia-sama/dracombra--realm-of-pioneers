@@ -35,9 +35,10 @@ func open_menu() -> void:
 		"+50 de chaque ressource",
 		"Aller au donjon (choisir l'étage)",
 		"Passer au jour suivant",
+		"Enregistrement pour les rapports (F8) : %s" % ("OUI" if BugReport.recording else "non"),
 		"Fermer",
 	]
-	var i := await Choice.ask("Mode admin", "Outils de test (F9).", options)
+	var i := await Choice.ask("Mode admin", "Outils de test (F9). F8 : rapport de bug.", options)
 	match i:
 		0:
 			await _pick_class()
@@ -60,6 +61,9 @@ func open_menu() -> void:
 			await _pick_floor()
 		6:
 			Game.sleep()
+		7:
+			BugReport.set_recording(not BugReport.recording)
+			Narration.say("Enregistrement : %s. F8 : rapport avec les 12 dernières secondes." % ("oui" if BugReport.recording else "non"), 2.5)
 
 
 func _pick_class() -> void:

@@ -173,6 +173,7 @@ func _on_hit(hitbox: Hitbox, hurtbox: Hurtbox) -> void:
 
 
 func _on_enemy_hit(body: Node2D, hitbox: Hitbox, from_player: bool) -> void:
+	BugReport.log_event("%s touché (%d dégâts) par %s" % [body.name, hitbox.damage, _src(hitbox)])
 	flash(find_sprite(body))
 	squash(body.get_node_or_null("Visual") as Node2D)
 	var dir := hitbox.get_knockback_direction(body.global_position)
@@ -183,6 +184,7 @@ func _on_enemy_hit(body: Node2D, hitbox: Hitbox, from_player: bool) -> void:
 
 
 func _on_player_hit(body: Node2D, hitbox: Hitbox) -> void:
+	BugReport.log_event("HÉROS touché (%d dégâts) par %s" % [hitbox.damage, _src(hitbox)])
 	flash(find_sprite(body), 0.1)
 	var dir := hitbox.get_knockback_direction(body.global_position)
 	PixelBurst.spawn(body, body.global_position, PixelBurst.BLOOD, dir)
@@ -209,6 +211,7 @@ func harvest_depleted(h: Harvestable) -> void:
 func _on_enemy_died(body: Node) -> void:
 	if not is_instance_valid(body):
 		return
+	BugReport.log_event("%s vaincu" % body.name)
 	var b := body as Node2D
 	hit_stop(HIT_STOP_KILL)
 	shake(2.0, 0.18)
@@ -221,3 +224,7 @@ func _on_enemy_died(body: Node) -> void:
 	var shadow := b.get_node_or_null("Shadow") as CanvasItem
 	if shadow:
 		shadow.create_tween().tween_property(shadow, "modulate:a", 0.0, 1.2)
+
+
+func _src(hitbox: Hitbox) -> String:
+	return String(hitbox.source.name) if is_instance_valid(hitbox.source) else String(hitbox.name)

@@ -122,6 +122,7 @@ func ask(title: String, body: String, options: Array, bottom: bool = false) -> i
 	if _buttons.get_child_count() > 0:
 		(_buttons.get_child(0) as Button).grab_focus()
 	var index: int = await _picked
+	BugReport.log_event("Choix « %s » : %s" % [title, options[index] if index >= 0 and index < options.size() else "fermé"])
 	_panel.visible = false
 	is_open = false
 	if player and is_instance_valid(player):
@@ -133,7 +134,8 @@ func ask(title: String, body: String, options: Array, bottom: bool = false) -> i
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_open and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause")):
+	if is_open and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause") \
+			or event.is_action_pressed("build")):
 		get_viewport().set_input_as_handled()
 		_picked.emit(-1)
 	elif is_open and UiNav.handle(event, get_viewport()):

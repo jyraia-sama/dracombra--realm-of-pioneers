@@ -33,7 +33,7 @@ max_amount = 1
 
 [node name="Slime" type="CharacterBody2D"]
 collision_layer = 4
-collision_mask = 7
+collision_mask = 5
 script = ExtResource("1_slime")
 
 [node name="Visual" type="Node2D" parent="."]

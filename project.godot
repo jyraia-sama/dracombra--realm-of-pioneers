@@ -33,6 +33,7 @@ Quests="*res://scripts/autoload/quests.gd"
 GameMenu="*res://scenes/ui/game_menu.gd"
 Fx="*res://scripts/autoload/fx.gd"
 Admin="*res://scripts/autoload/admin.gd"
+BugReport="*res://scripts/autoload/bug_report.gd"
 
 [display]
 

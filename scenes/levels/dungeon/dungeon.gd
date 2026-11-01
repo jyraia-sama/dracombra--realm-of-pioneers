@@ -165,6 +165,11 @@ func _decorate() -> void:
 				var s := node.get_node_or_null("Sprite2D") as Sprite2D
 				if s:
 					s.flip_h = true
+			# Décor du donjon sans collision : les salles sont des arènes, un rocher près
+			# d'un mur pouvait coincer le héros.
+			var body := node.get_node_or_null("Body")
+			if body:
+				body.queue_free()
 			props.add_child(node)
 			for dy in range(-1, 2):
 				for dx in range(-1, 2):

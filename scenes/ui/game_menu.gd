@@ -84,7 +84,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if UiNav.handle(event, get_viewport()):
 			get_viewport().set_input_as_handled()
 			return
-		if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel") \
+		if event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel") or event.is_action_pressed("build") \
 				or (event.is_action_pressed("bag") and _tabs.current_tab == TAB_BAG) \
 				or (event.is_action_pressed("map") and _tabs.current_tab == TAB_MAP):
 			get_viewport().set_input_as_handled()
