@@ -261,14 +261,10 @@ func _make_sword() -> void:
 
 
 func _use_hd_sheet(spec: Array) -> void:
-	_hd = JSON.parse_string(FileAccess.get_file_as_string(spec[1]))
-	sprite.texture = load(spec[0])
-	sprite.centered = false
-	sprite.hframes = COLUMNS
-	sprite.vframes = 18
-	sprite.scale = Vector2(0.5, 0.5)
-	var anchor: Array = _hd["anchor"]
-	sprite.offset = Vector2(-float(anchor[0]), -float(anchor[1]))
+	# Case, ancre et animations viennent du .json de la planche (REGLES_ASSETS.md).
+	_hd = SheetAnimation.load_sheet(spec[1])
+	_columns = SheetAnimation.apply_to(sprite, load(spec[0]), _hd)
+	_anims = SheetAnimation.anims_from(_hd, ANIMS)
 
 
 ## Place l'épée dans la main pour l'image affichée (table calculée depuis les planches).
@@ -456,6 +452,7 @@ func _flash() -> void:
 	tween.tween_property(sprite, "self_modulate", Color.WHITE, 0.2)
 
 
+## Valeurs par défaut si le .json de la planche n'a pas de bloc « anims ».
 ## Planche warrior.png : 6 colonnes, 3 lignes par animation (face, dos, profil).
 ## [première ligne, nombre d'images, durée d'une image (0 = calée sur la durée de l'action)]
 const ANIMS := {
@@ -471,6 +468,9 @@ const DIR_DOWN := 0
 const DIR_UP := 1
 const DIR_SIDE := 2
 
+## Animations et colonnes de la planche active (lues dans son .json, sinon ANIMS).
+var _anims: Dictionary = ANIMS
+var _columns: int = COLUMNS
 var _anim_time: float = 0.0
 var _anim_state: State = State.NORMAL
 
@@ -506,22 +506,22 @@ func _update_sprite(delta: float) -> void:
 			index = _progress(anim, _anim_time / maxf(hurt_duration, 0.01))
 		State.DEAD:
 			anim = &"death"
-			index = mini(int(_anim_time / ANIMS[anim][2]), ANIMS[anim][1] - 1)
-	var first_row: int = ANIMS[anim][0]
-	sprite.frame = (first_row + dir) * COLUMNS + index
+			index = mini(int(_anim_time / _anims[anim][2]), _anims[anim][1] - 1)
+	var first_row: int = _anims[anim][0]
+	sprite.frame = (first_row + dir) * _columns + index
 	_update_weapon(anim, dir, index)
 
 
 
 func _looped(anim: StringName, elapsed: float) -> int:
-	var count: int = ANIMS[anim][1]
-	var frame_time: float = ANIMS[anim][2]
+	var count: int = _anims[anim][1]
+	var frame_time: float = _anims[anim][2]
 	return int(elapsed / frame_time) % count
 
 
 ## Image d'une animation calée sur l'avancement d'une action (0 = début, 1 = fin).
 func _progress(anim: StringName, ratio: float) -> int:
-	var count: int = ANIMS[anim][1]
+	var count: int = _anims[anim][1]
 	return clampi(int(ratio * count), 0, count - 1)
 
 

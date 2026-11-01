@@ -1,0 +1,4 @@
+{
+ "_aide": "Liste des assets provisoires à (re)générer avec : python tools/placeholder/placeholder.py tout. genre = perso | creature | batiment | ressource. Exemples : {\"genre\": \"perso\", \"nom\": \"bran\", \"cat\": \"membre\", \"classe\": \"archer\"}, {\"genre\": \"creature\", \"nom\": \"loup\", \"taille\": \"72x44\", \"couleur\": \"#8a5a5a\"}, {\"genre\": \"batiment\", \"nom\": \"forge\", \"cases\": \"3x2\", \"fonction\": \"production\"}, {\"genre\": \"ressource\", \"nom\": \"minerai_fer\", \"type\": \"minerai\"}",
+ "assets": []
+}

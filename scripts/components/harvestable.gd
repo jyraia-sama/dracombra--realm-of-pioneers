@@ -87,6 +87,7 @@ func _on_depleted() -> void:
 	if Game.is_harvested(_key(), regrow_days):
 		return
 	Game.mark_harvested(_key())
+	Fx.harvest_depleted(self)
 	for child in get_children():
 		if child is Hurtbox:
 			child.set_deferred("monitorable", false)

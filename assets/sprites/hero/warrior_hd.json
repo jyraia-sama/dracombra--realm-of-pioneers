@@ -7,6 +7,16 @@
 32,
 54
 ],
+"scale": 0.5,
+"dirs": ["bas", "haut", "droite"],
+"anims": {
+"idle": {"row": 0, "frames": 4, "fps": 4.545, "loop": true},
+"walk": {"row": 3, "frames": 6, "fps": 10, "loop": true},
+"roll": {"row": 6, "frames": 6, "fps": 0, "loop": false},
+"attack": {"row": 9, "frames": 5, "fps": 0, "loop": false},
+"hurt": {"row": 12, "frames": 2, "fps": 12.5, "loop": false},
+"death": {"row": 15, "frames": 4, "fps": 6.667, "loop": false}
+},
 "hands": {
 "idle_0": [
 [
