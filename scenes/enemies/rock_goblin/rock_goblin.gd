@@ -75,6 +75,7 @@ func _ready() -> void:
 	charge_hitbox_shape.position = Vector2(0.0, -tile * 0.5)
 	charge_hitbox.damage = charge_damage
 	charge_hitbox.knockback_tiles = 1.5
+	charge_hitbox.heavy = true
 	charge_hitbox.source = self
 	charge_hitbox.active = false
 	hurtbox.hit_received.connect(_on_hit_received)

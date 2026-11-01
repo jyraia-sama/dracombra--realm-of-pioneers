@@ -43,6 +43,7 @@ func _ready() -> void:
 	($ContactHitbox/CollisionShape2D as CollisionShape2D).shape.size = Vector2(t * 1.6, t * 0.8)
 	($ContactHitbox/CollisionShape2D as CollisionShape2D).position = Vector2(0, -t * 0.45)
 	contact.damage = charge_damage
+	contact.heavy = true  # il ne frappe qu'en chargeant
 	contact.knockback_tiles = 2.0
 	contact.source = self
 	contact.active = false

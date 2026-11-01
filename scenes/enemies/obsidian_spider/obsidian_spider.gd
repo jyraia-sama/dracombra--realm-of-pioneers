@@ -195,6 +195,7 @@ func _start_leap() -> void:
 		_leap_direction = global_position.direction_to(_target.global_position)
 	velocity = _leap_direction * leap_distance_tiles * Game.TILE_SIZE / leap_time
 	contact_hitbox.damage = leap_damage
+	contact_hitbox.heavy = true
 	contact_hitbox.active = true
 
 
@@ -203,6 +204,7 @@ func _end_leap() -> void:
 	_state_timer = recover_time
 	_cooldown = leap_cooldown
 	contact_hitbox.damage = contact_damage
+	contact_hitbox.heavy = false
 	contact_hitbox.active = true
 
 
@@ -218,6 +220,7 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 	if state == State.DEAD:
 		return
 	contact_hitbox.damage = contact_damage
+	contact_hitbox.heavy = false
 	var knockback_speed: float = hitbox.knockback_tiles * Game.TILE_SIZE / hurt_duration
 	velocity = hitbox.get_knockback_direction(global_position) * knockback_speed
 	_state_timer = hurt_duration

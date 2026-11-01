@@ -11,6 +11,9 @@ var _already_hit: Array[Hurtbox] = []
 @export var damage: int = 1
 ## Distance de recul infligée à la cible, en tiles.
 @export var knockback_tiles: float = 1.0
+## Coup lourd : interrompt l'action de la cible et la repousse (bond, charge, griffe).
+## Un coup léger (contact) fait des dégâts sans interrompre ni repousser le héros.
+@export var heavy: bool = false
 ## Si true, chaque cible n'est touchée qu'une fois par activation
 ## (une attaque = un coup). Si false, la hitbox frappe en continu,
 ## et c'est l'invincibilité de la cible qui espace les coups.

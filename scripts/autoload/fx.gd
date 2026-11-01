@@ -188,8 +188,11 @@ func _on_player_hit(body: Node2D, hitbox: Hitbox) -> void:
 	flash(find_sprite(body), 0.1)
 	var dir := hitbox.get_knockback_direction(body.global_position)
 	PixelBurst.spawn(body, body.global_position, PixelBurst.BLOOD, dir)
-	hit_stop(HIT_STOP_PLAYER)
-	shake(2.5, 0.22)
+	if hitbox.heavy:
+		hit_stop(HIT_STOP_PLAYER)
+		shake(2.5, 0.22)
+	else:
+		shake(1.2, 0.12)
 
 
 func _on_harvest_hit(h: Harvestable, hitbox: Hitbox) -> void:

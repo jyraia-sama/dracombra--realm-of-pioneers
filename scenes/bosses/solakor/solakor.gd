@@ -53,6 +53,7 @@ func _ready() -> void:
 	claw_shape.shape.size = half * 2.0
 	claw_hitbox.damage = claw_damage
 	claw_hitbox.knockback_tiles = 2.5
+	claw_hitbox.heavy = true
 	claw_hitbox.source = self
 	claw_hitbox.active = false
 	claw.visible = false

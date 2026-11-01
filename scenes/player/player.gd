@@ -451,11 +451,18 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 	_flash()
 	if state == State.DEAD or health.is_dead():
 		return
-	# Un coup interrompt l'action en cours.
+	# Un coup léger (contact) blesse sans interrompre : seuls les coups lourds (bond,
+	# charge, griffe) coupent l'action en cours et repoussent le héros.
+	if not hitbox.heavy:
+		return
 	_buffered = ""
 	_end_attack()
 	visual.modulate = Color.WHITE
-	var knockback_speed: float = hitbox.knockback_tiles * Game.TILE_SIZE / hurt_duration
+	var knock := hitbox.knockback_tiles
+	# Le guerrier encaisse mieux : il est repoussé deux fois moins loin.
+	if Game.has_flag(&"prologue_done") and Hero.current == &"warrior":
+		knock *= 0.5
+	var knockback_speed: float = knock * Game.TILE_SIZE / hurt_duration
 	velocity = hitbox.get_knockback_direction(global_position) * knockback_speed
 	_state_timer = hurt_duration
 	state = State.HURT
