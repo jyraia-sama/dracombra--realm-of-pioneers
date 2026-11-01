@@ -48,6 +48,41 @@ func _ready() -> void:
 	_buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.add_child(_buttons)
 	_panel.visible = false
+	_make_button_styles()
+
+
+## Styles des boutons : le cadre de focus par défaut de Godot dépassait du bouton et était
+## coupé par la zone de défilement (traits blancs bizarres). Ici, le bouton choisi est
+## simplement surligné, dans le cadre.
+var _styles := {}
+
+
+func _make_button_styles() -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.13, 0.12, 0.16)
+	normal.set_content_margin_all(4)
+	normal.set_corner_radius_all(2)
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(0.2, 0.17, 0.27)
+	var focus := normal.duplicate() as StyleBoxFlat
+	focus.bg_color = Color(0.3, 0.23, 0.42)
+	focus.border_color = Color(1.0, 0.82, 0.45)
+	focus.set_border_width_all(1)
+	var pressed := focus.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.38, 0.29, 0.52)
+	_styles = {"normal": normal, "hover": hover, "pressed": pressed, "disabled": normal,
+		"focus": StyleBoxEmpty.new()}
+	_styles["_focus_bg"] = focus
+
+
+func _style_button(b: Button) -> void:
+	for key in ["normal", "hover", "pressed", "disabled", "focus"]:
+		b.add_theme_stylebox_override(key, _styles[key])
+	b.add_theme_color_override("font_focus_color", Color(1.0, 0.86, 0.5))
+	b.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.85))
+	# Le bouton qui a le focus (clavier / manette) prend le fond surligné.
+	b.focus_entered.connect(func() -> void: b.add_theme_stylebox_override("normal", _styles["_focus_bg"]); b.add_theme_stylebox_override("hover", _styles["_focus_bg"]))
+	b.focus_exited.connect(func() -> void: b.add_theme_stylebox_override("normal", _styles["normal"]); b.add_theme_stylebox_override("hover", _styles["hover"]))
 
 
 ## bottom = true : en bas de l'écran (dialogues), pour ne pas cacher les personnages.
@@ -69,6 +104,7 @@ func ask(title: String, body: String, options: Array, bottom: bool = false) -> i
 		var b := Button.new()
 		b.text = options[i]
 		b.pressed.connect(func(): _picked.emit(i))
+		_style_button(b)
 		if options.size() > 7:
 			b.add_theme_font_size_override("font_size", 12)
 		_buttons.add_child(b)

@@ -12,7 +12,7 @@ signal changed
 const TIERS: Array[Dictionary] = [
 	{"name": "Camp", "guild": "Feu de camp", "radius": 11.0},
 	{"name": "Village", "guild": "Tente de guilde", "radius": 24.0,
-		"upgrade": {"cost": {&"wood": 20, &"stone": 12}, "days": 2, "requires": {&"workbench": 1, &"tent": 2}}},
+		"upgrade": {"cost": {&"wood": 20, &"stone": 12}, "days": 2, "requires": {&"workbench": 1, &"tent": 1}}},
 	{"name": "Bourg", "guild": "Maison de guilde", "radius": 40.0,
 		"upgrade": {"cost": {&"wood": 60, &"stone": 40}, "days": 3, "requires": {&"tent": 4}}},
 	{"name": "Ville", "guild": "Hall de guilde", "radius": 58.0,
