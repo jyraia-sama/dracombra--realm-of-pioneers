@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/items_p1.png" id="2_icons"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icons")
+region = Rect2(608, 0, 32, 32)
+
+[resource]
+script = ExtResource("1_item")
+id = &"silk_robe"
+display_name = "Robe de soie"
+icon = SubResource("AtlasTexture_icon")
+description = "Armure de tissu du palier 1."
+category = &"equipment"
+slot = &"body"
+bonus = {&"def": 2, &"int": 1, &"wis": 1, &"mana": 10}
+classes = Array[StringName]([&"mage", &"cleric"])

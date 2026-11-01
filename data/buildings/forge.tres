@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildingData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_data.gd" id="1_b"]
+[ext_resource type="Texture2D" path="res://assets/sprites/buildings/forge.png" id="2_t"]
+
+[resource]
+script = ExtResource("1_b")
+id = &"forge"
+display_name = "Forge"
+description = "Fondre le minerai de fer et forger les armes et armures lourdes (palier 1)."
+tier_required = 1
+size = Vector2i(3, 2)
+cost = Dictionary[StringName, int]({&"wood": 15, &"stone": 20, &"iron_ore": 4})
+build_days = 2
+texture = ExtResource("2_t")
+housing = 0
+can_sleep = false

@@ -3,7 +3,8 @@ extends Node
 ## Changer de classe à volonté (l'arme suit), se soigner, devenir invincible, gagner des
 ## niveaux ou des ressources, aller directement à un étage du donjon, passer un jour.
 
-const RESOURCES := [&"wood", &"stone", &"flax", &"herb", &"hide", &"leather", &"rope", &"cloth", &"gem", &"slime_gel", &"obsidian_shard"]
+const RESOURCES := [&"wood", &"stone", &"flax", &"herb", &"hide", &"leather", &"rope", &"cloth", &"gem", &"slime_gel", &"obsidian_shard",
+	&"iron_ore", &"iron_ingot", &"chitin", &"silk", &"silk_cloth", &"mana_crystal", &"gold"]
 
 var invincible := false
 
@@ -35,6 +36,7 @@ func open_menu() -> void:
 		"+50 de chaque ressource",
 		"Aller au donjon (choisir l'étage)",
 		"Passer au jour suivant",
+		"Guilde : passer au palier suivant (actuel : %s)" % Town.tier_name(),
 		"Enregistrement pour les rapports (F8) : %s" % ("OUI" if BugReport.recording else "non"),
 		"Fermer",
 	]
@@ -62,6 +64,12 @@ func open_menu() -> void:
 		6:
 			Game.sleep()
 		7:
+			if Town.tier + 1 < Town.TIERS.size():
+				Town.tier += 1
+				Town.guild_upgrade = {}
+				Town.changed.emit()
+				Narration.say("La guilde passe au palier : %s." % Town.tier_name(), 2.0)
+		8:
 			BugReport.set_recording(not BugReport.recording)
 			Narration.say("Enregistrement : %s. F8 : rapport avec les 12 dernières secondes." % ("oui" if BugReport.recording else "non"), 2.5)
 

@@ -22,7 +22,8 @@ const DUST_SCENE := preload("res://scenes/props/dust_puff.tscn")
 @export var persistent: bool = true
 
 ## Outil qui rend la récolte deux fois plus rapide (et plus généreuse), selon la ressource.
-const TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe"}
+const TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe", &"iron_ore": &"pickaxe",
+	&"mana_crystal": &"pickaxe", &"obsidian_shard": &"pickaxe"}
 
 var health: HealthComponent
 var _sprite: CanvasItem

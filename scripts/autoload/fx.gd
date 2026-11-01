@@ -20,6 +20,7 @@ const HIT_STOP_HARVEST := 0.02
 ## Ressource récoltée -> gerbe de pixels.
 const HARVEST_BURSTS := {
 	&"wood": PixelBurst.WOOD, &"stone": PixelBurst.STONE, &"gem": PixelBurst.GEM,
+	&"iron_ore": PixelBurst.STONE, &"mana_crystal": PixelBurst.GEM, &"obsidian_shard": PixelBurst.SPARK,
 }
 
 var _resume_at_ms := 0

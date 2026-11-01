@@ -221,7 +221,8 @@ const WEAPONS := {
 }
 const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"mace"}
 ## Outil sorti pour récolter : ressource -> outil.
-const HARVEST_TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe"}
+const HARVEST_TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe", &"iron_ore": &"pickaxe",
+	&"mana_crystal": &"pickaxe", &"obsidian_shard": &"pickaxe"}
 
 ## Planche HD active : {"hands": {"walk_0": [[x, y, angle], ...]}, ...}.
 var _hd: Dictionary = {}

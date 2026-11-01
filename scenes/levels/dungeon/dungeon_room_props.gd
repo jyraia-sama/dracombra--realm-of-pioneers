@@ -7,6 +7,7 @@ const CAMPFIRE := preload("res://scenes/props/sylve/campfire.tscn")
 const GEM_ROCK := preload("res://scenes/props/sylve/gem_rock.tscn")
 const ROCK := preload("res://scenes/props/sylve/rock_grey.tscn")
 const CRYSTAL := preload("res://scenes/props/cave/crystal_purple.tscn")
+const CRYSTAL_BLUE := preload("res://scenes/props/cave/crystal_blue.tscn")
 const CHEST_TEX := preload("res://assets/sprites/buildings/chest.png")
 const MERCHANT_TEX := preload("res://assets/sprites/npc/marchand/marchand.png")
 const PICKUP := preload("res://scenes/items/pickup.tscn")
@@ -200,17 +201,18 @@ static func drop(from: Node, item: ItemData, count: int, at: Vector2) -> void:
 static func ore(rng: RandomNumberGenerator) -> Node2D:
 	var roll := rng.randf()
 	var node: Node2D
-	if roll < 0.4:
+	if roll < 0.3:
+		# Filon de fer : rocher gris veiné de rouille (teinte provisoire).
+		node = ROCK.instantiate()
+		(node.get_node("Sprite2D") as CanvasItem).modulate = Color(1.0, 0.72, 0.55)
+		_set_harvest(node, &"iron_ore", 1, 2, 4)
+	elif roll < 0.5:
+		node = CRYSTAL_BLUE.instantiate()
+		_add_harvest(node, &"mana_crystal", 1, 2, 3)
+	elif roll < 0.72:
 		node = CRYSTAL.instantiate()
-		var h := Harvestable.new()
-		h.name = "Harvest"
-		h.item_id = &"obsidian_shard"
-		h.min_amount = 1
-		h.max_amount = 3
-		h.hits = 3
-		h.hit_size = Vector2(16, 16)
-		node.add_child(h)
-	elif roll < 0.7:
+		_add_harvest(node, &"obsidian_shard", 1, 3, 3)
+	elif roll < 0.88:
 		node = ROCK.instantiate()
 	else:
 		node = GEM_ROCK.instantiate()
@@ -223,3 +225,19 @@ static func ore(rng: RandomNumberGenerator) -> Node2D:
 			(c as Harvestable).persistent = false
 			(c as Harvestable).regrow_days = 0
 	return node
+
+
+static func _add_harvest(node: Node2D, item: StringName, lo: int, hi: int, hits: int) -> void:
+	var h := Harvestable.new()
+	h.name = "Harvest"
+	node.add_child(h)
+	_set_harvest(node, item, lo, hi, hits)
+
+
+static func _set_harvest(node: Node2D, item: StringName, lo: int, hi: int, hits: int) -> void:
+	var h := node.get_node("Harvest") as Harvestable
+	h.item_id = item
+	h.min_amount = lo
+	h.max_amount = hi
+	h.hits = hits
+	h.hit_size = Vector2(16, 16)

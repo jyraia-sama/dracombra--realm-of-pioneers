@@ -371,8 +371,16 @@ func _make_enemy() -> Node2D:
 	# De l'or en plus du butin habituel, un peu plus en descendant.
 	if health:
 		health.died.connect(func() -> void:
-			if randf() < 0.7 and is_instance_valid(enemy):
-				DungeonRoomProps.drop(self, Inventory.item_by_id(&"gold"), rng.randi_range(1, 2 + floor_number), enemy.global_position), CONNECT_ONE_SHOT)
+			if not is_instance_valid(enemy):
+				return
+			if randf() < 0.7:
+				DungeonRoomProps.drop(self, Inventory.item_by_id(&"gold"), rng.randi_range(1, 2 + floor_number), enemy.global_position)
+			# Les araignées laissent de la chitine et de la soie (palier 1).
+			if scene == SPIDER:
+				if randf() < 0.55:
+					DungeonRoomProps.drop(self, Inventory.item_by_id(&"chitin"), 1, enemy.global_position)
+				if randf() < 0.45:
+					DungeonRoomProps.drop(self, Inventory.item_by_id(&"silk"), rng.randi_range(1, 2), enemy.global_position), CONNECT_ONE_SHOT)
 	return enemy
 
 
