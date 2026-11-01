@@ -47,6 +47,7 @@ var _alive: Array[Node2D] = []      # monstres du combat en cours
 var _fight_room := Vector2i(-1, -1)
 var _stairs_down: DungeonStairs
 var _spawning := false
+var _boss_bar: CanvasLayer
 ## Salles déjà visitées (les autres restent cachées sur les cartes).
 var _visited: Dictionary = {}
 ## Cases occupées par un décor ou un filon.
@@ -304,6 +305,9 @@ func _start_fight(room: Vector2i) -> void:
 		gates.append(gate)
 	_gates[room] = gates
 	Fx.shake(1.5, 0.2)
+	if is_boss_room(room):
+		_start_boss(room)
+		return
 	# Les monstres surgissent après un court instant, annoncés par un nuage de poussière.
 	var spots := _spawn_spots(room, _enemy_count(room))
 	for spot in spots:
@@ -318,6 +322,45 @@ func _start_fight(room: Vector2i) -> void:
 		_alive.append(enemy)
 		PixelBurst.spawn(self, spot, PixelBurst.SMOKE, Vector2.ZERO, 0.8)
 	_spawning = false
+
+
+## Au dernier étage de la zone, la salle de l'escalier est le repaire de la reine.
+func is_boss_room(room: Vector2i) -> bool:
+	return floor_number >= last_floor() and room == gen.stairs
+
+
+func _start_boss(room: Vector2i) -> void:
+	await Narration.title_card("La reine araignée d'obsidienne", zone_name(), 2.0)
+	if not is_inside_tree():
+		return
+	var queen := QueenSpider.create(36 + 10 * Game.abyss_clears)
+	queen.position = _cell_pos(DungeonGen.slot_center(room) + Vector2i(-7, -3))
+	add_child(queen)
+	_alive.append(queen)
+	queen.spawned.connect(func(n: Node2D) -> void: _alive.append(n))
+	queen.health.died.connect(_on_queen_died.bind(queen), CONNECT_ONE_SHOT)
+	_boss_bar = BossBar.create("Reine araignée d'obsidienne", queen.health)
+	add_child(_boss_bar)
+	PixelBurst.spawn(self, queen.position, PixelBurst.SMOKE, Vector2.ZERO, 2.0)
+	Fx.shake(4.0, 0.5)
+	_spawning = false
+
+
+## Butin de la reine : une pièce du palier 1 garantie (≈ 25 % rare) et beaucoup de ressources.
+func _on_queen_died(queen: Node2D) -> void:
+	var at := queen.global_position
+	DungeonRoomProps.drop(self, Loot.piece(1, [0, 75, 25]), 1, at)
+	for entry in [[&"gold", 40, 60], [&"chitin", 3, 5], [&"silk", 3, 5], [&"mana_crystal", 1, 2], [&"obsidian_shard", 3, 6]]:
+		DungeonRoomProps.drop(self, Inventory.item_by_id(entry[0]), rng.randi_range(entry[1], entry[2]), at)
+	Fx.shake(5.0, 0.6)
+	Fx.hit_stop(0.2)
+	var first := not Game.has_flag(&"abyss_zone1_queen")
+	Game.set_flag(&"abyss_zone1_queen")
+	Game.abyss_clears += 1
+	if first:
+		Narration.say("La reine est vaincue ! Un raccourci vers les profondeurs s'est ouvert à l'entrée des Abysses.", 4.5)
+	if _boss_bar:
+		_boss_bar.queue_free()
 
 
 func _enemy_count(room: Vector2i) -> int:
@@ -420,7 +463,7 @@ func _on_stairs_up() -> void:
 func _on_stairs_down() -> void:
 	if floor_number >= last_floor():
 		var j := await Choice.ask("Fond de la %s" % zone_name(),
-			"Plus bas, la galerie est effondrée. On entend gratter derrière les éboulis…\n(La reine araignée arrive bientôt.)",
+			"Plus bas, la galerie est effondrée : la zone suivante des Abysses n'est pas encore creusée.\n(Elle arrivera avec une prochaine étape.)",
 			["Remonter en ville", "Rester"])
 		if j == 0:
 			_leave_to_city()

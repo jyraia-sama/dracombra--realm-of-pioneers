@@ -9,6 +9,7 @@ var going_down := true
 var interact: Interactable
 var _active := true
 var _light: PointLight2D
+var _body: StaticBody2D
 
 const LIGHT_TEX := preload("res://assets/lights/light_radial.tres")
 
@@ -39,12 +40,16 @@ func setup(down: bool, active: bool) -> void:
 	shape.position = Vector2(0, -14)
 	body.add_child(shape)
 	add_child(body)
+	_body = body
 	set_active(active)
 
 
 ## Un escalier inactif est recouvert d'éclats (il s'ouvre quand la salle est nettoyée).
 func set_active(on: bool) -> void:
 	_active = on
+	# Recouvert d'éclats, il ne bloque pas le passage (on se bat autour).
+	if _body:
+		_body.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
 	if interact:
 		interact.enabled = on
 	if _light:

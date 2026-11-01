@@ -31,6 +31,8 @@ var dungeon_floor: int = 0
 var dungeon_run: Dictionary = {}
 ## Message à afficher à l'arrivée dans le prochain niveau (ex. pertes à la mort).
 var pending_message: String = ""
+## Nombre de fois où la reine araignée a été vaincue (le donjon durcit un peu à chaque fois).
+var abyss_clears: int = 0
 
 var _sleeping := false
 
@@ -52,6 +54,7 @@ func reset() -> void:
 	flags.clear()
 	day = 1
 	harvested.clear()
+	abyss_clears = 0
 	next_spawn = &""
 	pending_position = null
 	Inventory.clear()
@@ -108,7 +111,7 @@ func serialize() -> Dictionary:
 	var f := {}
 	for k in flags:
 		f[String(k)] = flags[k]
-	return {"flags": f, "day": day, "harvested": harvested.duplicate()}
+	return {"flags": f, "day": day, "harvested": harvested.duplicate(), "abyss_clears": abyss_clears}
 
 
 func deserialize(data: Dictionary) -> void:
@@ -117,6 +120,7 @@ func deserialize(data: Dictionary) -> void:
 		flags[StringName(k)] = bool(data["flags"][k])
 	day = int(data.get("day", 1))
 	harvested = data.get("harvested", {}).duplicate()
+	abyss_clears = int(data.get("abyss_clears", 0))
 
 
 ## F11 (ou Alt+Entrée) : plein écran. En 1080p plein écran, chaque pixel du dessin HD

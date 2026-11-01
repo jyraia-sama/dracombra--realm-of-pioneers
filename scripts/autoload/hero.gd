@@ -62,7 +62,7 @@ const ORDER: Array[StringName] = [&"warrior", &"archer", &"mage", &"cleric"]
 ## Nombre d'emplacements de techniques dans la barre (touches R, F, C).
 const SKILL_SLOTS := 3
 ## XP rapportée par chaque ennemi vaincu.
-const KILL_XP := {&"Slime": 2, &"RockGoblin": 4, &"ObsidianSpider": 3, &"Boar": 3}
+const KILL_XP := {&"Slime": 2, &"RockGoblin": 4, &"ObsidianSpider": 3, &"Boar": 3, &"QueenSpider": 40}
 
 var hero_name: String = "Heros"
 var current: StringName = &"warrior"

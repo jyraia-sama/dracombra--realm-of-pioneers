@@ -73,9 +73,10 @@ func _build() -> void:
 func _enter() -> void:
 	if not Game.has_flag(&"prologue_done"):
 		return
-	var i := await Choice.ask("Les Abysses de Dracombra",
-		"Un escalier s'enfonce sous les ruines. Un air froid en remonte, chargé d'éclats d'obsidienne.",
-		["Descendre (étage 1)", "Plus tard"])
+	var body := "Un escalier s'enfonce sous les ruines. Un air froid en remonte, chargé d'éclats d'obsidienne."
+	if Game.has_flag(&"abyss_zone1_queen"):
+		body += "\n\nRaccourci débloqué (reine vaincue %d fois) : il mènera directement à la zone suivante dès qu'elle sera creusée." % Game.abyss_clears
+	var i := await Choice.ask("Les Abysses de Dracombra", body, ["Descendre (étage 1)", "Plus tard"])
 	if i == 0:
 		Game.dungeon_floor = 1
 		Transition.change_scene(DUNGEON)
