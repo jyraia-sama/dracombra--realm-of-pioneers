@@ -218,8 +218,9 @@ const WEAPONS := {
 	&"mace": ["res://assets/sprites/weapons/mace.png", Vector2(5.5, 16), "swing"],
 	&"axe": ["res://assets/sprites/weapons/axe.png", Vector2(3, 18), "swing"],
 	&"pickaxe": ["res://assets/sprites/weapons/pickaxe.png", Vector2(8.5, 16), "swing"],
+	&"book": ["res://assets/sprites/weapons/book.png", Vector2(7, 15), "upright"],
 }
-const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"mace"}
+const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"book"}
 ## Outil sorti pour récolter : ressource -> outil.
 const HARVEST_TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe", &"iron_ore": &"pickaxe",
 	&"mana_crystal": &"pickaxe", &"obsidian_shard": &"pickaxe"}

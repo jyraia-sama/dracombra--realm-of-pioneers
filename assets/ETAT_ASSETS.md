@@ -15,6 +15,7 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `res://assets/sprites/items/gold.png` | PROVISOIRE | 2026-11-01 | icône pièces d'or (dessinée par le code) |
 | `res://assets/sprites/items/potion_heal.png` | PROVISOIRE | 2026-11-01 | icône potion de soin (dessinée par le code) |
 | `res://assets/sprites/items/items_p1.png` | PROVISOIRE | 2026-11-01 | icônes du palier 1 (tools/placeholder/palier1.py) |
+| `res://assets/sprites/weapons/book.png` | PROVISOIRE | 2026-11-01 | livre sacré du clerc, tenu en main (dessiné par le code) |
 <!-- fin provisoires -->
 
 ## Existants au 2026-11-01 (version 0.4.1)

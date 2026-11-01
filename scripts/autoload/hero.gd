@@ -29,7 +29,8 @@ const STAT_HELP := {
 	&"vit": "PV max, défense, parade.",
 }
 
-## Les classes de base. attack : melee (épée, masse), arrow (flèches), bolt (projectile magique).
+## Les classes de base. attack : melee (épée), arrow (flèches), bolt (projectile magique),
+## holy (éclat sacré du clerc, traverse les ennemis).
 ## stats : valeurs au niveau 1 ; growth : gain par niveau. main : la caractéristique qui fait
 ## les dégâts ; resource : endurance (techniques) ou mana (sorts), et la caractéristique qui la nourrit.
 const CLASSES: Dictionary = {
@@ -50,11 +51,11 @@ const CLASSES: Dictionary = {
 		"stats": {&"str": 1, &"dex": 3, &"int": 6, &"wis": 4, &"vit": 2},
 		"growth": {&"str": 0.1, &"dex": 0.3, &"int": 0.8, &"wis": 0.4, &"vit": 0.3},
 		"main": &"int", "resource": "Mana", "res_stat": &"int", "skill_word": "Sorts"},
-	&"cleric": {"name": "Clerc", "role": "Frappe à la masse et referme lentement ses blessures.", "attack": "melee",
-		"damage": 1, "cooldown": 0.0, "item": &"holy_symbol", "tint": Color(1.15, 1.08, 0.8), "icon": 256,
-		"stats": {&"str": 4, &"dex": 2, &"int": 3, &"wis": 6, &"vit": 4},
-		"growth": {&"str": 0.4, &"dex": 0.2, &"int": 0.3, &"wis": 0.7, &"vit": 0.5},
-		"main": &"str", "resource": "Mana", "res_stat": &"wis", "skill_word": "Sorts",
+	&"cleric": {"name": "Clerc", "role": "Lance des éclats de lumière sacrée qui traversent les ennemis, et referme lentement ses blessures.", "attack": "holy",
+		"damage": 1, "cooldown": 0.55, "item": &"holy_symbol", "tint": Color(1.15, 1.08, 0.8), "icon": 416,
+		"stats": {&"str": 2, &"dex": 2, &"int": 3, &"wis": 6, &"vit": 4},
+		"growth": {&"str": 0.2, &"dex": 0.2, &"int": 0.3, &"wis": 0.8, &"vit": 0.5},
+		"main": &"wis", "resource": "Mana", "res_stat": &"wis", "skill_word": "Sorts",
 		"regen": 8.0},
 }
 const ORDER: Array[StringName] = [&"warrior", &"archer", &"mage", &"cleric"]

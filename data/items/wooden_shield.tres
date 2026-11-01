@@ -16,4 +16,4 @@ description = "Un bouclier rond cerclé de fer. Guerrier et clerc : pare plus so
 category = &"equipment"
 slot = &"off"
 bonus = {&"def": 1, &"parry": 6}
-classes = Array[StringName]([&"warrior", &"cleric"])
+classes = Array[StringName]([&"warrior"])

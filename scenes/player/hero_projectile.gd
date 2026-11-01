@@ -23,12 +23,15 @@ static func create(kind: StringName, from: Vector2, direction: Vector2, dmg: int
 	p.knockback_tiles = 0.8 if kind == &"arrow" else 1.6
 	if kind == &"wave":
 		p.collision_mask = 16
+	# L'éclat sacré du clerc traverse les ennemis (portée plus courte).
+	if kind == &"holy":
+		p.pierce = true
 	p.source = shooter
 	p.position = from
 	var t := float(Game.TILE_SIZE)
-	var speed := {&"arrow": 14.0, &"bolt": 7.0, &"fire": 8.0, &"wave": 10.0}
+	var speed := {&"arrow": 14.0, &"bolt": 7.0, &"fire": 8.0, &"wave": 10.0, &"holy": 9.0}
 	p.velocity = direction.normalized() * t * float(speed.get(kind, 7.0))
-	p.lifetime = 0.7 if kind == &"arrow" else 0.6 if kind == &"wave" else 1.1
+	p.lifetime = 0.7 if kind == &"arrow" else 0.6 if kind == &"wave" else 0.75 if kind == &"holy" else 1.1
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
 	circle.radius = 3.0 if kind == &"arrow" else 5.0
@@ -42,7 +45,7 @@ static func create(kind: StringName, from: Vector2, direction: Vector2, dmg: int
 	if kind != &"arrow":
 		var light := PointLight2D.new()
 		light.texture = load("res://assets/lights/light_radial.tres")
-		light.color = Color(1.0, 0.55, 0.25) if kind == &"fire" else Color(0.7, 0.5, 1.0)
+		light.color = Color(1.0, 0.55, 0.25) if kind == &"fire" else Color(1.0, 0.9, 0.5) if kind == &"holy" else Color(0.7, 0.5, 1.0)
 		light.texture_scale = 0.5
 		light.energy = 0.9
 		p.add_child(light)
@@ -55,6 +58,8 @@ static func _texture(kind: StringName) -> Texture2D:
 		return _arrow()
 	if kind == &"wave":
 		return _wave()
+	if kind == &"holy":
+		return _orb([Color8(120, 80, 20), Color8(214, 160, 40), Color8(250, 214, 90), Color8(255, 244, 180), Color8(255, 255, 255)])
 	if kind == &"fire":
 		return _orb([Color8(92, 20, 12), Color8(196, 64, 28), Color8(244, 128, 36), Color8(252, 200, 92), Color8(255, 244, 200)])
 	return _orb([Color8(40, 22, 72), Color8(100, 52, 160), Color8(156, 92, 220), Color8(212, 164, 255), Color8(255, 255, 255)])
