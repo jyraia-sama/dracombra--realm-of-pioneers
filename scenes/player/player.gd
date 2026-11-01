@@ -22,7 +22,10 @@ const DODGE_COST := 4.0
 
 @export_group("Attaque")
 ## Durée d'une attaque, en secondes.
-@export var attack_duration: float = 0.3
+@export var attack_duration: float = 0.24
+## Après cette part de l'attaque, un nouvel appui enchaîne aussitôt le coup suivant
+## (ou une roulade) : plus besoin d'attendre la fin de l'animation.
+@export_range(0.0, 1.0) var attack_cancel_ratio: float = 0.55
 ## Portée de l'attaque, en tiles.
 @export var attack_range_tiles: float = 1.0
 ## Dégâts infligés par l'attaque.
@@ -57,6 +60,9 @@ var _regen_timer: float = 0.0
 var _dodge_cooldown_timer: float = 0.0
 var _dodge_velocity: Vector2 = Vector2.ZERO
 var _attack_crit := false
+## Appui mémorisé pendant une attaque : « attack » ou « dodge » (vide = rien).
+var _buffered := ""
+var _lunge: Tween
 var _knock_default := 0.0
 
 ## Techniques et sorts (touches R, F, C).
@@ -306,6 +312,7 @@ func start_attack(mult: float = 1.0, knock: float = -1.0) -> void:
 	var kind: String = Hero.info()["attack"] if done else "melee"
 	_state_timer = attack_duration
 	state = State.ATTACK
+	_anim_time = 0.0  # un coup enchaîné repart du début de l'animation
 	_attack_crit = done and Hero.roll_crit()
 	var dmg := Hero.hit_damage(mult, _attack_crit) if done else attack_damage
 	if kind == "melee":
@@ -387,6 +394,27 @@ func _filter_damage(amount: int) -> int:
 func _process_attack(delta: float) -> void:
 	velocity = Vector2.ZERO
 	_state_timer -= delta
+	# Mémorise l'appui suivant (coup ou roulade) pendant l'attaque.
+	if not input_locked and not actions_locked:
+		if Input.is_action_just_pressed("attack"):
+			_buffered = "attack"
+		elif Input.is_action_just_pressed("dodge"):
+			_buffered = "dodge"
+	var done := 1.0 - _state_timer / maxf(attack_duration, 0.01)
+	if _buffered != "" and done >= attack_cancel_ratio:
+		var next := _buffered
+		_buffered = ""
+		_end_attack()
+		state = State.NORMAL
+		# On peut changer de direction entre deux coups.
+		var dir := _get_input_direction()
+		if dir != Vector2.ZERO:
+			facing = _snap_to_8_directions(dir)
+		if next == "attack":
+			_start_attack()
+		elif Hero.use_stamina(DODGE_COST):
+			_start_dodge(dir)
+		return
 	if _state_timer <= 0.0:
 		_end_attack()
 		state = State.NORMAL
@@ -403,7 +431,10 @@ func _end_attack() -> void:
 ## Le coup d'épée : une petite fente vers l'avant (l'animation fait le reste).
 func _play_lunge() -> void:
 	var step := attack_duration / 3.0
+	if _lunge and _lunge.is_valid():
+		_lunge.kill()
 	var tween := create_tween()
+	_lunge = tween
 	tween.tween_property(visual, "position", facing * 3.0, step).set_ease(Tween.EASE_OUT)
 	tween.tween_interval(step)
 	tween.tween_property(visual, "position", Vector2.ZERO, step)
@@ -421,6 +452,7 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 	if state == State.DEAD or health.is_dead():
 		return
 	# Un coup interrompt l'action en cours.
+	_buffered = ""
 	_end_attack()
 	visual.modulate = Color.WHITE
 	var knockback_speed: float = hitbox.knockback_tiles * Game.TILE_SIZE / hurt_duration

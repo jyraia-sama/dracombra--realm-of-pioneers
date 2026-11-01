@@ -55,6 +55,16 @@ func _ready() -> void:
 		player.health.health_changed.connect(_on_health_changed)
 		_on_health_changed(player.health.current_health, player.health.max_health)
 
+	# Les ressources se consultent dans le sac : la place en haut à droite va à la mini-carte.
+	items_box.visible = false
+	var minimap := Minimap.new()
+	minimap.name = "Minimap"
+	minimap.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	minimap.offset_left = -Minimap.SIZE.x - 6
+	minimap.offset_right = -6
+	minimap.offset_top = 6
+	minimap.offset_bottom = 6 + Minimap.SIZE.y
+	add_child(minimap)
 	Inventory.item_changed.connect(_on_item_changed)
 	for item in Inventory.get_items():
 		_on_item_changed(item, Inventory.get_count(item.id))

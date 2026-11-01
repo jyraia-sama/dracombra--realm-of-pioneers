@@ -47,7 +47,6 @@ var _map_scale := 1.0
 # Système
 var _save_button: Button
 
-var _color_cache := {}
 
 
 func _ready() -> void:
@@ -471,50 +470,19 @@ func _build_map() -> void:
 	_map_view.set_meta("frame", frame)
 
 
-## Dessine la carte du niveau : une couleur moyenne par case (sol, murs, eau...).
+## Dessine la carte du niveau : une couleur moyenne par case (voir LevelMap).
 func _build_minimap() -> void:
-	var scene := get_tree().current_scene
-	if scene == null:
-		return
-	var layers: Array[TileMapLayer] = []
-	for n in ["Ground", "Walls"]:
-		var l := scene.get_node_or_null(n) as TileMapLayer
-		if l:
-			layers.append(l)
-	if layers.is_empty():
+	var data := LevelMap.build(get_tree().current_scene)
+	if data.is_empty():
 		_map_view.texture = null
 		return
-	_map_rect = layers[0].get_used_rect()
-	for l in layers:
-		_map_rect = _map_rect.merge(l.get_used_rect())
-	var img := Image.create(_map_rect.size.x, _map_rect.size.y, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0.05, 0.05, 0.07))
-	# Le sol dessiné (bords naturels, falaises) donne les vraies couleurs ; sinon, les tuiles.
-	var painter := scene.get_node_or_null("OrganicGround") as GroundPainter
-	var painted: Image = painter.cell_colors() if painter else null
-	if painted:
-		var at := painter.origin_cell - _map_rect.position
-		for y in painted.get_height():
-			for x in painted.get_width():
-				var c := painted.get_pixel(x, y)
-				var p := Vector2i(x, y) + at
-				if c.a > 0.5 and p.x >= 0 and p.y >= 0 and p.x < img.get_width() and p.y < img.get_height():
-					img.set_pixelv(p, Color(c.r, c.g, c.b))
-	else:
-		for l in layers:
-			for cell in l.get_used_cells():
-				var col := _tile_color(l, cell)
-				if col.a > 0.0:
-					img.set_pixelv(cell - _map_rect.position, col)
-	# Les arbres et les décors qui bloquent assombrissent la carte.
-	var props := scene.get_node_or_null("Props")
-	if props:
-		var t := float(Game.TILE_SIZE)
-		for p in props.get_children():
-			if p is Node2D and p.visible and p.get_node_or_null("Body") != null:
-				var c := Vector2i(floori(p.global_position.x / t), floori((p.global_position.y - 1.0) / t)) - _map_rect.position
-				if c.x >= 0 and c.y >= 0 and c.x < img.get_width() and c.y < img.get_height():
-					img.set_pixelv(c, img.get_pixelv(c).darkened(0.35))
+	var img: Image = data["image"]
+	_map_rect = data["rect"]
+	# Brouillard : salles du donjon pas encore visitées.
+	for r in LevelMap.hidden_rects(get_tree().current_scene):
+		var local := (r as Rect2i).intersection(_map_rect)
+		if local.size.x > 0 and local.size.y > 0:
+			img.fill_rect(Rect2i(local.position - _map_rect.position, local.size), Color(0.05, 0.05, 0.07))
 	var avail := Vector2(560, 250)
 	_map_scale = minf(avail.x / img.get_width(), avail.y / img.get_height())
 	if _map_scale >= 2.0:
@@ -525,32 +493,6 @@ func _build_minimap() -> void:
 	var frame: Control = _map_view.get_meta("frame")
 	frame.custom_minimum_size = _map_view.size
 	_map_marker.size = _map_view.size
-
-
-func _tile_color(layer: TileMapLayer, cell: Vector2i) -> Color:
-	var src := layer.get_cell_source_id(cell)
-	var coords := layer.get_cell_atlas_coords(cell)
-	var key := "%s:%d:%s" % [layer.tile_set.resource_path, src, coords]
-	if _color_cache.has(key):
-		return _color_cache[key]
-	var col := Color(0, 0, 0, 0)
-	var atlas := layer.tile_set.get_source(src) as TileSetAtlasSource
-	if atlas and atlas.texture:
-		var img := atlas.texture.get_image()
-		var region := atlas.get_tile_texture_region(coords)
-		var sum := Vector3.ZERO
-		var n := 0
-		for y in range(region.position.y, region.end.y, 2):
-			for x in range(region.position.x, region.end.x, 2):
-				var c := img.get_pixel(x, y)
-				if c.a > 0.5:
-					sum += Vector3(c.r, c.g, c.b)
-					n += 1
-		if n > 0:
-			sum /= n
-			col = Color(sum.x, sum.y, sum.z)
-	_color_cache[key] = col
-	return col
 
 
 func _refresh_map() -> void:

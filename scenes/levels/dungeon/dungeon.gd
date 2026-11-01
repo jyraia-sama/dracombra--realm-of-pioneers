@@ -47,6 +47,8 @@ var _alive: Array[Node2D] = []      # monstres du combat en cours
 var _fight_room := Vector2i(-1, -1)
 var _stairs_down: DungeonStairs
 var _spawning := false
+## Salles déjà visitées (les autres restent cachées sur les cartes).
+var _visited: Dictionary = {}
 
 @onready var ground: TileMapLayer = $Ground
 @onready var walls: TileMapLayer = $Walls
@@ -74,6 +76,15 @@ func _ready() -> void:
 ## Pas de sauvegarde dans le donjon : il change à chaque entrée (voir Save.save_game).
 func allows_save() -> bool:
 	return false
+
+
+## Brouillard des cartes (LevelMap) : les salles pas encore visitées.
+func map_hidden_rects() -> Array:
+	var out: Array = []
+	for pos in gen.rooms:
+		if not _visited.has(pos):
+			out.append(DungeonGen.slot_rect(pos))
+	return out
 
 
 func zone_name() -> String:
@@ -213,6 +224,7 @@ func _update_room(force: bool) -> void:
 		return
 	if room != _room or force:
 		_room = room
+		_visited[room] = true
 		_limit_to_room(room)
 	# Le combat se déclenche quand le héros est bien entré (pas encore dans le passage).
 	var kind: int = gen.rooms[room]["kind"]

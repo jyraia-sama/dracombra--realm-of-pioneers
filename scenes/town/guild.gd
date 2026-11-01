@@ -120,7 +120,7 @@ func _upgrade() -> void:
 	if up.is_empty():
 		return
 	if Town.guild_upgrade.is_empty() and not Town.start_guild_upgrade():
-		Narration.say("Il faut d'abord construire les bâtiments demandés.", 2.6)
+		Narration.say(_missing_buildings_text(), 4.0)
 		return
 	var moved := Town.deliver(up["cost"], Town.guild_upgrade["delivered"])
 	var need := Town.missing(up["cost"], Town.guild_upgrade["delivered"])
@@ -130,6 +130,26 @@ func _upgrade() -> void:
 		Narration.say("Matériaux déposés. Il manque encore : %s." % Building.cost_text(need), 3.0)
 	else:
 		Narration.say("Il manque : %s." % Building.cost_text(need), 2.6)
+
+
+## « Il faut encore : 1 tente (2 demandées, 1 terminée, 1 en chantier). »
+func _missing_buildings_text() -> String:
+	var parts: Array[String] = []
+	var up := Town.next_upgrade()
+	for id in Town.missing_buildings():
+		var data := Town.building(id)
+		var label := data.display_name.to_lower() if data else String(id)
+		var wanted := int(up["requires"][id])
+		var built := Town.count_built(id)
+		var placed := 0
+		for r in Town.sites:
+			if r["id"] == String(id):
+				placed += 1
+		var detail := "%d demandé%s, %d terminé%s" % [wanted, "s" if wanted > 1 else "", built, "s" if built > 1 else ""]
+		if placed > built:
+			detail += ", %d en chantier (dormez pour le terminer)" % (placed - built)
+		parts.append("%s (%s)" % [label, detail])
+	return "Il faut encore : %s." % "; ".join(parts)
 
 
 func _change_class() -> void:

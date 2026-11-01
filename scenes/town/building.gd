@@ -85,16 +85,41 @@ func refresh() -> void:
 func _on_interacted() -> void:
 	if record["built"]:
 		if data.can_sleep:
-			Game.sleep()
+			var i := await Choice.ask(data.display_name, "Dormir jusqu'au lendemain ?", ["Dormir", "Annuler"])
+			if i == 0:
+				Game.sleep()
 		elif Crafting.STATION_NAMES.has(data.id):
 			Crafting.open(data.id)
 		return
+	var need := Town.missing(data.cost, record["delivered"])
+	var have := {}
+	for id in need:
+		var n := mini(int(need[id]), Inventory.get_count(id))
+		if n > 0:
+			have[id] = n
+	if not have.is_empty():
+		var body := "Déposer %s ?" % cost_text(have)
+		var rest := _minus(need, have)
+		if not rest.is_empty():
+			body += "\nIl faudra encore : %s." % cost_text(rest)
+		var j := await Choice.ask("Chantier : %s" % data.display_name, body, ["Déposer", "Annuler"])
+		if j != 0:
+			return
 	if Town.deliver(data.cost, record["delivered"]) == 0:
 		Emote.show(get_tree().get_first_node_in_group("player"), "?", Color(1, 0.85, 0.4))
 		Narration.say("Il manque : %s." % cost_text(Town.missing(data.cost, record["delivered"])), 2.2)
 	elif Town.missing(data.cost, record["delivered"]).is_empty():
 		Narration.say("Tout est là. Le chantier avancera chaque jour : dormez pour le voir grandir.", 3.0)
 	refresh()
+
+
+static func _minus(a: Dictionary, b: Dictionary) -> Dictionary:
+	var out := {}
+	for id in a:
+		var left := int(a[id]) - int(b.get(id, 0))
+		if left > 0:
+			out[id] = left
+	return out
 
 
 ## « 3 bois, 2 pierre »

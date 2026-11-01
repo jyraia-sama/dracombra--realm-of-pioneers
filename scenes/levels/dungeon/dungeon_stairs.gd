@@ -29,6 +29,16 @@ func setup(down: bool, active: bool) -> void:
 	_light.energy = 0.9
 	_light.position = Vector2(0, -10)
 	add_child(_light)
+	# On ne marche pas sur l'escalier : on s'en approche par le bas pour l'utiliser.
+	var body := StaticBody2D.new()
+	body.name = "Body"
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(42, 24)
+	shape.shape = rect
+	shape.position = Vector2(0, -14)
+	body.add_child(shape)
+	add_child(body)
 	set_active(active)
 
 
