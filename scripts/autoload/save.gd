@@ -14,6 +14,9 @@ func save_game() -> void:
 	if not Game.has_flag(&"prologue_done"):
 		return
 	var scene := get_tree().current_scene
+	# Certains niveaux ne se sauvegardent pas (le donjon change à chaque entrée).
+	if scene and scene.has_method("allows_save") and not scene.allows_save():
+		return
 	var player := get_tree().get_first_node_in_group("player") as Player
 	var data := {
 		"version": VERSION,

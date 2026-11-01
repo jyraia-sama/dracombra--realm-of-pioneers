@@ -24,6 +24,8 @@ var harvested: Dictionary = {}
 var next_spawn: StringName = &""
 ## Position où replacer le héros au chargement d'une sauvegarde.
 var pending_position: Variant = null
+## Étage du donjon en cours (0 = hors du donjon). Pas sauvegardé : le donjon change à chaque entrée.
+var dungeon_floor: int = 0
 
 var _sleeping := false
 

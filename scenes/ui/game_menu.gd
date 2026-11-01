@@ -560,6 +560,8 @@ func _refresh_map() -> void:
 		zone = {"CaveEntrance": "Caverne des Telles-Ombrages", "HordeTunnel": "Galeries des Telles-Ombrages",
 			"SolakorLair": "Tanière de Solakor", "WoundedPassage": "Boyau de la crevasse",
 			"Sylve": "Sylve des Dracombres", "Dracombra": "Dracombra"}.get(String(scene.name), String(scene.name))
+		if scene.has_method("zone_name"):
+			zone = "Abysses — %s, étage %d" % [scene.zone_name(), Game.dungeon_floor]
 	_map_title.text = "%s    (blanc : vous · rouge : sorties · or : guilde · orange : bâtiments)" % zone
 	_map_marker.queue_redraw()
 

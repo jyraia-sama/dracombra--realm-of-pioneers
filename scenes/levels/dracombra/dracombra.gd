@@ -17,6 +17,9 @@ var phase: Phase = Phase.FREE
 
 func _ready() -> void:
 	Town.center = center_cell
+	Game.dungeon_floor = 0
+	# Entrée des Abysses au nord (avant super() : le point d'arrivée doit exister).
+	DungeonApproach.build(self)
 	super()
 	# Sol aux bords organiques (plus d'effet de grille).
 	GroundPainter.apply(self, $Ground, &"city")
