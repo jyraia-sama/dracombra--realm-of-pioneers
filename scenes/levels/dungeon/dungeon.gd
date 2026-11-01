@@ -333,7 +333,7 @@ func _start_boss(room: Vector2i) -> void:
 	await Narration.title_card("La reine araignée d'obsidienne", zone_name(), 2.0)
 	if not is_inside_tree():
 		return
-	var queen := QueenSpider.create(36 + 10 * Game.abyss_clears)
+	var queen := QueenSpider.create(70 + 15 * Game.abyss_clears)
 	queen.position = _cell_pos(DungeonGen.slot_center(room) + Vector2i(-7, -3))
 	add_child(queen)
 	_alive.append(queen)

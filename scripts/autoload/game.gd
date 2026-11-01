@@ -37,6 +37,20 @@ var abyss_clears: int = 0
 var _sleeping := false
 
 
+func _ready() -> void:
+	# Godot ne relie pas la manette aux actions d'interface par défaut :
+	# bouton A = valider, bouton B = retour (menus, fenêtres de choix).
+	_add_joy(&"ui_accept", JOY_BUTTON_A)
+	_add_joy(&"ui_cancel", JOY_BUTTON_B)
+
+
+func _add_joy(action: StringName, button: JoyButton) -> void:
+	var ev := InputEventJoypadButton.new()
+	ev.button_index = button
+	if InputMap.has_action(action) and not InputMap.action_has_event(action, ev):
+		InputMap.action_add_event(action, ev)
+
+
 func has_flag(flag: StringName) -> bool:
 	return flags.get(flag, false)
 

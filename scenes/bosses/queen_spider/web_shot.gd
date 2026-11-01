@@ -20,7 +20,7 @@ static func create(from: Vector2, direction: Vector2, shooter: Node2D) -> WebSho
 	w.once_per_activation = true
 	w.source = shooter
 	w.position = from
-	w.velocity = direction.normalized() * Game.TILE_SIZE * 6.0
+	w.velocity = direction.normalized() * Game.TILE_SIZE * 8.0
 	var shape := CollisionShape2D.new()
 	var c := CircleShape2D.new()
 	c.radius = 5.0

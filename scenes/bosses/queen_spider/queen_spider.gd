@@ -35,21 +35,23 @@ func _ready() -> void:
 	health.max_health = max_hp
 	health.current_health = max_hp
 	health.invulnerability_duration = 0.1
-	move_speed_tiles = 2.2
+	move_speed_tiles = 3.0
 	detection_radius_tiles = 30.0
 	lose_interest_radius_tiles = 40.0
-	leap_range_tiles = 4.5
+	leap_range_tiles = 5.5
 	leap_distance_tiles = 4.0
-	leap_damage = 3
-	leap_cooldown = 3.0
+	leap_damage = 4
+	leap_cooldown = 2.4
 	windup_time = 0.6
-	contact_damage = 1
+	contact_damage = 2
 	contact_hitbox.damage = contact_damage
 	hurt_duration = 0.08
 	health.health_changed.connect(func(cur: int, mx: int) -> void:
 		if not _enraged and cur <= mx / 2:
 			_enraged = true
 			visual.modulate = Color(1.0, 0.55, 0.65)
+			move_speed_tiles = 3.8
+			leap_cooldown = 1.6
 			Emote.show(self, "!!", Color(1, 0.4, 0.4), 20.0)
 			Fx.shake(3.0, 0.4))
 
@@ -64,10 +66,15 @@ func _physics_process(delta: float) -> void:
 	_web_timer -= delta * speed
 	_egg_timer -= delta * speed
 	if _web_timer <= 0.0:
-		_web_timer = 4.5
+		_web_timer = 3.2
 		_spit_web()
+		# Enragée : une deuxième salve, décalée.
+		if _enraged:
+			get_tree().create_timer(0.5).timeout.connect(func() -> void:
+				if state != State.DEAD and is_instance_valid(_target):
+					_spit_web())
 	elif _egg_timer <= 0.0:
-		_egg_timer = 9.0
+		_egg_timer = 7.0
 		_lay_eggs()
 
 
@@ -80,7 +87,7 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 ## Trois jets de toile en éventail vers le héros.
 func _spit_web() -> void:
 	var dir := global_position.direction_to(_target.global_position)
-	for a in [-0.35, 0.0, 0.35]:
+	for a in [-0.6, -0.3, 0.0, 0.3, 0.6]:
 		var web := WebShot.create(global_position + Vector2(0, -12), dir.rotated(a), self)
 		get_parent().add_child(web)
 	Emote.show(self, "Pfft !", Color(0.95, 0.95, 1.0), 16.0)
@@ -101,7 +108,7 @@ func _lay_eggs() -> void:
 			s.position = at
 			s.scale = Vector2(0.7, 0.7)
 			var h := s.get_node("Health") as HealthComponent
-			h.max_health = 1
+			h.max_health = 2
 			s.set("leap_damage", 1)
 			s.set("detection_radius_tiles", 30.0)
 			s.set("lose_interest_radius_tiles", 40.0)

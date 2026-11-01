@@ -229,7 +229,20 @@ func _on_bag_use() -> void:
 		return
 	var item := Inventory.item_by_id(_bag_ids[sel[0]])
 	var player := get_tree().get_first_node_in_group("player") as Player
+	# Les armes de classe (bâton, arc, symbole) ne se portent pas : elles suivent la classe.
+	var is_class_item := false
+	for cls in Hero.CLASSES:
+		if Hero.CLASSES[cls]["item"] == item.id:
+			is_class_item = true
+	if item.slot == &"" and item.use_heal <= 0:
+		_on_bag_selected(sel[0])
+		_bag_info.text += "\n\n" + ("Arme de classe : elle suit la classe (changez de classe à la guilde). Pour une meilleure arme, portez une arme du palier 1 (Équipement > Arme principale)." if is_class_item else "Cet objet ne s'utilise pas directement : il sert à fabriquer.")
+		return
 	if item.slot != &"":
+		if not Hero.can_wear(item):
+			_on_bag_selected(sel[0])
+			_bag_info.text += "\n\nPas pour la classe actuelle (%s)." % Hero.info()["name"]
+			return
 		Hero.wear(item.id)
 	elif item.use_heal > 0 and player and player.health.current_health < player.health.max_health:
 		Inventory.remove_item(item, 1)
