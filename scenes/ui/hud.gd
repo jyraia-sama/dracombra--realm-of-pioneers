@@ -88,6 +88,7 @@ func _make_label(at: Vector2, size: int) -> Label:
 
 func _process(_delta: float) -> void:
 	_objective.text = Quests.objective_text()
+	_refresh_info()
 	_refresh_health()
 	_refresh_bars()
 	var hotbar := get_node_or_null("HotbarLayer/Hotbar") as Control
@@ -100,7 +101,7 @@ func _refresh_info() -> void:
 		_info.text = ""
 		return
 	var pts := Hero.free_points()
-	_info.text = "%s · %s · Jour %d%s" % [Hero.hero_name, Hero.info()["name"], Game.day,
+	_info.text = "%s · %s · Jour %d · %s%s" % [Hero.hero_name, Hero.info()["name"], Game.day, Game.clock_text(),
 		"  (+%d points : menu Personnage)" % pts if pts > 0 else ""]
 
 

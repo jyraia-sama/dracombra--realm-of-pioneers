@@ -18,6 +18,8 @@ signal day_changed(day: int)
 var flags: Dictionary[StringName, bool] = {}
 ## Jour de jeu (le premier jour est celui du réveil à Dracombra).
 var day: int = 1
+## Heure de la journée, en minutes (0 = minuit, 480 = 8 h). Une minute de jeu = une seconde réelle.
+var time_minutes: float = 480.0
 ## Ressources récoltées : { "niveau:chemin du décor" : jour de la récolte }.
 var harvested: Dictionary = {}
 ## Point d'arrivée dans le prochain niveau (nom d'un Marker2D sous « Spawns »).
@@ -35,6 +37,88 @@ var pending_message: String = ""
 var abyss_clears: int = 0
 
 var _sleeping := false
+
+
+# ------------------------------------------------------------------ jour et nuit
+# Une journée dure 24 minutes réelles. Le jour change à l'aube (6 h) : en dormant (on se
+# réveille à 7 h le lendemain) ou en restant debout toute la nuit. Les niveaux qui ont un
+# CanvasModulate « Daylight » (Dracombra, Sylve) suivent la couleur du ciel.
+
+const DAWN := 360.0
+const WAKE := 420.0
+## Couleur du ciel selon l'heure : [heure, couleur].
+const SKY := [[0.0, Color(0.32, 0.36, 0.6)], [5.0, Color(0.32, 0.36, 0.6)], [6.5, Color(1.0, 0.8, 0.72)],
+	[8.0, Color(1.0, 0.98, 0.94)], [17.5, Color(1.0, 0.98, 0.94)], [19.0, Color(1.0, 0.78, 0.6)],
+	[20.5, Color(0.48, 0.47, 0.72)], [22.0, Color(0.32, 0.36, 0.6)], [24.0, Color(0.32, 0.36, 0.6)]]
+
+signal new_morning(day: int)
+
+
+func clock_text() -> String:
+	var m := int(time_minutes)
+	return "%02d:%02d" % [m / 60, m % 60]
+
+
+func is_night() -> bool:
+	return time_minutes >= 20.5 * 60.0 or time_minutes < 6.0 * 60.0
+
+
+static func sky_color(minutes: float) -> Color:
+	var h := minutes / 60.0
+	for i in range(1, SKY.size()):
+		if h <= SKY[i][0]:
+			var a: Array = SKY[i - 1]
+			var b: Array = SKY[i]
+			return (a[1] as Color).lerp(b[1], (h - a[0]) / maxf(0.001, b[0] - a[0]))
+	return SKY[0][1]
+
+
+func _process(delta: float) -> void:
+	if not has_flag(&"prologue_done") or get_tree().paused or _sleeping or Transition.is_busy:
+		return
+	var scene := get_tree().current_scene
+	if scene == null or not (scene is Level):
+		return
+	var before := time_minutes
+	time_minutes += delta
+	if time_minutes >= 1440.0:
+		time_minutes -= 1440.0
+	# L'aube passe sans avoir dormi : nouveau jour quand même.
+	if before < DAWN and time_minutes >= DAWN:
+		_new_day(false)
+	_apply_sky(scene)
+
+
+func _apply_sky(scene: Node) -> void:
+	var sky := scene.get_node_or_null("Daylight") as CanvasModulate
+	if sky == null:
+		return
+	sky.color = sky_color(time_minutes)
+	var player := scene.get_node_or_null("Player") as Node2D
+	if player:
+		var light := player.get_node_or_null("HeroLight") as PointLight2D
+		if light == null:
+			light = PointLight2D.new()
+			light.name = "HeroLight"
+			light.position = Vector2(0, -16)
+			light.color = Color(1, 0.86, 0.7)
+			light.texture = preload("res://assets/lights/light_radial.tres")
+			light.texture_scale = 2.0
+			player.add_child(light)
+		light.enabled = is_night() or time_minutes > 19.5 * 60.0
+
+
+## Un nouveau jour commence (à l'aube) : chantiers, arrivées à la guilde…
+func _new_day(slept: bool) -> Array[String]:
+	day += 1
+	var messages := Town.advance_day()
+	day_changed.emit(day)
+	new_morning.emit(day)
+	if not slept:
+		Narration.say("L'aube se lève. Jour %d." % day, 3.0)
+		for t in messages:
+			Narration.say(t, 3.0)
+	return messages
 
 
 func _ready() -> void:
@@ -67,6 +151,7 @@ func hero_max_health() -> int:
 func reset() -> void:
 	flags.clear()
 	day = 1
+	time_minutes = 480.0
 	harvested.clear()
 	abyss_clears = 0
 	next_spawn = &""
@@ -104,14 +189,17 @@ func sleep() -> void:
 	if player:
 		player.input_locked = true
 	await Transition.fade_out(0.8)
-	day += 1
-	var finished := Town.advance_day()
+	# On dort jusqu'au lendemain matin (le jour change à l'aube).
+	var finished := _new_day(true)
+	time_minutes = WAKE
+	var scene := get_tree().current_scene
+	if scene:
+		_apply_sky(scene)
 	if player:
 		player.health.heal(player.health.max_health)
-	await Transition.story_text("Jour %d" % day, 1.2)
+	await Transition.story_text("Jour %d — %s" % [day, clock_text()], 1.2)
 	for text in finished:
 		await Transition.story_text(text, 1.6)
-	day_changed.emit(day)
 	Save.save_game()
 	await Transition.fade_in(0.8)
 	if player:
@@ -125,7 +213,7 @@ func serialize() -> Dictionary:
 	var f := {}
 	for k in flags:
 		f[String(k)] = flags[k]
-	return {"flags": f, "day": day, "harvested": harvested.duplicate(), "abyss_clears": abyss_clears}
+	return {"flags": f, "day": day, "time": time_minutes, "harvested": harvested.duplicate(), "abyss_clears": abyss_clears}
 
 
 func deserialize(data: Dictionary) -> void:
@@ -133,6 +221,7 @@ func deserialize(data: Dictionary) -> void:
 	for k in data.get("flags", {}):
 		flags[StringName(k)] = bool(data["flags"][k])
 	day = int(data.get("day", 1))
+	time_minutes = float(data.get("time", 480.0))
 	harvested = data.get("harvested", {}).duplicate()
 	abyss_clears = int(data.get("abyss_clears", 0))
 
