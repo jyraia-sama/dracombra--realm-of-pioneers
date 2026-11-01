@@ -77,16 +77,42 @@ func reserved_rect() -> Rect2:
 
 
 func _on_interacted() -> void:
-	var options := ["Dormir jusqu'au lendemain", "Fabriquer des outils", "Améliorer la guilde", "Changer de classe", "Fermer"]
+	# Au palier Camp, le registre est au feu ; ensuite, on entre dans la salle de la guilde.
+	var hall := Town.tier >= 1
+	var options: Array[String] = []
+	var ids: Array[String] = []
+	if hall:
+		options.append("Entrer dans la salle de la guilde")
+		ids.append("hall")
+	else:
+		options.append("Registre de la guilde (%d membres)" % Roster.living().size())
+		ids.append("members")
+		options.append("Candidats du jour (%d)" % Roster.candidates.size())
+		ids.append("candidates")
+	for pair in [["Dormir jusqu'au lendemain", "sleep"], ["Fabriquer des outils", "craft"], ["Améliorer la guilde", "upgrade"],
+			["Changer de classe", "class"], ["Fermer", "close"]]:
+		options.append(pair[0])
+		ids.append(pair[1])
 	var choice := await Choice.ask(Town.guild_name(), _status_text(), options)
-	match choice:
-		0:
-			Game.sleep()
-		1:
+	if choice < 0:
+		return
+	match ids[choice]:
+		"hall":
+			Game.next_spawn = &"entrance"
+			Transition.change_scene("res://scenes/levels/guild_hall/guild_hall.tscn")
+		"members":
+			await GuildRegistry.open_members()
+		"candidates":
+			await GuildRegistry.open_candidates()
+		"sleep":
+			var i := await Choice.ask(Town.guild_name(), "Dormir jusqu'au lendemain matin ? (%s)" % Game.clock_text(), ["Dormir", "Annuler"])
+			if i == 0:
+				Game.sleep()
+		"craft":
 			Crafting.open(&"camp")
-		2:
+		"upgrade":
 			_upgrade()
-		3:
+		"class":
 			_change_class()
 
 

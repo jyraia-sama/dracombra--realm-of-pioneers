@@ -21,6 +21,12 @@ func _ready() -> void:
 	Game.dungeon_run = {}
 	# Entrée des Abysses au nord (avant super() : le point d'arrivée doit exister).
 	DungeonApproach.build(self)
+	# Retour de la salle de la guilde : devant la guilde.
+	var from_hall := Marker2D.new()
+	from_hall.name = "from_guild_hall"
+	from_hall.position = guild.position + Vector2(0, 30)
+	$Spawns.add_child(from_hall)
+	_spawn_members()
 	super()
 	# Sol aux bords organiques (plus d'effet de grille).
 	GroundPainter.apply(self, $Ground, &"city")
@@ -71,3 +77,12 @@ func _wake_up() -> void:
 	Quests.reset()
 	Save.save_game()
 	Narration.say("E : interagir · B : construire · Échap : menu (sac, personnage, carte). Parlez à Ysolde.", 5.0)
+
+
+## Les membres de la guilde flânent autour de la guilde.
+func _spawn_members() -> void:
+	var t := float(Game.TILE_SIZE)
+	var area := Rect2(guild.position - Vector2(t * 9, t * 5), Vector2(t * 18, t * 11))
+	for m in Roster.living():
+		var npc := MemberNPC.create(m, area)
+		$Props.add_child(npc)

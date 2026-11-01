@@ -13,5 +13,5 @@ size = Vector2i(2, 1)
 cost = Dictionary[StringName, int]({&"wood": 8, &"stone": 2})
 build_days = 1
 texture = ExtResource("2_t")
-housing = 1
+housing = 2
 can_sleep = true

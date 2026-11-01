@@ -18,6 +18,9 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `res://assets/sprites/weapons/book.png` | PROVISOIRE | 2026-11-01 | livre sacré du clerc, tenu en main (dessiné par le code) |
 | `scenes/bosses/queen_spider/queen_spider.gd` | PROVISOIRE | 2026-11-01 | reine araignée : planche de l'araignée d'obsidienne agrandie ×2 et teintée |
 | `scenes/bosses/queen_spider/web_shot.gd` | PROVISOIRE | 2026-11-01 | jet de toile (dessiné par le code) |
+| `res://assets/sprites/guild/membre_*/` | PROVISOIRE | 2026-11-01 | membres combattants (silhouette bleue + couleur de classe, générés) |
+| `res://assets/sprites/guild/artisan/artisan.png` | PROVISOIRE | 2026-11-01 | membres artisans (générés) |
+| `scenes/levels/guild_hall/guild_hall.gd` | PROVISOIRE | 2026-11-01 | salle de la guilde : plancher, murs, tapis, pupitre, tableau (dessinés par le code) |
 <!-- fin provisoires -->
 
 ## Existants au 2026-11-01 (version 0.4.1)

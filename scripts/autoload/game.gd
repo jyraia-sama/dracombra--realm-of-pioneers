@@ -159,6 +159,7 @@ func reset() -> void:
 	Inventory.clear()
 	Town.reset()
 	Quests.reset()
+	Roster.reset()
 
 
 # ------------------------------------------------------------------ récoltes

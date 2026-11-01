@@ -27,6 +27,7 @@ func save_game() -> void:
 		"town": Town.serialize(),
 		"hero": Hero.serialize(),
 		"quests": Quests.serialize(),
+		"roster": Roster.serialize(),
 	}
 	var file := FileAccess.open(PATH, FileAccess.WRITE)
 	if file:
@@ -46,6 +47,7 @@ func load_game() -> bool:
 	Town.deserialize(data.get("town", {}))
 	Hero.deserialize(data.get("hero", {}))
 	Quests.deserialize(data.get("quests", {}))
+	Roster.deserialize(data.get("roster", {}))
 	var pos = data.get("position")
 	if pos != null:
 		Game.pending_position = Vector2(pos[0], pos[1])
