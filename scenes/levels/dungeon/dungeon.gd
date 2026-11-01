@@ -354,6 +354,11 @@ func _on_queen_died(queen: Node2D) -> void:
 		DungeonRoomProps.drop(self, Inventory.item_by_id(entry[0]), rng.randi_range(entry[1], entry[2]), at)
 	Fx.shake(5.0, 0.6)
 	Fx.hit_stop(0.2)
+	# Lysia, prisonnière de la reine, attend dans un cocon (tant qu'on ne l'a pas libérée).
+	if not Lysia.rescued():
+		var c := Lysia.cocoon()
+		c.position = _cell_pos(DungeonGen.slot_center(gen.stairs) + Vector2i(7, -3))
+		props.add_child(c)
 	var first := not Game.has_flag(&"abyss_zone1_queen")
 	Game.set_flag(&"abyss_zone1_queen")
 	Game.abyss_clears += 1

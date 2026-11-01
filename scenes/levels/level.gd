@@ -23,6 +23,7 @@ func _ready() -> void:
 	if player != null:
 		_camera = player.get_node_or_null("Camera2D") as Camera2D
 		_place_player(player)
+		Roster.spawn_party(self, player)
 	_limit_camera()
 	# Sauvegarde automatique en arrivant dans un niveau (après le prologue).
 	Save.save_game.call_deferred()

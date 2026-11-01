@@ -26,7 +26,14 @@ func _ready() -> void:
 	from_hall.name = "from_guild_hall"
 	from_hall.position = guild.position + Vector2(0, 30)
 	$Spawns.add_child(from_hall)
+	Roster.settle_after_outing()
 	_spawn_members()
+	# Au palier Camp, Lysia attend près du feu (ensuite, derrière son comptoir dans la salle).
+	if Lysia.rescued() and Town.tier == 0:
+		var lysia := Lysia.new()
+		lysia.name = "Lysia"
+		lysia.position = guild.position + Vector2(30, 6)
+		$Props.add_child(lysia)
 	super()
 	# Sol aux bords organiques (plus d'effet de grille).
 	GroundPainter.apply(self, $Ground, &"city")
@@ -84,5 +91,7 @@ func _spawn_members() -> void:
 	var t := float(Game.TILE_SIZE)
 	var area := Rect2(guild.position - Vector2(t * 9, t * 5), Vector2(t * 18, t * 11))
 	for m in Roster.living():
+		if Roster.party.has(int(m["id"])):
+			continue  # ceux du groupe suivent le héros
 		var npc := MemberNPC.create(m, area)
 		$Props.add_child(npc)

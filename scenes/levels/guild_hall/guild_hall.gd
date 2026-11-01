@@ -31,6 +31,8 @@ func _ready() -> void:
 	super()
 	_limit_camera_to_room()
 	for m in Roster.living():
+		if Roster.party.has(int(m["id"])):
+			pass  # les compagnons du groupe sont aussi dans la salle (ils ne suivent pas ici)
 		var npc := MemberNPC.create(m, Rect2(t * 3, t * 5, _room.size.x - t * 6, _room.size.y - t * 8))
 		$Props.add_child(npc)
 	Narration.say("Salle de la guilde — %d membre%s, %d place%s libre%s." % [Roster.living().size(),
@@ -91,9 +93,20 @@ func _build_walls() -> void:
 
 func _build_props() -> void:
 	var t := float(Game.TILE_SIZE)
-	var desk := HallDesk.new()
-	desk.position = Vector2(_room.size.x * 0.3, t * 5.0)
-	$Props.add_child(desk)
+	# Le comptoir : Lysia derrière (une fois libérée), sinon le registre posé sur un pupitre.
+	if Lysia.rescued():
+		var counter := HallCounter.new()
+		counter.position = Vector2(_room.size.x * 0.3, t * 5.6)
+		$Props.add_child(counter)
+		var lysia := Lysia.new()
+		lysia.name = "Lysia"
+		lysia.position = counter.position + Vector2(0, -12)
+		lysia.z_index = 0
+		$Props.add_child(lysia)
+	else:
+		var desk := HallDesk.new()
+		desk.position = Vector2(_room.size.x * 0.3, t * 5.0)
+		$Props.add_child(desk)
 	var board := HallBoard.new()
 	board.position = Vector2(_room.size.x * 0.68, t * 3.2)
 	$Props.add_child(board)
@@ -101,6 +114,10 @@ func _build_props() -> void:
 		var b: Node2D = BRAZIER.instantiate()
 		b.position = Vector2(x, t * 3.6)
 		$Props.add_child(b)
+
+
+func is_guild_hall() -> bool:
+	return true
 
 
 func allows_save() -> bool:
@@ -179,6 +196,31 @@ class HallDesk extends Node2D:
 		draw_rect(Rect2(-8, -21, 8, 5), Color("efe6cf"))
 		draw_rect(Rect2(0, -21, 8, 5), Color("e2d8bd"))
 		draw_line(Vector2(9, -24), Vector2(13, -30), Color("f4f0e8"), 1.0)
+
+
+class HallCounter extends Node2D:
+	func _ready() -> void:
+		var body := StaticBody2D.new()
+		var cs := CollisionShape2D.new()
+		var r := RectangleShape2D.new()
+		r.size = Vector2(56, 8)
+		cs.shape = r
+		cs.position = Vector2(0, -4)
+		body.add_child(cs)
+		add_child(body)
+
+	func _draw() -> void:
+		draw_rect(Rect2(-29, -16, 58, 16), Color("2a1b12"))
+		draw_rect(Rect2(-28, -15, 56, 14), Color("8a5f3c"))
+		draw_rect(Rect2(-29, -18, 58, 4), Color("a8774c"))
+		for x in [-20, -6, 8, 22]:
+			draw_line(Vector2(x, -13), Vector2(x, -2), Color("6b4a2e"))
+		# Le registre, un encrier, une pile de papiers.
+		draw_rect(Rect2(-22, -23, 16, 6), Color("1d1622"))
+		draw_rect(Rect2(-21, -22, 7, 4), Color("efe6cf"))
+		draw_rect(Rect2(-14, -22, 7, 4), Color("e2d8bd"))
+		draw_rect(Rect2(14, -22, 5, 4), Color("1d1622"))
+		draw_rect(Rect2(4, -21, 8, 3), Color("efe6cf"))
 
 
 class HallBoard extends Node2D:

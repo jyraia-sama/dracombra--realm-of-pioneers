@@ -492,6 +492,7 @@ func _refresh_player(refill: bool) -> void:
 func reward_kill(enemy: Node) -> void:
 	var key := StringName(enemy.get_script().get_global_name()) if enemy.get_script() else &""
 	gain_xp(int(KILL_XP.get(key, 1)))
+	Roster.share_xp(int(KILL_XP.get(key, 1)))
 
 
 func serialize() -> Dictionary:

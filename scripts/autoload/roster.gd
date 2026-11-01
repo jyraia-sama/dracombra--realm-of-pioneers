@@ -34,6 +34,9 @@ const ARTISAN_SPRITE := "res://assets/sprites/guild/artisan/artisan"
 
 var members: Array[Dictionary] = []
 var candidates: Array[Dictionary] = []
+## Le groupe d'aventure : identifiants des 2 compagnons (au plus) qui suivent le héros.
+var party: Array[int] = []
+const PARTY_SIZE := 2
 var _next_id := 1
 
 
@@ -44,6 +47,7 @@ func _ready() -> void:
 func reset() -> void:
 	members.clear()
 	candidates.clear()
+	party.clear()
 	_next_id = 1
 	changed.emit()
 
@@ -76,8 +80,9 @@ func _on_new_morning(_day: int) -> void:
 	candidates.clear()
 	for i in randi_range(1, 2):
 		candidates.append(make_candidate())
-	# Les blessés se reposent.
+	# Une nuit de repos : PV au maximum ; les blessés se reposent.
 	for m in members:
+		m["hp"] = 0
 		if m["state"] == "blessé":
 			m["rest"] = int(m["rest"]) - 1
 			if int(m["rest"]) <= 0:
@@ -123,7 +128,71 @@ func recruit(index: int) -> bool:
 
 func dismiss(id: int) -> void:
 	members = members.filter(func(m): return int(m["id"]) != id)
+	party.erase(id)
 	changed.emit()
+
+
+# ------------------------------------------------------------------ le groupe
+
+func party_members() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for id in party:
+		var m := by_id(id)
+		if not m.is_empty() and m["state"] != "mort":
+			out.append(m)
+	return out
+
+
+func set_party_slot(slot: int, id: int) -> void:
+	party.erase(id)
+	while party.size() <= slot:
+		party.append(0)
+	party[slot] = id
+	party = party.filter(func(x): return x > 0)
+	changed.emit()
+
+
+## XP gagnée par le héros : les compagnons présents la gagnent aussi (classe actuelle).
+func share_xp(amount: int) -> void:
+	for m in party_members():
+		var cls: String = m["cls"]
+		var lvl := int(m["levels"].get(cls, 1))
+		if lvl >= Hero.MAX_LEVEL:
+			continue
+		m["xp"] = int(m.get("xp", 0)) + amount
+		while lvl < Hero.MAX_LEVEL and int(m["xp"]) >= Hero.xp_to_next(lvl):
+			m["xp"] = int(m["xp"]) - Hero.xp_to_next(lvl)
+			lvl += 1
+			m["levels"][cls] = lvl
+			Narration.say("%s passe niveau %d !" % [m["name"], lvl], 2.0)
+
+
+## PV max d'un compagnon : comme le héros (10 + VIT / 2), avec la VIT de sa classe à son niveau.
+func max_hp(m: Dictionary) -> int:
+	return 10 + stat(m, &"vit") / 2 + int(gear_bonus(m, &"vit")) / 2
+
+
+func stat(m: Dictionary, key: StringName) -> int:
+	var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
+	var lvl := int(m["levels"].get(m["cls"], 1))
+	return int(info["stats"][key]) + int(floor(float(info["growth"][key]) * (lvl - 1)))
+
+
+## Dégâts d'un coup : dégâts de la classe + 1 tous les 5 points de la caractéristique principale.
+func damage(m: Dictionary) -> int:
+	var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
+	var main: StringName = info["main"]
+	var gain := maxi(stat(m, main) - int(info["stats"][main]), 0)
+	return int(info["damage"]) + gain / 5 + gear_bonus(m, &"dmg")
+
+
+func gear_bonus(m: Dictionary, key: StringName) -> int:
+	var total := 0
+	for slot in m.get("gear", {}):
+		var item := Inventory.item_by_id(StringName(m["gear"][slot]))
+		if item and (item.classes.is_empty() or item.classes.has(StringName(m["cls"]))):
+			total += int(item.bonus.get(key, 0))
+	return total
 
 
 func by_id(id: int) -> Dictionary:
@@ -177,7 +246,8 @@ func sprite_path(m: Dictionary) -> String:
 # ------------------------------------------------------------------ sauvegarde
 
 func serialize() -> Dictionary:
-	return {"members": members.duplicate(true), "candidates": candidates.duplicate(true), "next_id": _next_id}
+	return {"members": members.duplicate(true), "candidates": candidates.duplicate(true), "next_id": _next_id,
+		"party": party.duplicate()}
 
 
 func deserialize(data: Dictionary) -> void:
@@ -188,4 +258,37 @@ func deserialize(data: Dictionary) -> void:
 	for m in data.get("candidates", []):
 		candidates.append(m)
 	_next_id = int(data.get("next_id", members.size() + 1))
+	party.clear()
+	for id in data.get("party", []):
+		party.append(int(id))
 	changed.emit()
+
+
+# ------------------------------------------------------------------ compagnons dans les niveaux
+
+## Fait apparaître les compagnons du groupe près du héros (appelé par Level._ready).
+func spawn_party(level: Node2D, player: Node2D) -> void:
+	if not Game.has_flag(&"prologue_done") or player == null or level.has_method("is_guild_hall"):
+		return
+	var slot := 0
+	for m in party_members():
+		var c := Companion.create(m, slot)
+		c.position = player.global_position + Vector2(-18 if slot == 0 else 18, 10)
+		level.add_child.call_deferred(c)
+		slot += 1
+
+
+## Retour en ville : ceux qui sont tombés sont blessés (2 jours de repos).
+func settle_after_outing() -> void:
+	var hurt: Array[String] = []
+	for m in members:
+		if m.get("fell", false):
+			m["fell"] = false
+			if m["state"] != "mort":
+				m["state"] = "blessé"
+				m["rest"] = 2
+				hurt.append(m["name"])
+	if not hurt.is_empty():
+		changed.emit()
+		Narration.say("%s doi%s se reposer (blessé%s, 2 jours)." % [", ".join(hurt), "t" if hurt.size() == 1 else "vent",
+			"" if hurt.size() == 1 else "s"], 4.0)
