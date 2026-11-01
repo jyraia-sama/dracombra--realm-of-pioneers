@@ -216,7 +216,14 @@ func install_dir() -> String:
 	var base := OS.get_environment("LOCALAPPDATA")
 	if base == "":
 		base = OS.get_environment("HOME").path_join(".local/share")
-	return base.path_join("Programs").path_join("Dracombra")
+	# Windows donne LOCALAPPDATA avec des « \ », mais le chemin du programme avec des « / » :
+	# sans cette conversion, le jeu installé ne se reconnaissait jamais comme installé.
+	return base.replace("\\", "/").path_join("Programs").path_join("Dracombra")
+
+
+## Chemin comparable : « / » partout, sans majuscules (Windows ne les distingue pas).
+static func _norm(path: String) -> String:
+	return path.replace("\\", "/").simplify_path().to_lower()
 
 
 func installed_exe() -> String:
@@ -225,7 +232,7 @@ func installed_exe() -> String:
 
 ## Le jeu tourne-t-il depuis son dossier d'installation ?
 func is_installed() -> bool:
-	return _exe.get_base_dir().simplify_path().to_lower() == install_dir().simplify_path().to_lower()
+	return _norm(_exe.get_base_dir()) == _norm(install_dir())
 
 
 ## Le jeu propose de s'installer quand il est lancé d'ailleurs (Téléchargements, Bureau...).

@@ -123,7 +123,8 @@ func _build_updates() -> void:
 			if err != "":
 				_update_label.text = err
 				_update_button.disabled = false)
-		return
+	# On cherche quand même les mises à jour : si une version plus récente existe, le bouton
+	# « Mettre à jour » remplace celui d'installation.
 	Updater.check()
 
 
