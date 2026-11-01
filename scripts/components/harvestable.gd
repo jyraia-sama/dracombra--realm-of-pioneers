@@ -17,6 +17,9 @@ const DUST_SCENE := preload("res://scenes/props/dust_puff.tscn")
 @export var regrow_days: int = 3
 ## Taille de la zone qu'on peut frapper, en pixels, posée au pied du décor.
 @export var hit_size: Vector2 = Vector2(14, 14)
+## false : la récolte n'est pas retenue d'un jour à l'autre (donjon tiré au sort à chaque
+## entrée : le même nom de nœud n'y désigne jamais le même filon).
+@export var persistent: bool = true
 
 ## Outil qui rend la récolte deux fois plus rapide (et plus généreuse), selon la ressource.
 const TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe"}
@@ -24,12 +27,13 @@ const TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe"}
 var health: HealthComponent
 var _sprite: CanvasItem
 var _hits_taken := 0
+var _depleted := false
 
 
 func _ready() -> void:
 	add_to_group("harvestable")
 	_sprite = get_parent().get_node_or_null("Sprite2D") as CanvasItem
-	if Game.is_harvested(_key(), regrow_days):
+	if persistent and Game.is_harvested(_key(), regrow_days):
 		_set_present(false)
 		return
 	health = HealthComponent.new()
@@ -84,9 +88,13 @@ func _on_hit(_hitbox: Hitbox) -> void:
 
 
 func _on_depleted() -> void:
-	if Game.is_harvested(_key(), regrow_days):
+	if _depleted:
 		return
-	Game.mark_harvested(_key())
+	_depleted = true
+	if persistent:
+		if Game.is_harvested(_key(), regrow_days):
+			return
+		Game.mark_harvested(_key())
 	Fx.harvest_depleted(self)
 	for child in get_children():
 		if child is Hurtbox:

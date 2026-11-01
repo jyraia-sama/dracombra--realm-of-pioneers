@@ -26,6 +26,11 @@ var next_spawn: StringName = &""
 var pending_position: Variant = null
 ## Étage du donjon en cours (0 = hors du donjon). Pas sauvegardé : le donjon change à chaque entrée.
 var dungeon_floor: int = 0
+## Passage en cours dans le donjon : {"start": {objet: quantité}} au moment d'y entrer
+## (pour la règle des 25 % à la mort). Vide hors du donjon.
+var dungeon_run: Dictionary = {}
+## Message à afficher à l'arrivée dans le prochain niveau (ex. pertes à la mort).
+var pending_message: String = ""
 
 var _sleeping := false
 

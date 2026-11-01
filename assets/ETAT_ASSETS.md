@@ -11,6 +11,9 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `scenes/levels/dungeon/dungeon_gate.gd` | PROVISOIRE | 2026-11-01 | herse d'éclats d'obsidienne des salles de combat (dessinée par le code) |
 | `scenes/levels/dungeon/dungeon_stairs.gd` | PROVISOIRE | 2026-11-01 | escaliers du donjon (dessinés par le code) |
 | `scenes/levels/dracombra/dungeon_approach.gd` | PROVISOIRE | 2026-11-01 | bâtiment d'entrée des Abysses : escalier dessiné + piliers et braseros existants |
+| `res://assets/sprites/npc/marchand/marchand.png` | PROVISOIRE | 2026-11-01 | perso pnj (généré) |
+| `res://assets/sprites/items/gold.png` | PROVISOIRE | 2026-11-01 | icône pièces d'or (dessinée par le code) |
+| `res://assets/sprites/items/potion_heal.png` | PROVISOIRE | 2026-11-01 | icône potion de soin (dessinée par le code) |
 <!-- fin provisoires -->
 
 ## Existants au 2026-11-01 (version 0.4.1)

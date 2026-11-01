@@ -18,6 +18,7 @@ var phase: Phase = Phase.FREE
 func _ready() -> void:
 	Town.center = center_cell
 	Game.dungeon_floor = 0
+	Game.dungeon_run = {}
 	# Entrée des Abysses au nord (avant super() : le point d'arrivée doit exister).
 	DungeonApproach.build(self)
 	super()
@@ -25,6 +26,9 @@ func _ready() -> void:
 	GroundPainter.apply(self, $Ground, &"city")
 	if Game.has_flag(&"wake_in_dracombra") and not Game.has_flag(&"prologue_done"):
 		_wake_up.call_deferred()
+	elif Game.pending_message != "":
+		Narration.say(Game.pending_message, 5.0)
+		Game.pending_message = ""
 	elif Game.has_flag(&"prologue_done"):
 		Narration.say("Dracombra — %s. Jour %d." % [Town.tier_name(), Game.day], 2.2)
 

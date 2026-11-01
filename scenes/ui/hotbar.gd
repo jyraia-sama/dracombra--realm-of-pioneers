@@ -1,11 +1,11 @@
 class_name Hotbar
 extends HBoxContainer
 ## Barre d'outils en bas de l'écran : l'arme de la classe, la hache, la pioche, puis les
-## soins (baume, viande). Touches 1 à 6 pour utiliser un consommable ; H (ou RB) prend
+## soins (baume, viande, potion). Touches 1 à 6 pour utiliser un consommable ; H (ou RB) prend
 ## le meilleur soin disponible. Les outils servent tout seuls quand on frappe.
 ## À droite, les trois techniques ou sorts placés (R, F, C) avec leur temps de recharge.
 
-const SLOTS: Array[StringName] = [&"__weapon", &"axe", &"pickaxe", &"balm", &"meat", &"herb"]
+const SLOTS: Array[StringName] = [&"__weapon", &"axe", &"pickaxe", &"balm", &"meat", &"potion_heal"]
 const SLOT := 22
 const SKILL_KEYS := ["R", "F", "C"]
 
@@ -133,7 +133,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 	if event.is_action_pressed("quick_heal"):
 		get_viewport().set_input_as_handled()
-		for i in [3, 4]:
+		# Le moins précieux d'abord : viande, baume, puis potion.
+		for i in [4, 3, 5]:
 			if use_slot(i):
 				return
 

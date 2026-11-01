@@ -19,7 +19,7 @@ const DOOR := 3
 ## Taille de la grille des salles.
 const GRID := Vector2i(6, 6)
 
-enum Kind { START, COMBAT, CALM, STAIRS }
+enum Kind { START, COMBAT, CALM, STAIRS, REST, TREASURE }
 
 const DIRS: Array[Vector2i] = [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP]
 
@@ -82,9 +82,34 @@ func _generate_once(rng: RandomNumberGenerator, room_count: int, loops: float) -
 		if rooms[pos]["dist"] > rooms[stairs]["dist"]:
 			stairs = pos
 	rooms[stairs]["kind"] = Kind.STAIRS
-	# Environ une salle sur quatre est calme (décor seulement), jamais l'escalier ni le départ.
+	# Une salle de repos (feu de camp + marchand ambulant) vers le milieu de l'étage,
+	# parfois une salle au trésor, puis environ une salle sur cinq est calme.
+	var middle: Array[Vector2i] = []
+	var others: Array[Vector2i] = []
+	var far: int = rooms[stairs]["dist"]
 	for pos in rooms:
-		if rooms[pos]["kind"] == Kind.COMBAT and _rng.randf() < 0.25:
+		if rooms[pos]["kind"] != Kind.COMBAT:
+			continue
+		var d: int = rooms[pos]["dist"]
+		if d >= 2 and d <= maxi(2, far - 1):
+			middle.append(pos)
+		else:
+			others.append(pos)
+	if middle.is_empty():
+		middle = others.duplicate()
+	if not middle.is_empty():
+		var rest: Vector2i = middle[_rng.randi() % middle.size()]
+		rooms[rest]["kind"] = Kind.REST
+	var candidates: Array[Vector2i] = []
+	for pos in rooms:
+		if rooms[pos]["kind"] == Kind.COMBAT:
+			candidates.append(pos)
+	# Le trésor de préférence dans un cul-de-sac (une seule porte).
+	candidates.sort_custom(func(a, b): return rooms[a]["doors"].size() < rooms[b]["doors"].size())
+	if not candidates.is_empty() and _rng.randf() < 0.7:
+		rooms[candidates[0]]["kind"] = Kind.TREASURE
+	for pos in rooms:
+		if rooms[pos]["kind"] == Kind.COMBAT and _rng.randf() < 0.2:
 			rooms[pos]["kind"] = Kind.CALM
 	for pos in rooms:
 		_carve_room(pos)

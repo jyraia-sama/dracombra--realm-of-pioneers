@@ -49,6 +49,8 @@ var _stairs_down: DungeonStairs
 var _spawning := false
 ## Salles déjà visitées (les autres restent cachées sur les cartes).
 var _visited: Dictionary = {}
+## Cases occupées par un décor ou un filon.
+var _taken: Dictionary = {}
 
 @onready var ground: TileMapLayer = $Ground
 @onready var walls: TileMapLayer = $Walls
@@ -58,15 +60,20 @@ var _visited: Dictionary = {}
 func _ready() -> void:
 	floor_number = maxi(1, Game.dungeon_floor)
 	Game.dungeon_floor = floor_number
+	# Début d'un passage : on retient le contenu du sac (règle des 25 % à la mort).
+	if Game.dungeon_run.is_empty():
+		Game.dungeon_run = {"start": Inventory.serialize()}
 	rng.randomize()
 	gen.generate(rng, 5 + floor_number + rng.randi_range(0, 1))
 	_paint_tiles()
 	_place_start_and_stairs()
 	_decorate()
+	_furnish()
 	super()
 	GroundPainter.apply(self, ground, &"cave", walls)
 	var player := get_player()
 	_add_hero_light(player)
+	player.health.died.connect(_on_hero_died)
 	if _camera:
 		_camera.limit_smoothed = true
 	_update_room(true)
@@ -139,7 +146,7 @@ func _decorate() -> void:
 	var total := 0
 	for d in DECOR:
 		total += int(d[1])
-	var taken := {}
+	var taken := _taken
 	for pos in gen.rooms:
 		var center := DungeonGen.slot_center(pos)
 		var count := rng.randi_range(5, 10)
@@ -196,6 +203,42 @@ func _wall_distance(cell: Vector2i) -> int:
 			if not gen.floor_cells.has(cell + dir * d):
 				return d
 	return 99
+
+
+## Salles spéciales (repos, trésor) et filons de ressources éparpillés.
+func _furnish() -> void:
+	for pos in gen.rooms:
+		var kind: int = gen.rooms[pos]["kind"]
+		var c := _cell_pos(DungeonGen.slot_center(pos))
+		match kind:
+			DungeonGen.Kind.REST:
+				var fire := DungeonRoomProps.campfire()
+				fire.position = c + Vector2(8, 0)
+				props.add_child(fire)
+				var m := DungeonRoomProps.merchant()
+				m.position = c + Vector2(-28, -6)
+				props.add_child(m)
+			DungeonGen.Kind.TREASURE:
+				var chest := DungeonRoomProps.chest(floor_number)
+				chest.position = c
+				props.add_child(chest)
+		if kind == DungeonGen.Kind.START:
+			continue
+		var count := rng.randi_range(1, 3)
+		var tries := 0
+		while count > 0 and tries < 100:
+			tries += 1
+			var r := DungeonGen.inner_rect(pos)
+			var cell := Vector2i(rng.randi_range(r.position.x, r.end.x - 1), rng.randi_range(r.position.y, r.end.y - 1))
+			if not _free_for_decor(cell, DungeonGen.slot_center(pos), _taken) or _wall_distance(cell) > 2:
+				continue
+			var ore := DungeonRoomProps.ore(rng)
+			ore.position = _cell_pos(cell)
+			props.add_child(ore)
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					_taken[cell + Vector2i(dx, dy)] = true
+			count -= 1
 
 
 func _add_hero_light(player: Player) -> void:
@@ -325,6 +368,11 @@ func _make_enemy() -> Node2D:
 	for prop in ["detection_radius_tiles", "lose_interest_radius_tiles"]:
 		if prop in enemy:
 			enemy.set(prop, maxf(enemy.get(prop), 14.0))
+	# De l'or en plus du butin habituel, un peu plus en descendant.
+	if health:
+		health.died.connect(func() -> void:
+			if randf() < 0.7 and is_instance_valid(enemy):
+				DungeonRoomProps.drop(self, Inventory.item_by_id(&"gold"), rng.randi_range(1, 2 + floor_number), enemy.global_position), CONNECT_ONE_SHOT)
 	return enemy
 
 
@@ -376,7 +424,32 @@ func _on_stairs_down() -> void:
 		_leave_to_city()
 
 
+## Mort dans le donjon : on ne garde que 25 % des ressources ramassées pendant le passage.
+## L'équipement (porté ou trouvé) est conservé.
+func _on_hero_died() -> void:
+	var start: Dictionary = Game.dungeon_run.get("start", {})
+	var lost: Array[String] = []
+	for item in Inventory.get_items():
+		if item.category != &"resource" and item.category != &"currency":
+			continue
+		var gained := Inventory.get_count(item.id) - int(start.get(String(item.id), start.get(item.id, 0)))
+		if gained <= 0:
+			continue
+		var lose := gained - int(floor(gained * 0.25))
+		if lose > 0:
+			Inventory.remove_item(item, lose)
+			lost.append("%d %s" % [lose, item.display_name.to_lower()])
+	Game.dungeon_run = {}
+	Game.dungeon_floor = 0
+	if lost.is_empty():
+		Game.pending_message = "Vous vous réveillez au camp, sonné."
+	else:
+		Game.pending_message = "Vous vous réveillez au camp. Perdu dans les Abysses (75 %% du butin) : %s." % ", ".join(lost)
+	BugReport.log_event("Mort au donjon, pertes : %s" % ", ".join(lost))
+
+
 func _leave_to_city() -> void:
+	Game.dungeon_run = {}
 	Game.dungeon_floor = 0
 	Game.next_spawn = &"from_dungeon"
 	Transition.change_scene(CITY)

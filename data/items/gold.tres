@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/gold.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"gold"
+display_name = "Pièces d'or"
+icon = ExtResource("2_icon")
+description = "La monnaie d'Aethelgard. Les marchands ambulants des Abysses l'acceptent volontiers."
+category = &"currency"
