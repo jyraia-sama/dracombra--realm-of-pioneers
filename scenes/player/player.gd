@@ -63,6 +63,7 @@ var _attack_crit := false
 ## Appui mémorisé pendant une attaque : « attack » ou « dodge » (vide = rien).
 var _buffered := ""
 var _lunge: Tween
+var _swallow_actions := false
 var _knock_default := 0.0
 
 ## Techniques et sorts (touches R, F, C).
@@ -127,6 +128,14 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Après un menu, une fenêtre de choix ou un dialogue : on attend que les touches
+	# d'action soient relâchées (sinon le « A » qui valide donnait un coup d'arme).
+	var blocked := input_locked or get_tree().paused or Choice.is_open or GameMenu.is_open
+	if blocked:
+		_swallow_actions = true
+	elif _swallow_actions and not (Input.is_action_pressed("attack") or Input.is_action_pressed("dodge") \
+			or Input.is_action_pressed("interact")):
+		_swallow_actions = false
 	_dodge_cooldown_timer = maxf(_dodge_cooldown_timer - delta, 0.0)
 	_shot_cooldown = maxf(_shot_cooldown - delta, 0.0)
 	# Le clerc referme lentement ses blessures.
@@ -160,7 +169,7 @@ func _process_normal() -> void:
 	if direction != Vector2.ZERO:
 		facing = _snap_to_8_directions(direction)
 
-	if input_locked or actions_locked:
+	if input_locked or actions_locked or _swallow_actions:
 		return
 	if Input.is_action_just_pressed("dodge") and _dodge_cooldown_timer <= 0.0:
 		if Hero.use_stamina(DODGE_COST):
@@ -240,10 +249,11 @@ func _set_weapon(id: StringName) -> void:
 
 
 ## Avant un coup : la hache devant un arbre, la pioche devant la pierre (si on les a).
-func _pick_tool_for_attack() -> void:
+## Renvoie le décor récoltable visé (ou null).
+func _pick_tool_for_attack() -> Harvestable:
 	_set_weapon(_class_weapon)
 	if not Game.has_flag(&"prologue_done"):
-		return
+		return null
 	var reach := Game.TILE_SIZE * 1.8
 	var best: Harvestable = null
 	var best_d := reach
@@ -257,6 +267,7 @@ func _pick_tool_for_attack() -> void:
 			best_d = d
 	if best and HARVEST_TOOLS.has(best.item_id) and best.has_tool():
 		_set_weapon(HARVEST_TOOLS[best.item_id])
+	return best
 
 
 func _make_sword() -> void:
@@ -309,9 +320,12 @@ func _start_attack() -> void:
 ## Une attaque de l'arme. mult : multiplicateur de dégâts (techniques) ; knock : recul en
 ## tiles (-1 = celui de l'arme).
 func start_attack(mult: float = 1.0, knock: float = -1.0) -> void:
-	_pick_tool_for_attack()
+	var target := _pick_tool_for_attack()
 	var done := Game.has_flag(&"prologue_done")
 	var kind: String = Hero.info()["attack"] if done else "melee"
+	# Devant un arbre ou un rocher, toutes les classes donnent un coup d'outil (pas de tir).
+	if target != null and mult <= 1.0:
+		kind = "melee"
 	_state_timer = attack_duration
 	state = State.ATTACK
 	_anim_time = 0.0  # un coup enchaîné repart du début de l'animation

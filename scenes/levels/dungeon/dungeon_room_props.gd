@@ -6,8 +6,9 @@ extends RefCounted
 const CAMPFIRE := preload("res://scenes/props/sylve/campfire.tscn")
 const GEM_ROCK := preload("res://scenes/props/sylve/gem_rock.tscn")
 const ROCK := preload("res://scenes/props/sylve/rock_grey.tscn")
-const CRYSTAL := preload("res://scenes/props/cave/crystal_purple.tscn")
-const CRYSTAL_BLUE := preload("res://scenes/props/cave/crystal_blue.tscn")
+const ROCK_BIG := preload("res://scenes/props/sylve/rock_grey_big.tscn")
+const CRYSTAL := preload("res://scenes/props/cave/crystal_purple_large.tscn")
+const CRYSTAL_BLUE := preload("res://scenes/props/cave/crystal_blue_large.tscn")
 const CHEST_TEX := preload("res://assets/sprites/buildings/chest.png")
 const MERCHANT_TEX := preload("res://assets/sprites/npc/marchand/marchand.png")
 const PICKUP := preload("res://scenes/items/pickup.tscn")
@@ -102,38 +103,51 @@ static func shop(_m: Node) -> void:
 			await _sell()
 
 
+## Vente : choisir l'objet, puis la quantité (1, 5, 10 ou tout). B / Échap revient en arrière.
 static func _sell() -> void:
-	var options: Array[String] = []
-	var ids: Array[StringName] = []
-	var total := 0
-	for entry in BUYBACK:
-		var n := Inventory.get_count(entry[0])
-		if n <= 0:
-			continue
-		var item := Inventory.item_by_id(entry[0])
-		ids.append(entry[0])
-		options.append("%s ×%d — %d or pièce (%d or)" % [item.display_name, n, int(entry[1]), n * int(entry[1])])
-		total += n * int(entry[1])
-	if ids.is_empty():
-		Narration.say("« Rien qui m'intéresse pour l'instant. »", 2.0)
-		return
-	options.append("Tout vendre (%d or)" % total)
-	options.append("Retour")
-	var i := await Choice.ask("Vendre", "Le marchand rachète la gelée de slime, les éclats d'obsidienne et les gemmes.", options)
-	if i < 0 or i == options.size() - 1:
-		return
-	var sold := ids if i == ids.size() else [ids[i]]
-	var gain := 0
-	for id in sold:
-		var n := Inventory.get_count(id)
-		var price := 0
+	while true:
+		var options: Array[String] = []
+		var ids: Array[StringName] = []
 		for entry in BUYBACK:
-			if entry[0] == id:
-				price = entry[1]
-		Inventory.remove_item(Inventory.item_by_id(id), n)
-		gain += n * price
-	Inventory.add_item(Inventory.item_by_id(&"gold"), gain)
-	Narration.say("+%d pièces d'or." % gain, 1.8)
+			var n := Inventory.get_count(entry[0])
+			if n <= 0:
+				continue
+			var item := Inventory.item_by_id(entry[0])
+			ids.append(entry[0])
+			options.append("%s ×%d — %d or pièce" % [item.display_name, n, int(entry[1])])
+		if ids.is_empty():
+			Narration.say("« Rien qui m'intéresse pour l'instant. »", 2.0)
+			return
+		options.append("Retour")
+		var i := await Choice.ask("Vendre", "Le marchand rachète la gelée de slime, les éclats d'obsidienne et les gemmes.", options)
+		if i < 0 or i >= ids.size():
+			return
+		await _sell_amount(ids[i])
+
+
+static func _sell_amount(id: StringName) -> void:
+	var item := Inventory.item_by_id(id)
+	var price := 0
+	for entry in BUYBACK:
+		if entry[0] == id:
+			price = entry[1]
+	var have := Inventory.get_count(id)
+	var amounts: Array[int] = []
+	for n in [1, 5, 10]:
+		if n < have:
+			amounts.append(n)
+	amounts.append(have)
+	var options: Array[String] = []
+	for n in amounts:
+		options.append("%s%d — %d or" % ["Tout : " if n == have else "", n, n * price])
+	options.append("Retour")
+	var i := await Choice.ask("Vendre : %s" % item.display_name, "Vous en avez %d. Combien en vendre ?" % have, options)
+	if i < 0 or i >= amounts.size():
+		return
+	var n: int = amounts[i]
+	Inventory.remove_item(item, n)
+	Inventory.add_item(Inventory.item_by_id(&"gold"), n * price)
+	Narration.say("Vendu : %d %s (+%d or)." % [n, item.display_name.to_lower(), n * price], 1.8)
 
 
 # ------------------------------------------------------------------ trésor
@@ -198,32 +212,55 @@ static func drop(from: Node, item: ItemData, count: int, at: Vector2) -> void:
 
 ## Filon tiré au hasard : pierre, gemme ou cristal d'obsidienne. Pas de collision, pas de
 ## mémoire d'un jour à l'autre (persistent = false).
+## Filon tiré au hasard, en grand format et signalé par un OreMarker (étincelles + icône).
+## Pas de collision, pas de mémoire d'un passage à l'autre (persistent = false).
 static func ore(rng: RandomNumberGenerator) -> Node2D:
 	var roll := rng.randf()
 	var node: Node2D
+	var color := Color.WHITE
+	var height := 22.0
 	if roll < 0.3:
-		# Filon de fer : rocher gris veiné de rouille (teinte provisoire).
-		node = ROCK.instantiate()
-		(node.get_node("Sprite2D") as CanvasItem).modulate = Color(1.0, 0.72, 0.55)
+		# Filon de fer : gros rocher veiné de rouille (teinte provisoire).
+		node = ROCK_BIG.instantiate()
+		node.scale = Vector2(1.5, 1.5)
+		(node.get_node("Sprite2D") as CanvasItem).modulate = Color(1.0, 0.68, 0.5)
 		_set_harvest(node, &"iron_ore", 1, 2, 4)
+		color = Color(1.0, 0.6, 0.3)
 	elif roll < 0.5:
 		node = CRYSTAL_BLUE.instantiate()
 		_add_harvest(node, &"mana_crystal", 1, 2, 3)
+		color = Color(0.5, 0.85, 1.0)
+		height = 28.0
 	elif roll < 0.72:
 		node = CRYSTAL.instantiate()
 		_add_harvest(node, &"obsidian_shard", 1, 3, 3)
+		color = Color(0.8, 0.55, 1.0)
+		height = 28.0
 	elif roll < 0.88:
-		node = ROCK.instantiate()
+		node = ROCK_BIG.instantiate()
+		node.scale = Vector2(1.5, 1.5)
+		color = Color(0.85, 0.85, 0.9)
 	else:
 		node = GEM_ROCK.instantiate()
+		node.scale = Vector2(1.5, 1.5)
+		color = Color(0.5, 0.9, 1.0)
 	var body := node.get_node_or_null("Body")
 	if body:
 		node.remove_child(body)
 		body.free()
+	var item_id := &""
 	for c in node.get_children():
 		if c is Harvestable:
 			(c as Harvestable).persistent = false
 			(c as Harvestable).regrow_days = 0
+			item_id = (c as Harvestable).item_id
+	var marker := OreMarker.new()
+	marker.name = "OreMarker"
+	marker.color = color
+	marker.height = height / node.scale.y
+	var item := Inventory.item_by_id(item_id)
+	marker.icon = item.icon if item else null
+	node.add_child(marker)
 	return node
 
 

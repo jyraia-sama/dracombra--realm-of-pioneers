@@ -133,10 +133,14 @@ func ask(title: String, body: String, options: Array, bottom: bool = false) -> i
 	return index
 
 
-func _unhandled_input(event: InputEvent) -> void:
+## Retour / fermeture en priorité (avant le reste du jeu) : Échap, B (clavier), bouton B.
+func _input(event: InputEvent) -> void:
 	if is_open and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause") \
 			or event.is_action_pressed("build")):
 		get_viewport().set_input_as_handled()
 		_picked.emit(-1)
-	elif is_open and UiNav.handle(event, get_viewport()):
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if is_open and UiNav.handle(event, get_viewport()):
 		get_viewport().set_input_as_handled()

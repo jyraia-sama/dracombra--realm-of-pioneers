@@ -52,6 +52,8 @@ func setup(building: BuildingData, site: Dictionary) -> void:
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.size = Vector2(80, 12)
 	_label.position = Vector2(-40, 2)
+	# Au-dessus des décors (un pilier devant le chantier cachait le texte).
+	_label.z_index = 50
 	add_child(_label)
 
 	_interact = Interactable.new()
