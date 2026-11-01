@@ -375,6 +375,9 @@ func _make_enemy() -> Node2D:
 				return
 			if randf() < 0.7:
 				DungeonRoomProps.drop(self, Inventory.item_by_id(&"gold"), rng.randi_range(1, 2 + floor_number), enemy.global_position)
+			# Rarement, une pièce d'équipement du palier 1.
+			if randf() < 0.03 + 0.01 * floor_number:
+				DungeonRoomProps.drop(self, Loot.piece(1, [60, 30, 10]), 1, enemy.global_position)
 			# Les araignées laissent de la chitine et de la soie (palier 1).
 			if scene == SPIDER:
 				if randf() < 0.55:

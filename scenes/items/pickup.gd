@@ -19,6 +19,15 @@ func _ready() -> void:
 	if item != null:
 		sprite.texture = item.icon
 		sprite.scale = Vector2(0.5, 0.5)  # icône HD
+		# Butin rare : une lueur de la couleur de sa rareté.
+		if item.rarity > 0:
+			var light := PointLight2D.new()
+			light.texture = preload("res://assets/lights/light_radial.tres")
+			light.color = Loot.color(item)
+			light.texture_scale = 0.6
+			light.energy = 1.0
+			light.position = Vector2(0, -6)
+			add_child(light)
 	_time = randf() * TAU
 
 
@@ -57,6 +66,9 @@ func _try_collect(player: Player) -> bool:
 		player.health.heal(item.heal_amount * amount)
 	else:
 		Inventory.add_item(item, amount)
+		# Une pièce d'équipement s'annonce, à la couleur de sa rareté.
+		if item.category == &"equipment":
+			Emote.show(player, Loot.label(item), Loot.color(item), 40.0)
 	_collected = true
 	var tween := create_tween().set_parallel()
 	tween.tween_property(sprite, "position:y", sprite.position.y - 10.0, 0.2)

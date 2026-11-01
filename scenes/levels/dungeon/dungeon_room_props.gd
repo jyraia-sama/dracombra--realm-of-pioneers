@@ -183,6 +183,9 @@ static func chest(floor_number: int) -> Node2D:
 			[&"gem", 1, 2], [&"obsidian_shard", 2, 4]]
 		if randf() < 0.5:
 			loot.append([&"potion_heal", 1, 1])
+		# Une chance sur trois de trouver une pièce d'équipement du palier 1.
+		if randf() < 0.33:
+			drop(c, Loot.piece(1, [45, 35, 20]), 1, c.global_position + Vector2(0, 6))
 		for entry in loot:
 			var item := Inventory.item_by_id(entry[0])
 			if item == null:

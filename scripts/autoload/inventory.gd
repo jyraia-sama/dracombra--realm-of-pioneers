@@ -7,6 +7,9 @@ signal item_changed(item: ItemData, count: int)
 var _counts: Dictionary[StringName, int] = {}
 var _items: Dictionary[StringName, ItemData] = {}
 var _db: Dictionary[StringName, ItemData] = {}
+## Objets uniques (butin rare…) : identifiant -> {"base", "rarity", "bonus"}.
+var _uniques: Dictionary = {}
+var _next_uid := 1
 
 
 func add_item(item: ItemData, amount: int = 1) -> void:
@@ -48,18 +51,55 @@ func item_by_id(id: StringName) -> ItemData:
 	return _db.get(id)
 
 
-## Pour la sauvegarde : { identifiant : quantité }.
+## Crée un objet unique à partir d'un objet de base, avec sa rareté et ses bonus en plus.
+## L'objet est connu de item_by_id comme n'importe quel autre.
+func register_unique(base_id: StringName, rarity: int, extra: Dictionary, uid: String = "") -> ItemData:
+	var base := item_by_id(base_id)
+	if base == null:
+		return null
+	if uid == "":
+		uid = "u%d" % _next_uid
+		_next_uid += 1
+	else:
+		_next_uid = maxi(_next_uid, int(uid.trim_prefix("u")) + 1)
+	var item := base.duplicate() as ItemData
+	item.id = StringName(uid)
+	item.base_id = base_id
+	item.rarity = rarity
+	var bonus := base.bonus.duplicate()
+	for k in extra:
+		bonus[k] = int(bonus.get(k, 0)) + int(extra[k])
+	item.bonus = bonus
+	_db[item.id] = item
+	_uniques[uid] = {"base": String(base_id), "rarity": rarity, "bonus": extra.duplicate()}
+	return item
+
+
+## Pour la sauvegarde : { identifiant : quantité }, plus les objets uniques ("__uniques").
 func serialize() -> Dictionary:
 	var out := {}
 	for id in _counts:
 		if _counts[id] > 0:
 			out[String(id)] = _counts[id]
+	var keep := {}
+	var worn: Array = Hero.gear.values().map(func(v): return String(v))
+	for uid in _uniques:
+		if get_count(StringName(uid)) > 0 or worn.has(uid):
+			keep[uid] = _uniques[uid]
+	if not keep.is_empty():
+		out["__uniques"] = keep
 	return out
 
 
 func deserialize(data: Dictionary) -> void:
 	clear()
+	var uniques: Dictionary = data.get("__uniques", {})
+	for uid in uniques:
+		var u: Dictionary = uniques[uid]
+		register_unique(StringName(u["base"]), int(u["rarity"]), u.get("bonus", {}), String(uid))
 	for id in data:
+		if String(id).begins_with("__"):
+			continue
 		var item := item_by_id(StringName(id))
 		if item != null:
 			add_item(item, int(data[id]))
@@ -68,3 +108,6 @@ func deserialize(data: Dictionary) -> void:
 func clear() -> void:
 	_counts.clear()
 	_items.clear()
+	for uid in _uniques:
+		_db.erase(StringName(uid))
+	_uniques.clear()

@@ -186,7 +186,10 @@ func _refresh_bag() -> void:
 	var items := Inventory.get_items()
 	items.sort_custom(func(a, b): return String(a.category) + a.display_name < String(b.category) + b.display_name)
 	for item in items:
-		_bag_list.add_item("%s ×%d" % [item.display_name, Inventory.get_count(item.id)], item.icon)
+		var n := Inventory.get_count(item.id)
+		var idx := _bag_list.add_item("%s%s" % [Loot.label(item), " ×%d" % n if n > 1 or item.rarity == 0 else ""], item.icon)
+		if item.rarity > 0:
+			_bag_list.set_item_custom_fg_color(idx, Loot.color(item))
 		_bag_ids.append(item.id)
 	if _bag_ids.is_empty():
 		_bag_info.text = "Le sac est vide.\n\nCoupez des arbres, cassez des rochers, cueillez herbes et lin : frappez-les avec votre arme."
@@ -200,7 +203,7 @@ func _on_bag_selected(index: int) -> void:
 	if index < 0 or index >= _bag_ids.size():
 		return
 	var item := Inventory.item_by_id(_bag_ids[index])
-	var text := "%s\n\n%s" % [item.display_name, item.description]
+	var text := "%s\n\n%s" % [Loot.label(item), item.description]
 	if item.use_heal > 0:
 		text += "\n\nRend %d PV." % item.use_heal
 	for cls in Hero.CLASSES:
@@ -213,6 +216,7 @@ func _on_bag_selected(index: int) -> void:
 			for c in item.classes:
 				names.append(Hero.CLASSES[c]["name"])
 			text += "\nClasses : %s" % ", ".join(names)
+		text += "\n" + Loot.compare_text(item)
 	_bag_info.text = text
 	_bag_use.text = "Porter" if item.slot != &"" else "Utiliser"
 	_bag_use.visible = item.use_heal > 0 or item.slot != &""
@@ -626,7 +630,11 @@ func _refresh_gear() -> void:
 		if slot == &"main" and item == null:
 			item = _class_weapon()
 		b.icon = item.icon if item else _empty_icon()
-		b.text = "%s : %s" % [Hero.GEAR_NAMES[slot], item.display_name if item else "—"]
+		b.text = "%s : %s" % [Hero.GEAR_NAMES[slot], Loot.label(item) if item else "—"]
+		if item and item.rarity > 0:
+			b.add_theme_color_override("font_color", Loot.color(item))
+		else:
+			b.remove_theme_color_override("font_color")
 		var active := item == null or slot == &"main" or Hero.can_wear(item)
 		b.modulate = Color.WHITE if active else Color(1, 1, 1, 0.5)
 	# Portrait : la première image du héros (de face).
@@ -658,7 +666,7 @@ func _select_gear(slot: StringName) -> void:
 		info = "%s — l'arme du %s.\nL'arme principale suit la classe : changez de classe à la guilde de Dracombra." % [
 			w.display_name if w else "?", String(Hero.info()["name"]).to_lower()]
 	elif worn:
-		info = "Porté : %s\n%s" % [worn.display_name, bonus_text(worn)]
+		info = "Porté : %s\n%s" % [Loot.label(worn), bonus_text(worn)]
 		if not Hero.can_wear(worn):
 			info += "\n(sans effet pour un %s)" % String(Hero.info()["name"]).to_lower()
 		var off := _small_button("Retirer (ranger dans le sac)")
@@ -675,7 +683,10 @@ func _select_gear(slot: StringName) -> void:
 		if item.slot != slot:
 			continue
 		found += 1
-		var b := _small_button("%s  %s" % [item.display_name, bonus_text(item, true)])
+		var b := _small_button("%s  %s" % [Loot.label(item), bonus_text(item, true)])
+		if item.rarity > 0:
+			b.add_theme_color_override("font_color", Loot.color(item))
+		b.tooltip_text = Loot.compare_text(item)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.icon = item.icon

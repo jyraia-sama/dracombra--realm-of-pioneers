@@ -24,3 +24,8 @@ extends Resource
 @export var bonus: Dictionary = {}
 ## Classes qui peuvent le porter (vide = toutes).
 @export var classes: Array[StringName] = []
+## Rareté (0 normal … 7 divin, voir Loot.RARITIES). Les objets trouvés au-dessus de
+## « normal » sont uniques : créés à la volée par Loot, avec leurs propres bonus.
+@export var rarity: int = 0
+## Objet de base d'un objet unique (vide pour un objet ordinaire).
+var base_id: StringName = &""
