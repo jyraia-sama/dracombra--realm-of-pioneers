@@ -160,7 +160,8 @@ static func _new_order() -> void:
 		return
 	var times := counts[q]
 	for id in recipe["in"]:
-		Town.consume(id, int(recipe["in"][id]) * times)
+		if not recipe.get("keep", []).has(id):
+			Town.consume(id, int(recipe["in"][id]) * times)
 	Town.orders.append({"out": String(recipe["out"]), "station": String(station), "total": times * int(recipe["n"]), "done": 0})
 	Town.changed.emit()
 	var who := workers_for(station)
@@ -170,7 +171,12 @@ static func _new_order() -> void:
 static func _max_count(recipe: Dictionary) -> int:
 	var most := 99
 	for id in recipe["in"]:
-		most = mini(most, Town.amount_of(id) / maxi(1, int(recipe["in"][id])))
+		var per: int = 0 if recipe.get("keep", []).has(id) else int(recipe["in"][id])
+		if per == 0:
+			if Town.amount_of(id) <= 0:
+				return 0
+			continue
+		most = mini(most, Town.amount_of(id) / per)
 	return most
 
 
@@ -187,7 +193,8 @@ static func _cancel(index: int) -> void:
 		if String(r["out"]) == String(o["out"]) and String(r["station"]) == String(o["station"]):
 			var times := ceili(float(left) / maxf(1.0, float(r["n"])))
 			for id in r["in"]:
-				_deliver(StringName(id), int(r["in"][id]) * times)
+				if not r.get("keep", []).has(id):
+					_deliver(StringName(id), int(r["in"][id]) * times)
 			break
 	Town.orders.remove_at(index)
 	Town.changed.emit()

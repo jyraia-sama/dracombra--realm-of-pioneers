@@ -270,7 +270,7 @@ func _fight(_delta: float) -> void:
 	if _cooldown > 0.0:
 		return
 	if ranged and dist <= ARROW_RANGE:
-		var kind: StringName = {"arrow": &"arrow", "bolt": &"bolt", "holy": &"holy"}.get(attack, &"arrow")
+		var kind: StringName = {"arrow": &"arrow", "bolt": &"bolt", "holy": &"holy", "shot": &"bullet", "elem": &"fire"}.get(attack, &"arrow")
 		var shot := HeroProjectile.create(kind, global_position + Vector2(0, -10), _facing, Roster.damage(_m), self)
 		get_parent().add_child(shot)
 		_cooldown = float(Hero.class_data(_cls)["cooldown"]) + 0.35

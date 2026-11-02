@@ -136,6 +136,9 @@ func _execute(id: StringName, s: Dictionary) -> void:
 			player.play_cast(0.3)
 			SkillFx.ring(level, body, t * 1.2, col, 0.6)
 			Emote.show(player, "+%d" % amount, Color(0.5, 1.0, 0.5), 34.0)
+		"chain":
+			player.play_cast(0.3)
+			_chain(s, body, col)
 		"blink":
 			SkillFx.ring(level, body, t, col, 0.35)
 			player.blink(float(s["dist"]))
@@ -144,6 +147,45 @@ func _execute(id: StringName, s: Dictionary) -> void:
 			if then != &"":
 				# La technique qui suit est offerte (ni coût ni recharge).
 				_execute(then, SkillBook.get_skill(then))
+
+
+## Chaîne d'éclairs : frappe l'ennemi le plus proche, puis saute vers le plus proche suivant.
+func _chain(s: Dictionary, from: Vector2, col: Color) -> void:
+	var level := player.get_parent()
+	var hb := Hitbox.new()
+	hb.source = player
+	hb.knockback_tiles = 0.6
+	hb.active = false
+	level.add_child(hb)
+	var hit: Array[Node2D] = []
+	var at := from
+	for i in int(s["jumps"]) + 1:
+		var best: Node2D = null
+		var best_d := float(s["range"]) * Game.TILE_SIZE
+		for e in get_tree().get_nodes_in_group("enemies"):
+			var en := e as Node2D
+			if en == null or hit.has(en):
+				continue
+			var h := en.get_node_or_null("Health") as HealthComponent
+			if h == null or h.is_dead():
+				continue
+			var d := en.global_position.distance_to(at)
+			if d < best_d:
+				best_d = d
+				best = en
+		if best == null:
+			break
+		hit.append(best)
+		var target := best.global_position + Vector2(0, -10)
+		SkillFx.bolt(level, at, target, col)
+		var hurt := best.get_node_or_null("Hurtbox") as Hurtbox
+		if hurt:
+			best.get_node("Health").clear_invulnerable()
+			hb.global_position = target
+			hb.damage = Hero.hit_damage(float(s["mult"]), Hero.roll_crit())
+			hurt.receive_hit(hb)
+		at = target
+	hb.queue_free()
 
 
 ## Compagnons debout à moins de 6 cases du héros (techniques de groupe).
@@ -172,7 +214,7 @@ func _shoot(s: Dictionary) -> void:
 		var dir := facing.rotated(offset)
 		var from := player.global_position + Vector2(0, -Game.TILE_SIZE) + dir * 6.0
 		var shot := HeroProjectile.create(StringName(s.get("kind", &"bolt")), from, dir,
-			Hero.hit_damage(float(s["mult"]), Hero.roll_crit()), player)
+			Hero.hit_damage(float(s["mult"]), bool(s.get("crit", false)) or Hero.roll_crit()), player)
 		shot.pierce = bool(s.get("pierce", false))
 		var sc := float(s.get("scale", 1.0))
 		shot.scale = Vector2(sc, sc)

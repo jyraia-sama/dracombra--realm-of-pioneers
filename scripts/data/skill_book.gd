@@ -14,6 +14,8 @@ extends RefCounted
 ##   buff        effet temporaire                    buff {stat: valeur}, duration, heal (part des PV)
 ##   heal        soin                                heal (part des PV max)
 ##   blink       saut instantané                     dist (cases, négatif = en arrière), then (technique lancée après)
+##   chain       éclair qui saute d'ennemi en ennemi  mult, jumps (ennemis), range (cases)
+## Option « crit » (projectile) : le tir est toujours critique.
 ## Toutes les valeurs sont des premiers réglages, à équilibrer en jouant.
 
 const UNLOCK_LEVELS: Array[int] = [1, 5, 12, 25, 45, 75]
@@ -115,6 +117,26 @@ const SKILLS: Dictionary = {
 	&"divine_hammer": {"class": &"paladin", "name": "Marteau divin", "level": 45, "cost": 12, "cooldown": 12.0,
 		"type": "area", "mult": 3.0, "radius": 1.8, "dist": 1.5, "delay": 0.25, "ticks": 1, "interval": 0.0,
 		"color": Color(1.0, 0.95, 0.6), "desc": "Un marteau de lumière s'abat devant le paladin (×3 dégâts, en zone)."},
+	# ------------------------------------------------------------ Tireur d'élite (classe mixte)
+	&"aimed_shot": {"class": &"marksman", "name": "Tir visé", "level": 20, "cost": 6, "cooldown": 5.0,
+		"type": "projectile", "kind": &"bullet", "mult": 3.0, "count": 1, "pierce": true, "scale": 1.4, "crit": true,
+		"color": Color(1.0, 0.85, 0.5), "desc": "Une balle soigneusement visée : toujours critique, traverse tout (×3 dégâts)."},
+	&"buckshot": {"class": &"marksman", "name": "Grenaille", "level": 35, "cost": 7, "cooldown": 6.0,
+		"type": "projectile", "kind": &"bullet", "mult": 0.9, "count": 6, "spread": 22.0,
+		"color": Color(0.95, 0.8, 0.6), "desc": "Six plombs en éventail : terrible à bout portant."},
+	&"explosive_round": {"class": &"marksman", "name": "Balle explosive", "level": 45, "cost": 10, "cooldown": 10.0,
+		"type": "projectile", "kind": &"bullet", "mult": 2.5, "count": 1, "scale": 1.6, "explode": 1.8,
+		"color": Color(1.0, 0.5, 0.2), "desc": "La balle explose à l'impact et blesse tout autour (×2,5 dégâts)."},
+	# ------------------------------------------------------------ Élémentaliste (classe mixte)
+	&"flame_wall": {"class": &"elementalist", "name": "Mur de flammes", "level": 20, "cost": 8, "cooldown": 9.0,
+		"type": "area", "mult": 0.8, "radius": 1.7, "dist": 3.0, "delay": 0.1, "ticks": 6, "interval": 0.5,
+		"color": Color(1.0, 0.5, 0.2), "desc": "Des flammes jaillissent 3 cases devant et brûlent pendant 3 secondes."},
+	&"ice_lance": {"class": &"elementalist", "name": "Lance de glace", "level": 35, "cost": 8, "cooldown": 6.0,
+		"type": "projectile", "kind": &"ice", "mult": 2.5, "count": 1, "pierce": true, "scale": 1.6,
+		"color": Color(0.6, 0.85, 1.0), "desc": "Une lance de glace traverse les rangs et ralentit tout ce qu'elle touche (×2,5)."},
+	&"chain_lightning": {"class": &"elementalist", "name": "Chaîne d'éclairs", "level": 45, "cost": 12, "cooldown": 9.0,
+		"type": "chain", "mult": 2.2, "jumps": 4, "range": 6.0, "color": Color(1.0, 0.95, 0.5),
+		"desc": "Un éclair frappe l'ennemi le plus proche puis saute sur quatre autres (×2,2 chacun)."},
 }
 
 

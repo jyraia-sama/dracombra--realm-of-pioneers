@@ -26,6 +26,8 @@ const CLASS_COMBAT := {
 	# Classes mixtes : le chevalier encaisse encore plus que le guerrier ; le paladin entre les deux.
 	&"knight": {"weapon": 11, "hp": 140, "hp_vit": 7, "armor": 18, "poise": 30},
 	&"paladin": {"weapon": 11, "hp": 125, "hp_vit": 6, "armor": 13, "poise": 20},
+	&"marksman": {"weapon": 22, "hp": 105, "hp_vit": 5, "armor": 5, "poise": 0},
+	&"elementalist": {"weapon": 22, "hp": 85, "hp_vit": 4, "armor": 0, "poise": 0},
 }
 
 ## Les monstres au niveau 1. Les dégâts de base sont réglés dans leur script ;
@@ -142,6 +144,29 @@ static func kill_xp(enemy: Node) -> int:
 
 static func poise(enemy: Node) -> int:
 	return int(MONSTERS.get(monster_key(enemy), {}).get("poise", 0))
+
+
+# ------------------------------------------------------------------ effets sur les monstres
+
+## Ralentit un monstre (glace) : sa vitesse × factor pendant `duration` secondes.
+static func slow(enemy: Node, factor: float, duration: float) -> void:
+	if not is_instance_valid(enemy) or not ("move_speed_tiles" in enemy):
+		return
+	if not enemy.has_meta(&"base_speed"):
+		enemy.set_meta(&"base_speed", float(enemy.get("move_speed_tiles")))
+	var base := float(enemy.get_meta(&"base_speed"))
+	enemy.set("move_speed_tiles", base * factor)
+	var vis := enemy.get_node_or_null("Visual") as CanvasItem
+	if vis:
+		vis.modulate = Color(0.6, 0.8, 1.2)
+	var tag := Time.get_ticks_msec()
+	enemy.set_meta(&"slow_tag", tag)
+	enemy.get_tree().create_timer(duration).timeout.connect(func() -> void:
+		if is_instance_valid(enemy) and int(enemy.get_meta(&"slow_tag", 0)) == tag:
+			enemy.set("move_speed_tiles", base)
+			enemy.remove_meta(&"base_speed")
+			if vis:
+				vis.modulate = Color.WHITE)
 
 
 # ------------------------------------------------------------------ cibles des monstres

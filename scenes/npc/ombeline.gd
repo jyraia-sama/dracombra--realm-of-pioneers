@@ -109,15 +109,15 @@ func _offer(id: StringName) -> void:
 	if id == &"knight":
 		await _defense_now()
 	else:
-		await Ysolde.lines("Dame Ombeline", ["Cherchez un mur fissuré : un filet de poussière tombe de ses fentes. Brisez-le.",
-			"Et méfiez-vous : les gardiens de l'autel ne dorment que d'un œil."])
+		await Ysolde.lines("Dame Ombeline", q.get("hint", [q["pitch"]]))
 
 
 func _remind(id: StringName) -> void:
 	if id == &"knight":
 		await _defense_now()
 	else:
-		await Ysolde.lines("Dame Ombeline", [ClassQuests.QUESTS[id]["pitch"]])
+		var q: Dictionary = ClassQuests.QUESTS[id]
+		await Ysolde.lines("Dame Ombeline", [q["pitch"]] + Array(q.get("hint", [])))
 
 
 func _defense_now() -> void:
@@ -132,8 +132,5 @@ func _defense_now() -> void:
 
 
 func _finish(id: StringName) -> void:
-	if id == &"paladin":
-		await Ysolde.lines("Dame Ombeline", ["Le bouclier des pionniers... Sa lumière vous a choisi. Gardez-le : il est à vous, paladin."])
-	else:
-		await Ysolde.lines("Dame Ombeline", ["Vous avez tenu la ligne sans reculer. Relevez-vous, chevalier. Ce grand bouclier vous revient."])
+	await Ysolde.lines("Dame Ombeline", [ClassQuests.QUESTS[id]["thanks"]])
 	ClassQuests.complete(id)

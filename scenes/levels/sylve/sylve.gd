@@ -96,6 +96,8 @@ func _collapse() -> void:
 
 func _start_free_play() -> void:
 	phase = Phase.FREE
+	# Lieux des quêtes de classes mixtes en cours (ruines du mousquet, foyers élémentaires).
+	ClassQuests.setup_sylve(self)
 	daylight.color = DAY
 	var player := get_player()
 	player.input_locked = false

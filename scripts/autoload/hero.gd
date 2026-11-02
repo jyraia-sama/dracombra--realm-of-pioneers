@@ -79,8 +79,20 @@ const MIXED: Dictionary = {
 		"growth": {&"str": 0.6, &"dex": 0.2, &"int": 0.2, &"wis": 0.6, &"vit": 0.6},
 		"main": &"str", "resource": "Mana", "res_stat": &"wis", "skill_word": "Techniques et prières",
 		"bases": [&"warrior", &"cleric"], "unlock_level": 20, "quest": &"paladin"},
+	&"marksman": {"name": "Tireur d'élite", "role": "Mousquet des pionniers : tirs lents, puissants, qui traversent les rangs. Gros critiques.",
+		"attack": "shot", "cooldown": 0.9, "item": &"", "tint": Color(1, 1, 1), "icon": 224,
+		"stats": {&"str": 3, &"dex": 7, &"int": 2, &"wis": 2, &"vit": 3},
+		"growth": {&"str": 0.3, &"dex": 0.8, &"int": 0.2, &"wis": 0.2, &"vit": 0.4},
+		"main": &"dex", "resource": "Vigueur", "res_stat": &"dex", "skill_word": "Techniques",
+		"bases": [&"archer"], "unlock_level": 20, "quest": &"marksman"},
+	&"elementalist": {"name": "Élémentaliste", "role": "Feu, glace et foudre : ses tirs alternent les éléments, ses sorts brûlent, gèlent et foudroient.",
+		"attack": "elem", "cooldown": 0.6, "item": &"", "tint": Color(1.05, 0.9, 0.9), "icon": 240,
+		"stats": {&"str": 1, &"dex": 3, &"int": 7, &"wis": 4, &"vit": 2},
+		"growth": {&"str": 0.1, &"dex": 0.3, &"int": 0.9, &"wis": 0.4, &"vit": 0.3},
+		"main": &"int", "resource": "Mana", "res_stat": &"int", "skill_word": "Sorts",
+		"bases": [&"mage"], "unlock_level": 20, "quest": &"elementalist"},
 }
-const MIXED_ORDER: Array[StringName] = [&"knight", &"paladin"]
+const MIXED_ORDER: Array[StringName] = [&"knight", &"paladin", &"marksman", &"elementalist"]
 ## Nombre d'emplacements de techniques dans la barre (touches R, F, C).
 const SKILL_SLOTS := 3
 

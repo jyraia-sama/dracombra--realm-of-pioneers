@@ -17,6 +17,9 @@ ATLAS = "res://assets/sprites/items/items_mx.png"
 STEEL = [(120, 128, 146), (186, 194, 210), (236, 240, 250)]
 SACRED = [(176, 140, 60), (232, 200, 100), (255, 244, 190)]
 TOWER = [(90, 96, 112), (140, 146, 162), (200, 206, 220)]
+WOOD = [(96, 60, 34), (140, 92, 52), (184, 132, 80)]
+PAPER = [(170, 150, 110), (226, 210, 170), (250, 244, 220)]
+ELEM = [(150, 40, 30), (230, 120, 40), (120, 200, 250)]
 
 ITEMS = [
     ("long_sword", "Épée longue", "equipment", "main", {"dmg": 16, "str": 3}, ["knight", "paladin"],
@@ -25,6 +28,12 @@ ITEMS = [
      "Un pavois qui couvre le chevalier de la tête aux genoux.", "shield", TOWER),
     ("sacred_shield", "Bouclier sacré", "equipment", "off", {"def": 6, "parry": 12, "wis": 3}, ["paladin"],
      "Le bouclier béni des pionniers. Sa lumière protège ceux qui combattent près du paladin.", "sacred_shield", SACRED),
+    ("musket", "Mousquet des pionniers", "equipment", "main", {"dmg": 14, "dex": 2}, ["marksman"],
+     "Arme à poudre forgée d'après les plans des pionniers. Tireur d'élite.", "musket", WOOD),
+    ("musket_plans", "Plans du mousquet", "quest", "", {}, [],
+     "Les plans d'une arme à poudre des pionniers. La forge peut s'en servir (ils ne s'usent pas).", "scroll", PAPER),
+    ("elemental_scepter", "Sceptre élémentaire", "equipment", "main", {"dmg": 26, "int": 3}, ["elementalist"],
+     "Trois cristaux — feu, glace, foudre — enchâssés dans le bois. Élémentaliste.", "scepter", ELEM),
 ]
 
 
@@ -42,6 +51,26 @@ def draw(d, kind, pal):
         d.rectangle((14, 7, 18, 24), fill=mid)
         d.rectangle((9, 11, 23, 15), fill=mid)
         d.line((7, 5, 25, 5), fill=light)
+    elif kind == "musket":
+        d.line((3, 25, 28, 6), fill=O, width=5)
+        d.line((3, 25, 14, 17), fill=mid, width=3)
+        d.line((13, 18, 28, 6), fill=c((150, 154, 168)), width=2)
+        d.polygon([(2, 24), (8, 21), (9, 28), (4, 29)], fill=dark)
+        d.rectangle((13, 17, 15, 21), fill=c((200, 170, 80)))
+    elif kind == "scroll":
+        d.rectangle((6, 8, 26, 24), fill=O)
+        d.rectangle((7, 9, 25, 23), fill=mid)
+        for y in (12, 15, 18):
+            d.line((10, y, 22, y), fill=dark)
+        d.line((14, 11, 20, 20), fill=c((60, 60, 70)))
+        d.ellipse((4, 6, 9, 26), fill=light)
+        d.ellipse((23, 6, 28, 26), fill=light)
+    elif kind == "scepter":
+        d.line((10, 29, 18, 12), fill=O, width=4)
+        d.line((10, 29, 18, 12), fill=c(WOOD[1]), width=2)
+        for (x, y), col in zip(((16, 6), (22, 9), (20, 3)), pal):
+            d.ellipse((x - 3, y - 3, x + 3, y + 3), fill=O)
+            d.ellipse((x - 2, y - 2, x + 2, y + 2), fill=c(col))
     else:
         palier2.draw(d, kind, pal)
 
@@ -64,8 +93,9 @@ def main():
             'atlas = ExtResource("2_icons")', f"region = Rect2({i * 32}, 0, 32, 32)", "",
             "[resource]", 'script = ExtResource("1_item")', f'id = &"{iid}"', f'display_name = "{name}"',
             'icon = SubResource("AtlasTexture_icon")', f'description = "{desc}"', f'category = &"{cat}"',
-            f'slot = &"{slot}"', f"bonus = {{{b}}}", f"classes = Array[StringName]([{cl}])",
         ]
+        if slot:
+            lines += [f'slot = &"{slot}"', f"bonus = {{{b}}}", f"classes = Array[StringName]([{cl}])"]
         (ROOT / f"data/items/{iid}.tres").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"{len(ITEMS)} objets")
 

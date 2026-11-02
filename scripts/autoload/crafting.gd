@@ -72,6 +72,10 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"long_sword", "n": 1, "station": &"forge", "in": {&"silver_ingot": 3, &"iron_ingot": 2, &"crypt_leather": 1}, "requires": [&"knight", &"paladin"]},
 	{"out": &"tower_shield", "n": 1, "station": &"forge", "in": {&"silver_ingot": 4, &"crypt_leather": 2, &"wood": 2}, "requires": [&"knight"]},
 	{"out": &"sacred_shield", "n": 1, "station": &"forge", "in": {&"silver_ingot": 4, &"spectral_essence": 2, &"mana_crystal": 1}, "requires": [&"paladin"]},
+	# Le mousquet : il faut les plans (gardés, pas consommés). requires accepte aussi un drapeau de quête.
+	{"out": &"musket", "n": 1, "station": &"forge", "in": {&"iron_ingot": 3, &"silver_ingot": 1, &"wood": 2, &"musket_plans": 1},
+		"keep": [&"musket_plans"], "requires": [&"marksman", &"cq_marksman_active"]},
+	{"out": &"elemental_scepter", "n": 1, "station": &"workbench", "in": {&"mana_crystal": 3, &"spectral_essence": 2, &"wood": 2}, "requires": [&"elementalist"]},
 ]
 const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à peaux", &"camp": "Feu de camp", &"forge": "Forge"}
 
@@ -102,6 +106,7 @@ const CATEGORIES := {
 	&"wraps_gloves": "Palier 2 · tissu (mage, clerc)", &"wraps_shoes": "Palier 2 · tissu (mage, clerc)",
 	&"potion_mana": "Potions", &"potion_stamina": "Potions",
 	&"long_sword": "Classes mixtes", &"tower_shield": "Classes mixtes", &"sacred_shield": "Classes mixtes",
+	&"musket": "Classes mixtes", &"elemental_scepter": "Classes mixtes",
 }
 
 
@@ -114,7 +119,7 @@ func recipes_for(station: StringName) -> Array[Dictionary]:
 	for r in RECIPES:
 		if r["station"] != station:
 			continue
-		if r.has("requires") and not r["requires"].any(func(c): return Hero.unlocked.has(c)):
+		if r.has("requires") and not r["requires"].any(func(c): return Hero.unlocked.has(c) or Game.has_flag(c)):
 			continue
 		out.append(r)
 	return out
@@ -141,9 +146,12 @@ func craft(recipe: Dictionary) -> bool:
 	if not can_craft(recipe):
 		return false
 	for id in recipe["in"]:
+		if recipe.get("keep", []).has(id):
+			continue
 		Town.consume(id, int(recipe["in"][id]))
 	var item := Inventory.item_by_id(recipe["out"])
 	Inventory.add_item(item, int(recipe["n"]))
+	ClassQuests.on_crafted(recipe["out"])
 	# L'équipement d'une classe la débloque.
 	for cls in Hero.CLASSES:
 		if Hero.CLASSES[cls]["item"] == recipe["out"] and Hero.unlock(cls):

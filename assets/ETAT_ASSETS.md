@@ -176,4 +176,4 @@ Tous marqués FINAL par défaut : passer une ligne en À DESSINER si l'asset doi
 | `res://assets/sprites/enemies/crypt/wisp.png` | PROVISOIRE | 2026-11-02 | feu follet, planche 4 × 2 (tools/placeholder/cryptes.py) |
 | `res://assets/sprites/enemies/crypt/crypt_rat.png` | PROVISOIRE | 2026-11-02 | rat des cryptes, planche 4 × 2 (tools/placeholder/cryptes.py) |
 | `res://assets/sprites/enemies/crypt/crypt_guardian.png` | PROVISOIRE | 2026-11-02 | boss Gardien des cryptes, planche 4 × 4 en cases de 128 (tools/placeholder/cryptes.py) |
-| `res://assets/sprites/items/items_mx.png` | PROVISOIRE | 2026-11-02 | icônes de l'équipement des classes mixtes : épée longue, grand bouclier, bouclier sacré (tools/placeholder/classes_mixtes.py) |
+| `res://assets/sprites/items/items_mx.png` | PROVISOIRE | 2026-11-02 | icônes des classes mixtes : épée longue, grand bouclier, bouclier sacré, mousquet, plans, sceptre élémentaire (tools/placeholder/classes_mixtes.py) |

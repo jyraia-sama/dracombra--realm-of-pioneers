@@ -230,7 +230,8 @@ const WEAPONS := {
 	&"book": ["res://assets/sprites/weapons/book.png", Vector2(7, 15), "upright"],
 }
 const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"book",
-	&"knight": &"sword", &"paladin": &"sword"}
+	&"knight": &"sword", &"paladin": &"sword", &"marksman": &"bow", &"elementalist": &"staff"}
+var _elem_turn := 0
 ## Outil sorti pour récolter : ressource -> outil.
 const HARVEST_TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe", &"iron_ore": &"pickaxe",
 	&"mana_crystal": &"pickaxe", &"obsidian_shard": &"pickaxe"}
@@ -324,6 +325,12 @@ func start_attack(mult: float = 1.0, knock: float = -1.0) -> void:
 	var target := _pick_tool_for_attack()
 	var done := Game.has_flag(&"prologue_done")
 	var kind: String = Hero.info()["attack"] if done else "melee"
+	# Tireur d'élite : balle de mousquet ; élémentaliste : feu, glace et foudre tour à tour.
+	if kind == "shot":
+		kind = "bullet"
+	elif kind == "elem":
+		kind = ["fire", "ice", "spark"][_elem_turn % 3]
+		_elem_turn += 1
 	# Devant un arbre ou un rocher, toutes les classes donnent un coup d'outil (pas de tir).
 	if target != null and mult <= 1.0:
 		kind = "melee"

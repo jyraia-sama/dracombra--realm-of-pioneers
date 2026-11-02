@@ -476,7 +476,8 @@ func train(m: Dictionary, cls: StringName, weapon: ItemData) -> bool:
 
 
 ## Classes mixtes : arme demandée et prix en or pour qu'un membre y passe.
-const MIXED_WEAPONS := {&"knight": &"long_sword", &"paladin": &"long_sword"}
+const MIXED_WEAPONS := {&"knight": &"long_sword", &"paladin": &"long_sword", &"marksman": &"musket",
+	&"elementalist": &"elemental_scepter"}
 const PROMOTE_GOLD := 150
 
 

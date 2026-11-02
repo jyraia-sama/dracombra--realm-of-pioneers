@@ -7,6 +7,8 @@ var velocity := Vector2.ZERO
 var lifetime := 1.2
 ## Traverse les ennemis au lieu de se briser au premier touché.
 var pierce := false
+## Sorte de projectile (arrow, bolt, fire, ice, spark, bullet, holy, wave).
+var kind: StringName = &"bolt"
 ## Rayon d'explosion à l'impact, en pixels (0 = pas d'explosion).
 var explode_radius := 0.0
 var explode_color := Color(1.0, 0.55, 0.2)
@@ -24,14 +26,19 @@ static func create(kind: StringName, from: Vector2, direction: Vector2, dmg: int
 	if kind == &"wave":
 		p.collision_mask = 16
 	# L'éclat sacré du clerc traverse les ennemis (portée plus courte).
-	if kind == &"holy":
+	if kind == &"holy" or kind == &"bullet":
 		p.pierce = true
+	p.kind = kind
 	p.source = shooter
 	p.position = from
 	var t := float(Game.TILE_SIZE)
-	var speed := {&"arrow": 14.0, &"bolt": 7.0, &"fire": 8.0, &"wave": 10.0, &"holy": 9.0}
+	var speed := {&"arrow": 14.0, &"bolt": 7.0, &"fire": 8.0, &"wave": 10.0, &"holy": 9.0, &"bullet": 24.0,
+		&"ice": 9.0, &"spark": 12.0}
 	p.velocity = direction.normalized() * t * float(speed.get(kind, 7.0))
-	p.lifetime = 0.7 if kind == &"arrow" else 0.6 if kind == &"wave" else 0.75 if kind == &"holy" else 1.1
+	p.lifetime = 0.7 if kind == &"arrow" else 0.6 if kind == &"wave" else 0.75 if kind == &"holy" \
+		else 0.5 if kind == &"bullet" else 0.8 if kind == &"spark" else 1.1
+	if kind == &"bullet":
+		p.knockback_tiles = 1.2
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
 	circle.radius = 3.0 if kind == &"arrow" else 5.0
@@ -45,7 +52,9 @@ static func create(kind: StringName, from: Vector2, direction: Vector2, dmg: int
 	if kind != &"arrow":
 		var light := PointLight2D.new()
 		light.texture = load("res://assets/lights/light_radial.tres")
-		light.color = Color(1.0, 0.55, 0.25) if kind == &"fire" else Color(1.0, 0.9, 0.5) if kind == &"holy" else Color(0.7, 0.5, 1.0)
+		light.color = Color(1.0, 0.55, 0.25) if kind == &"fire" else Color(1.0, 0.9, 0.5) if kind == &"holy" \
+			else Color(0.55, 0.85, 1.0) if kind == &"ice" else Color(1.0, 0.95, 0.5) if kind == &"spark" \
+			else Color(1.0, 0.85, 0.6) if kind == &"bullet" else Color(0.7, 0.5, 1.0)
 		light.texture_scale = 0.5
 		light.energy = 0.9
 		p.add_child(light)
@@ -62,6 +71,12 @@ static func _texture(kind: StringName) -> Texture2D:
 		return _orb([Color8(120, 80, 20), Color8(214, 160, 40), Color8(250, 214, 90), Color8(255, 244, 180), Color8(255, 255, 255)])
 	if kind == &"fire":
 		return _orb([Color8(92, 20, 12), Color8(196, 64, 28), Color8(244, 128, 36), Color8(252, 200, 92), Color8(255, 244, 200)])
+	if kind == &"ice":
+		return _orb([Color8(20, 50, 92), Color8(60, 130, 200), Color8(120, 196, 240), Color8(200, 240, 255), Color8(255, 255, 255)])
+	if kind == &"spark":
+		return _orb([Color8(80, 70, 20), Color8(200, 180, 40), Color8(250, 236, 90), Color8(255, 252, 200), Color8(255, 255, 255)])
+	if kind == &"bullet":
+		return _bullet()
 	return _orb([Color8(40, 22, 72), Color8(100, 52, 160), Color8(156, 92, 220), Color8(212, 164, 255), Color8(255, 255, 255)])
 
 
@@ -91,6 +106,22 @@ static func _arrow() -> Texture2D:
 			img.set_pixel(x, y, steel if y <= 3 else steel_dark)
 	img.set_pixel(21, 3, steel)
 	_outline(img, outline)
+	return ImageTexture.create_from_image(img)
+
+
+## Balle de mousquet : petite bille de plomb et sa traînée de poudre.
+static func _bullet() -> Texture2D:
+	var img := Image.create(20, 5, false, Image.FORMAT_RGBA8)
+	for x in range(0, 15):
+		var a := float(x) / 15.0
+		img.set_pixel(x, 2, Color(1.0, 0.85, 0.6, a * 0.7))
+		if x > 8:
+			img.set_pixel(x, 1, Color(1.0, 0.95, 0.8, a * 0.4))
+			img.set_pixel(x, 3, Color(1.0, 0.95, 0.8, a * 0.4))
+	for y in range(1, 4):
+		for x in range(15, 19):
+			img.set_pixel(x, y, Color8(90, 92, 104) if y == 3 else Color8(170, 172, 186))
+	_outline(img, Color8(30, 20, 38))
 	return ImageTexture.create_from_image(img)
 
 
@@ -141,7 +172,10 @@ static func _outline(img: Image, col: Color) -> void:
 func _ready() -> void:
 	super()
 	body_entered.connect(func(_b: Node2D) -> void: _break())
-	hit_landed.connect(func(_h: Hurtbox) -> void:
+	hit_landed.connect(func(h: Hurtbox) -> void:
+		# La glace ralentit ; la foudre secoue (recul).
+		if kind == &"ice":
+			Combat.slow(h.get_parent(), 0.5, 2.0)
 		if not pierce:
 			_break())
 
