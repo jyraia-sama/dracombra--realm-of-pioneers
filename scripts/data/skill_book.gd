@@ -4,7 +4,7 @@ extends RefCounted
 ## Chaque classe en apprend six, aux niveaux de UNLOCK_LEVELS ; trois peuvent être placées
 ## dans la barre (touches R, F, C).
 ##
-## Champs communs : name, level, cost (endurance ou mana), cooldown (s), desc, type,
+## Champs communs : name, level, cost (vigueur ou mana), cooldown (s), desc, type,
 ## color (couleur de l'effet). Les autres champs dépendent du type :
 ##   strike      coup de l'arme renforcé            mult, knock
 ##   dash        ruée qui blesse sur le passage      mult, dist (cases)
@@ -84,7 +84,7 @@ const SKILLS: Dictionary = {
 		"type": "area", "mult": 2.0, "radius": 1.3, "dist": 3.0, "delay": 0.15, "ticks": 1, "interval": 0.0,
 		"color": Color(1.0, 0.95, 0.6), "desc": "Une colonne de lumière frappe à distance, devant le héros (×2 dégâts, en zone)."},
 	&"blessing": {"class": &"cleric", "name": "Bénédiction", "level": 12, "cost": 8, "cooldown": 20.0,
-		"type": "buff", "buff": {"damage": 1.4, "regen": 1.0}, "duration": 10.0, "color": Color(1.0, 0.9, 0.5),
+		"type": "buff", "buff": {"damage": 1.4, "regen": 10.0}, "duration": 10.0, "color": Color(1.0, 0.9, 0.5),
 		"desc": "+40 % de dégâts et 1 PV rendu par seconde pendant 10 secondes."},
 	&"consecration": {"class": &"cleric", "name": "Consécration", "level": 25, "cost": 10, "cooldown": 14.0,
 		"type": "area", "mult": 1.0, "radius": 2.0, "dist": 0.0, "delay": 0.0, "ticks": 5, "interval": 0.8,

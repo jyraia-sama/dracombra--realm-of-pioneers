@@ -14,6 +14,8 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `res://assets/sprites/npc/marchand/marchand.png` | PROVISOIRE | 2026-11-01 | perso pnj (généré) |
 | `res://assets/sprites/items/gold.png` | PROVISOIRE | 2026-11-01 | icône pièces d'or (dessinée par le code) |
 | `res://assets/sprites/items/potion_heal.png` | PROVISOIRE | 2026-11-01 | icône potion de soin (dessinée par le code) |
+| `res://assets/sprites/items/potion_mana.png` | PROVISOIRE | 2026-11-02 | icône potion de mana (potion de soin recolorée en bleu) |
+| `res://assets/sprites/items/potion_stamina.png` | PROVISOIRE | 2026-11-02 | icône potion de vigueur (potion de soin recolorée en orange) |
 | `res://assets/sprites/items/items_p1.png` | PROVISOIRE | 2026-11-01 | icônes du palier 1 (tools/placeholder/palier1.py) |
 | `res://assets/sprites/weapons/book.png` | PROVISOIRE | 2026-11-01 | livre sacré du clerc, tenu en main (dessiné par le code) |
 | `scenes/bosses/queen_spider/queen_spider.gd` | PROVISOIRE | 2026-11-01 | reine araignée : planche de l'araignée d'obsidienne agrandie ×2 et teintée |

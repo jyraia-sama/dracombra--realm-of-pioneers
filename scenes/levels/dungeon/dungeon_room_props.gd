@@ -14,7 +14,7 @@ const MERCHANT_TEX := preload("res://assets/sprites/npc/marchand/marchand.png")
 const PICKUP := preload("res://scenes/items/pickup.tscn")
 
 ## Ce que vend le marchand : [objet, prix en or].
-const SHOP := [[&"potion_heal", 25], [&"balm", 10]]
+const SHOP := [[&"potion_heal", 25], [&"potion_mana", 30], [&"potion_stamina", 20], [&"balm", 10]]
 ## Ce qu'il rachète : [objet, prix en or par unité].
 const BUYBACK := [[&"slime_gel", 2], [&"obsidian_shard", 3], [&"gem", 8]]
 
@@ -33,7 +33,7 @@ static func campfire() -> Node2D:
 	it.radius_tiles = 2.0
 	fire.add_child(it)
 	it.interacted.connect(func() -> void:
-		var i := await Choice.ask("Feu de camp", "Se reposer un moment près des flammes ?\n(PV, endurance et mana au maximum, une seule fois.)", ["Se reposer", "Plus tard"])
+		var i := await Choice.ask("Feu de camp", "Se reposer un moment près des flammes ?\n(PV, endurance et mana au maximum, pour tout le groupe, une seule fois.)", ["Se reposer", "Plus tard"])
 		if i != 0:
 			return
 		var player := fire.get_tree().get_first_node_in_group("player") as Player
@@ -41,6 +41,8 @@ static func campfire() -> Node2D:
 		if player:
 			player.health.heal(player.health.max_health)
 		Hero.refill_energy()
+		for c in fire.get_tree().get_nodes_in_group("companions"):
+			(c as Companion).rest()
 		it.enabled = false
 		it.prompt = "Braises"
 		await Transition.fade_in(0.4)
@@ -98,7 +100,7 @@ static func shop(_m: Node) -> void:
 				continue
 			Inventory.remove_item(Inventory.item_by_id(&"gold"), price)
 			Inventory.add_item(item, 1)
-			Narration.say("%s achetée." % item.display_name if item.id == &"potion_heal" else "%s acheté." % item.display_name, 1.5)
+			Narration.say("%s achetée." % item.display_name if String(item.id).begins_with("potion") else "%s acheté." % item.display_name, 1.5)
 		else:
 			await _sell()
 
@@ -183,6 +185,8 @@ static func chest(floor_number: int) -> Node2D:
 			[&"gem", 1, 2], [&"obsidian_shard", 2, 4]]
 		if randf() < 0.5:
 			loot.append([&"potion_heal", 1, 1])
+		if randf() < 0.5:
+			loot.append([[&"potion_mana", 1, 1], [&"potion_stamina", 1, 1]][randi() % 2])
 		# Une chance sur trois de trouver une pièce d'équipement du palier 1.
 		if randf() < 0.33:
 			drop(c, Loot.piece(1, [45, 35, 20]), 1, c.global_position + Vector2(0, 6))

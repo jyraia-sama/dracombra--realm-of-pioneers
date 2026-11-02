@@ -9,5 +9,5 @@ id = &"potion_heal"
 display_name = "Potion de soin"
 icon = ExtResource("2_icon")
 description = "Une fiole rouge vendue par les marchands ambulants. Referme les plaies en un instant."
-use_heal = 10
+use_heal = 100
 category = &"food"

@@ -1,7 +1,8 @@
 class_name StatBars
 extends Control
 ## Le cadre du héros, en haut à gauche : médaillon de la classe (avec le niveau), barres de
-## vie, d'endurance et de mana (classes de magie seulement), et la fine barre d'XP.
+## vie, d'endurance (roulades, toutes les classes), de mana (magie) ou de vigueur (guerrier,
+## archer) pour les techniques, et la fine barre d'XP.
 ## Quand une barre baisse, un reste clair s'efface doucement derrière : on voit ce
 ## qu'on vient de perdre.
 
@@ -14,6 +15,7 @@ const FONT_SIZE := 8
 const HP_COLORS := [Color8(122, 22, 34), Color8(206, 48, 52), Color8(255, 120, 104)]
 const STAMINA_COLORS := [Color8(36, 96, 40), Color8(84, 176, 70), Color8(170, 236, 120)]
 const MANA_COLORS := [Color8(28, 46, 120), Color8(60, 108, 220), Color8(140, 196, 255)]
+const VIGOR_COLORS := [Color8(120, 56, 16), Color8(222, 132, 40), Color8(255, 200, 120)]
 const XP_COLOR := Color8(240, 196, 80)
 const FRAME := Color8(28, 20, 30)
 const FRAME_LIGHT := Color8(150, 118, 84)
@@ -23,6 +25,7 @@ const BACK := Color8(52, 40, 52)
 var hp := [0.0, 1.0, 0.0]
 var stamina := [0.0, 1.0, 0.0]
 var mana := [0.0, 1.0, 0.0]
+## true : la barre des techniques est le mana (bleu) ; false : la vigueur (orange).
 var show_mana := false
 var show_resources := false
 var xp_ratio := 0.0
@@ -36,7 +39,7 @@ var _font: Font
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_font = ThemeDB.fallback_font
-	custom_minimum_size = Vector2(MEDAL + 6 + BAR_W + 4, MEDAL + 8)
+	custom_minimum_size = Vector2(MEDAL + 6 + BAR_W + 4, MEDAL + 14)
 
 
 func set_values(hp_now: float, hp_max: float, st_now: float, st_max: float, mp_now: float, mp_max: float) -> void:
@@ -87,14 +90,17 @@ func _draw() -> void:
 	if low:
 		var k := 0.5 + 0.5 * sin(_pulse * 8.0)
 		hp_cols[1] = HP_COLORS[1].lerp(Color8(255, 170, 150), k * 0.5)
-	_bar(Vector2(x, y), hp, hp_cols, "%d / %d" % [int(ceil(hp[0])), int(hp[1])])
+	_bar(Vector2(x, y), hp, hp_cols, "PV %d / %d" % [int(ceil(hp[0])), int(hp[1])])
 	y += BAR_H + GAP
 	if show_resources:
-		_bar(Vector2(x, y), stamina, STAMINA_COLORS, "%d" % int(stamina[0]), BAR_W - 14.0, 5.0)
-		y += 5.0 + GAP
+		# Endurance (roulades) puis mana ou vigueur (techniques) : aussi lisibles que la vie.
+		_bar(Vector2(x, y), stamina, STAMINA_COLORS, "END %d / %d" % [int(stamina[0]), int(stamina[1])])
+		y += BAR_H + GAP
 		if show_mana:
-			_bar(Vector2(x, y), mana, MANA_COLORS, "%d" % int(mana[0]), BAR_W - 6.0, 5.0)
-			y += 5.0 + GAP
+			_bar(Vector2(x, y), mana, MANA_COLORS, "MANA %d / %d" % [int(mana[0]), int(mana[1])])
+		else:
+			_bar(Vector2(x, y), mana, VIGOR_COLORS, "VIG %d / %d" % [int(mana[0]), int(mana[1])])
+		y += BAR_H + GAP
 		# XP : une ligne fine sous les barres.
 		var r := Rect2(Vector2(x, y), Vector2(BAR_W - 20.0, 2))
 		draw_rect(r.grow(1), FRAME)

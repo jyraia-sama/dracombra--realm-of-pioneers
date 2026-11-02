@@ -60,15 +60,15 @@ func _run() -> void:
 	var player: Player = city.get_node("Player")
 
 	# --- Niveaux et XP
-	_check(HeroA.xp_to_next(1) == 8 and HeroA.xp_to_next(50) > HeroA.xp_to_next(10), "xp : la courbe monte (%d, %d, %d)" % [HeroA.xp_to_next(1), HeroA.xp_to_next(10), HeroA.xp_to_next(50)])
+	_check(HeroA.xp_to_next(1) == 20 and HeroA.xp_to_next(50) > HeroA.xp_to_next(10), "xp : la courbe monte (%d, %d, %d)" % [HeroA.xp_to_next(1), HeroA.xp_to_next(10), HeroA.xp_to_next(50)])
 	_check(HeroA.known_skills().size() == 1 and HeroA.slots()[0] == &"power_strike", "techniques : Frappe puissante connue et placée sur R au niveau 1")
-	HeroA.gain_xp(8)
+	HeroA.gain_xp(20)
 	_check(HeroA.level() == 2 and HeroA.free_points() == 2, "niveau 2 : 2 points à répartir")
 	var hp_before: int = player.health.max_health
 	HeroA.spend_point(&"vit")
 	HeroA.spend_point(&"vit")
 	_check(HeroA.allocated(&"vit") == 2 and HeroA.free_points() == 0, "caractéristiques : 2 points en vitalité")
-	_check(player.health.max_health == hp_before + 1, "vitalité : les PV max montent (%d -> %d)" % [hp_before, player.health.max_health])
+	_check(player.health.max_health == hp_before + 12, "vitalité : les PV max montent (%d -> %d)" % [hp_before, player.health.max_health])
 	HeroA.reset_points()
 	_check(HeroA.free_points() == 2 and HeroA.allocated(&"vit") == 0, "caractéristiques : on peut redistribuer")
 	var total := 0
@@ -78,7 +78,7 @@ func _run() -> void:
 	_check(HeroA.level() == 100, "niveau maximum : 100 (%d)" % HeroA.level())
 	_check(HeroA.known_skills().size() == 6, "niveau 100 : les 6 techniques du guerrier sont connues")
 	_check(HeroA.slots().size() == 3 and not HeroA.slots().has(&""), "les 3 emplacements de techniques sont remplis")
-	_check(HeroA.damage() > 5 and player.health.max_health > 30, "niveau 100 : dégâts %d, PV %d" % [HeroA.damage(), player.health.max_health])
+	_check(HeroA.damage() > 20 and player.health.max_health > 400, "niveau 100 : dégâts %d, PV %d" % [HeroA.damage(), player.health.max_health])
 
 	# --- Chaque technique de chaque classe se lance sans erreur
 	for cls in HeroA.ORDER:

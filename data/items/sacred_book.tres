@@ -15,5 +15,5 @@ icon = SubResource("AtlasTexture_icon")
 description = "Arme de tissu du palier 1 (clerc). Reliure de soie, fermoir de cristal."
 category = &"equipment"
 slot = &"main"
-bonus = {&"dmg": 2, &"wis": 1}
+bonus = {&"dmg": 4, &"wis": 1}
 classes = Array[StringName]([&"cleric"])

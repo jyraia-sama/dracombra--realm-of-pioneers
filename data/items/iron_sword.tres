@@ -15,5 +15,5 @@ icon = SubResource("AtlasTexture_icon")
 description = "Arme lourde du palier 1."
 category = &"equipment"
 slot = &"main"
-bonus = {&"dmg": 2, &"str": 1}
+bonus = {&"dmg": 6, &"str": 1}
 classes = Array[StringName]([&"warrior"])

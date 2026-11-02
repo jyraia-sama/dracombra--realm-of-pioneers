@@ -16,6 +16,12 @@ extends Resource
 @export_multiline var description: String = ""
 ## Soin quand on l'utilise depuis le sac (0 = ne se consomme pas).
 @export var use_heal: int = 0
+## Mana rendu quand on le boit (classes de magie).
+@export var use_mana: int = 0
+## Endurance rendue quand on le boit (roulades).
+@export var use_stamina: int = 0
+## Vigueur rendue quand on le boit (techniques du guerrier et de l'archer).
+@export var use_vigor: int = 0
 ## Catégorie, pour trier le sac : resource, food, equipment...
 @export var category: StringName = &"resource"
 ## Équipement : emplacement où il se porte (head, body, hands, feet, main, off ; vide = ne se porte pas).

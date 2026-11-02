@@ -206,6 +206,12 @@ func _on_bag_selected(index: int) -> void:
 	var text := "%s\n\n%s" % [Loot.label(item), item.description]
 	if item.use_heal > 0:
 		text += "\n\nRend %d PV." % item.use_heal
+	if item.use_mana > 0:
+		text += "\n\nRend %d mana (mage, clerc)." % item.use_mana
+	if item.use_stamina > 0:
+		text += "\n\nRend %d d'endurance (roulades)." % item.use_stamina
+	if item.use_vigor > 0:
+		text += "\n\nRend %d de vigueur (techniques du guerrier et de l'archer)." % item.use_vigor
 	for cls in Hero.CLASSES:
 		if Hero.CLASSES[cls]["item"] == item.id:
 			text += "\n\nDébloque la classe %s." % Hero.CLASSES[cls]["name"]
@@ -219,8 +225,12 @@ func _on_bag_selected(index: int) -> void:
 		text += "\n" + Loot.compare_text(item)
 	_bag_info.text = text
 	_bag_use.text = "Porter" if item.slot != &"" else "Utiliser"
-	_bag_use.visible = item.use_heal > 0 or item.slot != &""
+	_bag_use.visible = _drinkable(item) or item.slot != &""
 	_bag_use.disabled = item.slot != &"" and not Hero.can_wear(item)
+
+
+static func _drinkable(item: ItemData) -> bool:
+	return item.use_heal > 0 or item.use_mana > 0 or item.use_stamina > 0 or item.use_vigor > 0
 
 
 func _on_bag_use() -> void:
@@ -234,7 +244,7 @@ func _on_bag_use() -> void:
 	for cls in Hero.CLASSES:
 		if Hero.CLASSES[cls]["item"] == item.id:
 			is_class_item = true
-	if item.slot == &"" and item.use_heal <= 0:
+	if item.slot == &"" and not _drinkable(item):
 		_on_bag_selected(sel[0])
 		_bag_info.text += "\n\n" + ("Arme de classe : elle suit la classe (changez de classe à la guilde). Pour une meilleure arme, portez une arme du palier 1 (Équipement > Arme principale)." if is_class_item else "Cet objet ne s'utilise pas directement : il sert à fabriquer.")
 		return
@@ -244,9 +254,8 @@ func _on_bag_use() -> void:
 			_bag_info.text += "\n\nPas pour la classe actuelle (%s)." % Hero.info()["name"]
 			return
 		Hero.wear(item.id)
-	elif item.use_heal > 0 and player and player.health.current_health < player.health.max_health:
-		Inventory.remove_item(item, 1)
-		player.health.heal(item.use_heal)
+	elif _drinkable(item) and player:
+		Hero.consume(item)
 	var keep := sel[0]
 	_refresh_bag()
 	if keep < _bag_ids.size():
@@ -369,8 +378,7 @@ func _refresh_sheet() -> void:
 	if player:
 		var res := "PV : %d / %d    Endurance : %d / %d" % [player.health.current_health, player.health.max_health,
 			int(Hero.stamina), int(Hero.stamina_max())]
-		if Hero.uses_mana():
-			res += "    Mana : %d / %d" % [int(Hero.mana), int(Hero.mana_max())]
+		res += "    %s : %d / %d" % [Hero.resource_name(), int(Hero.energy), int(Hero.energy_max())]
 		lines.append(res)
 	var pts := Hero.free_points()
 	lines.append("[color=#ffd36e]Points à répartir : %d[/color]" % pts if pts > 0 else "Points à répartir : 0 (+%d par niveau)" % Hero.POINTS_PER_LEVEL)
@@ -381,8 +389,8 @@ func _refresh_sheet() -> void:
 		var main := "  ★" if c["main"] == k else ""
 		row["value"].text = "%d%s%s" % [Hero.stat(k), " (+%d)" % extra if extra > 0 else "", main]
 		row["plus"].text = "%s%s" % [Hero.STAT_NAMES[k], "   [+]" if pts > 0 else ""]
-	_derived.text = "Dégâts %d · Défense %d · Parade %d %% · Critique %d %% · %s +%.1f/s" % [
-		Hero.damage(), Hero.defense(), int(Hero.parry_chance()), int(Hero.crit_chance()), c["resource"], Hero.energy_regen()]
+	_derived.text = "Dégâts %d · Défense %d (−%d %%) · Parade %d %% · Critique %d %% · %s +%.1f/s" % [
+		Hero.damage(), Hero.defense(), int(Hero.reduction_pct()), int(Hero.parry_chance()), int(Hero.crit_chance()), Hero.resource_name(), Hero.energy_regen()]
 	var spent := 0
 	for k in Hero.STATS:
 		spent += Hero.allocated(k)
@@ -458,7 +466,7 @@ func _select_skill(id: StringName, refresh_buttons: bool = true) -> void:
 	var known := Hero.known_skills().has(id)
 	var c := Hero.info()
 	if known:
-		_skill_info.text = "%s — %s %d · recharge %ss\n%s" % [sk["name"], c["resource"], sk["cost"],
+		_skill_info.text = "%s — %s %d · recharge %ss\n%s" % [sk["name"], Hero.resource_name(), sk["cost"],
 			String.num(float(sk["cooldown"]), 1).trim_suffix(".0"), sk["desc"]]
 	else:
 		_skill_info.text = "%s — appris au niveau %d.\n%s" % [sk["name"], sk["level"], sk["desc"]]
@@ -674,10 +682,9 @@ func _refresh_gear() -> void:
 		var h := player.sprite.texture.get_height() / player.sprite.vframes
 		atlas.region = Rect2(0, 0, w, h)
 		_gear_portrait.texture = atlas
-	var totals: Array[String] = ["Défense %d" % Hero.defense(), "Parade %d %%" % int(Hero.parry_chance()),
+	var totals: Array[String] = ["Défense %d (−%d %%)" % [Hero.defense(), int(Hero.reduction_pct())], "Parade %d %%" % int(Hero.parry_chance()),
 		"Critique %d %%" % int(Hero.crit_chance()), "Endurance %d" % int(Hero.stamina_max())]
-	if Hero.uses_mana():
-		totals.append("Mana %d" % int(Hero.mana_max()))
+	totals.append("%s %d" % [Hero.resource_name(), int(Hero.energy_max())])
 	_gear_total.text = "%s · %s\n%s\n%s" % [totals[0], totals[1], totals[2], " · ".join(totals.slice(3))]
 	_select_gear(_gear_slot)
 

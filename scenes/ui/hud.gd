@@ -106,7 +106,7 @@ func _refresh_info() -> void:
 
 
 func _on_focus(target: Interactable) -> void:
-	_prompt.text = "" if target == null else "E : %s" % target.prompt
+	_prompt.text = "" if target == null else "%s : %s" % ["X" if Game.using_pad else "E", target.prompt]
 
 
 func _on_health_changed(current: int, maximum: int) -> void:
@@ -119,7 +119,7 @@ func _refresh_health() -> void:
 		return
 	var text := "PV : %d / %d" % [_hp.x, _hp.y]
 	if Game.has_flag(&"prologue_done"):
-		text += "    %s : %d / %d" % [Hero.info()["resource"], int(Hero.energy), int(Hero.energy_max())]
+		text += "    %s : %d / %d" % [Hero.resource_name(), int(Hero.energy), int(Hero.energy_max())]
 	health_label.text = text
 
 
@@ -128,7 +128,7 @@ func _refresh_bars() -> void:
 	bars.visible = _hp.y > 0
 	bars.show_resources = done
 	bars.show_mana = done and Hero.uses_mana()
-	bars.set_values(_hp.x, _hp.y, Hero.stamina, Hero.stamina_max(), Hero.mana, Hero.mana_max())
+	bars.set_values(_hp.x, _hp.y, Hero.stamina, Hero.stamina_max(), Hero.energy, Hero.energy_max())
 	var need := Hero.xp_to_next(Hero.level())
 	bars.xp_ratio = 1.0 if need == 0 else clampf(float(Hero.xp.get(Hero.current, 0)) / need, 0.0, 1.0)
 	bars.level = Hero.level()

@@ -14,5 +14,5 @@ display_name = "Viande de sanglier"
 icon = SubResource("AtlasTexture_icon")
 heal_amount = 0
 description = "Nourrissante. Se mange depuis le sac."
-use_heal = 3
+use_heal = 30
 category = &"food"

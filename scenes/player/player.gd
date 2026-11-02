@@ -29,7 +29,7 @@ const DODGE_COST := 4.0
 ## Portée de l'attaque, en tiles.
 @export var attack_range_tiles: float = 1.0
 ## Dégâts infligés par l'attaque.
-@export var attack_damage: int = 1
+@export var attack_damage: int = 12
 ## Recul infligé aux ennemis touchés, en tiles.
 @export var attack_knockback_tiles: float = 1.5
 
@@ -145,7 +145,7 @@ func _physics_process(delta: float) -> void:
 		if _regen_timer >= regen:
 			_regen_timer = 0.0
 			if health.current_health < health.max_health:
-				health.heal(1)
+				health.heal(maxi(1, int(round(health.max_health * 0.05))))
 
 	match state:
 		State.NORMAL:
@@ -403,8 +403,7 @@ func _filter_damage(amount: int) -> int:
 	if guard <= 0.0:
 		health.set_invulnerable(0.3)
 		return 0
-	var reduced := int(round(amount * guard)) - Hero.defense()
-	return maxi(reduced, 1)
+	return Combat.after_defense(amount * guard, Hero.defense())
 
 
 func _process_attack(delta: float) -> void:
@@ -470,6 +469,9 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 	# Un coup léger (contact) blesse sans interrompre : seuls les coups lourds (bond,
 	# charge, griffe) coupent l'action en cours et repoussent le héros.
 	if not hitbox.heavy:
+		return
+	# Résistance (poise) : un coup lourd trop faible n'interrompt pas les classes robustes.
+	if Game.has_flag(&"prologue_done") and hurtbox.last_amount <= int(Combat.class_info(Hero.current).get("poise", 0)):
 		return
 	_buffered = ""
 	_end_attack()

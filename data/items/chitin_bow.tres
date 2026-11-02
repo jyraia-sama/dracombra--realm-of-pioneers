@@ -15,5 +15,5 @@ icon = SubResource("AtlasTexture_icon")
 description = "Arme de cuir du palier 1. Corde en soie d'araignée."
 category = &"equipment"
 slot = &"main"
-bonus = {&"dmg": 2, &"dex": 1}
+bonus = {&"dmg": 6, &"dex": 1}
 classes = Array[StringName]([&"archer"])

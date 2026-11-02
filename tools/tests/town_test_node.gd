@@ -83,7 +83,7 @@ func _run() -> void:
 	var player: Player = city.get_node("Player")
 	_check(city.get_node_or_null("Guild") != null, "dracombra : la guilde (feu de camp) est au centre")
 	_check(TownA.center == city.center_cell, "dracombra : le centre de la ville est connu (%s)" % TownA.center)
-	_check(player.health.max_health == 12, "héros : 10 PV + 2 du guerrier après le prologue (%d)" % player.health.max_health)
+	_check(player.health.max_health == 150, "héros : 120 PV + 6 par VIT pour le guerrier après le prologue (%d)" % player.health.max_health)
 	_check(TownA.is_unlocked(TownA.center + Vector2i(3, 0)) and not TownA.is_unlocked(TownA.center + Vector2i(30, 0)), "dracombra : seul le quartier du camp est constructible")
 
 	# --- Récolte : un arbre donne du bois
@@ -165,7 +165,7 @@ func _run() -> void:
 	player.perform_attack()
 	await _frames(2)
 	_check(city.find_children("*", "HeroProjectile", true, false).size() >= 1, "archer : l'attaque tire une flèche")
-	HeroA.gain_xp(12)
+	HeroA.gain_xp(20)
 	_check(HeroA.level(&"archer") == 2 and HeroA.level(&"warrior") == 1, "classes : chaque classe a son propre niveau")
 	HeroA.switch_to(&"warrior")
 

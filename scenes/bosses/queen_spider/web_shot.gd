@@ -15,7 +15,7 @@ static func create(from: Vector2, direction: Vector2, shooter: Node2D) -> WebSho
 	var w := WebShot.new()
 	w.collision_layer = 0
 	w.collision_mask = 8 | 1  # héros (zone de dégâts) + murs
-	w.damage = 1
+	w.damage = 8
 	w.knockback_tiles = 0.0
 	w.once_per_activation = true
 	w.source = shooter

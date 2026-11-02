@@ -24,7 +24,7 @@ const ROCK_SCENE := preload("res://scenes/enemies/rock_goblin/thrown_rock.tscn")
 @export var throw_cooldown: float = 1.8
 ## Vitesse de la pierre, en tiles par seconde.
 @export var rock_speed_tiles: float = 7.0
-@export var rock_damage: int = 1
+@export var rock_damage: int = 8
 
 @export_group("Charge")
 ## En dessous de cette distance, il fonce sur le guerrier, en tiles.
@@ -37,7 +37,7 @@ const ROCK_SCENE := preload("res://scenes/enemies/rock_goblin/thrown_rock.tscn")
 ## Temps pendant lequel il reprend son souffle après une charge, en secondes.
 @export var charge_recover: float = 0.7
 @export var charge_cooldown: float = 2.5
-@export var charge_damage: int = 1
+@export var charge_damage: int = 12
 
 @export_group("Dégâts reçus")
 @export var hurt_duration: float = 0.2
@@ -150,7 +150,7 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.IDLE:
 			velocity = Vector2.ZERO
-			_target = get_tree().get_first_node_in_group("player") as Node2D
+			_target = Combat.pick_target(self, _target)
 			if _is_target_within(detection_radius_tiles):
 				state = State.POSITION
 		State.POSITION:
@@ -182,6 +182,7 @@ func _tick(delta: float, on_done: Callable) -> void:
 
 
 func _process_position() -> void:
+	_target = Combat.pick_target(self, _target)
 	if not _is_target_within(lose_interest_radius_tiles):
 		state = State.IDLE
 		return

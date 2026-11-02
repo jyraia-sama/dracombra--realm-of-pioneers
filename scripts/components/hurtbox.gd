@@ -10,6 +10,8 @@ signal hit_received(hitbox: Hitbox)
 ## Facultatif : modifie les dégâts reçus (défense, parade...). Reçoit les dégâts du coup,
 ## renvoie ceux à encaisser ; 0 = coup paré (pas de dégâts ni de recul).
 var damage_filter: Callable
+## Dégâts réellement encaissés au dernier coup.
+var last_amount: int = 0
 
 
 func _ready() -> void:
@@ -21,11 +23,13 @@ func _ready() -> void:
 func receive_hit(hitbox: Hitbox) -> bool:
 	if health == null or health.is_dead() or health.is_invulnerable():
 		return false
-	var amount := hitbox.damage
+	# Les dégâts du coup, augmentés selon le niveau de celui qui frappe (voir Combat).
+	var amount := Combat.hit_amount(hitbox)
 	if damage_filter.is_valid():
 		amount = int(damage_filter.call(amount))
 		if amount <= 0:
 			return true
+	last_amount = amount
 	health.take_damage(amount)
 	hit_received.emit(hitbox)
 	return true

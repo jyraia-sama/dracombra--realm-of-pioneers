@@ -30,9 +30,9 @@ enum State { IDLE, CHASE, WINDUP, LEAP, RECOVER, HURT, DEAD }
 
 @export_group("Combat")
 ## Dégâts au contact.
-@export var contact_damage: int = 1
+@export var contact_damage: int = 8
 ## Dégâts du bond.
-@export var leap_damage: int = 2
+@export var leap_damage: int = 18
 ## Recul infligé au guerrier, en tiles.
 @export var contact_knockback_tiles: float = 1.5
 ## Durée pendant laquelle l'araignée est repoussée après un coup, en secondes.
@@ -168,12 +168,13 @@ func _physics_process(delta: float) -> void:
 
 func _process_idle() -> void:
 	velocity = Vector2.ZERO
-	_target = get_tree().get_first_node_in_group("player") as Node2D
+	_target = Combat.pick_target(self, _target)
 	if _is_target_within(detection_radius_tiles):
 		state = State.CHASE
 
 
 func _process_chase() -> void:
+	_target = Combat.pick_target(self, _target)
 	if not _is_target_within(lose_interest_radius_tiles):
 		state = State.IDLE
 		return

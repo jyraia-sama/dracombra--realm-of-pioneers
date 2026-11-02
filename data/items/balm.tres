@@ -14,5 +14,5 @@ display_name = "Baume de soin"
 icon = SubResource("AtlasTexture_icon")
 heal_amount = 0
 description = "Herbes pilées. Se consomme depuis le sac, ou sert d'objet de soin au clerc."
-use_heal = 6
+use_heal = 50
 category = &"food"

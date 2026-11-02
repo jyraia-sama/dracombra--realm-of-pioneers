@@ -23,11 +23,11 @@ const STAT_NAMES := {&"str": "Force", &"dex": "Dextérité", &"int": "Intelligen
 const STAT_SHORT := {&"str": "FOR", &"dex": "DEX", &"int": "INT", &"wis": "SAG", &"vit": "VIT"}
 ## Ce que fait chaque caractéristique (affiché dans le menu Personnage).
 const STAT_HELP := {
-	&"str": "Dégâts du guerrier : +1 dégât tous les 5 points.",
-	&"dex": "Dégâts de l'archer (+1 tous les 5 points). Critique +0,4 %, parade +0,25 % et endurance +1 par point.",
-	&"int": "Dégâts du mage (+1 tous les 5 points) et son mana (+2 par point).",
-	&"wis": "Dégâts du clerc (+1 tous les 5 points), son mana (+2 par point) et la récupération du mana (+0,1/s par point).",
-	&"vit": "PV max (+1 tous les 2 points), défense (+1 tous les 10 points), parade +0,1 % et endurance +1 par point.",
+	&"str": "Dégâts du guerrier : +2 % par point.",
+	&"dex": "Dégâts de l'archer (+2 % par point) et sa vigueur (+2 par point). Critique +0,4 %, parade +0,25 % et endurance +1 par point.",
+	&"int": "Dégâts du mage (+2 % par point) et son mana (+2 par point).",
+	&"wis": "Dégâts du clerc (+2 % par point), son mana (+2 par point) et la récupération du mana (+0,1/s par point).",
+	&"vit": "PV max (+6 guerrier, +5 archer et clerc, +4 mage par point), défense (+2 tous les 5 points), parade +0,1 %, endurance +1 et vigueur du guerrier +2 par point.",
 }
 
 ## Les classes de base. attack : melee (épée), arrow (flèches), bolt (projectile magique),
@@ -36,24 +36,24 @@ const STAT_HELP := {
 ## les dégâts ; resource : endurance (techniques) ou mana (sorts), et la caractéristique qui la nourrit.
 const CLASSES: Dictionary = {
 	&"warrior": {"name": "Guerrier", "role": "Corps à corps. Encaisse les coups.", "attack": "melee",
-		"damage": 1, "cooldown": 0.0, "item": &"", "tint": Color(1, 1, 1), "icon": 272,
+		"cooldown": 0.0, "item": &"", "tint": Color(1, 1, 1), "icon": 272,
 		"stats": {&"str": 5, &"dex": 3, &"int": 1, &"wis": 2, &"vit": 5},
 		"growth": {&"str": 0.6, &"dex": 0.3, &"int": 0.1, &"wis": 0.2, &"vit": 0.6},
-		"main": &"str", "resource": "Endurance", "res_stat": &"vit", "skill_word": "Techniques",
+		"main": &"str", "resource": "Vigueur", "res_stat": &"vit", "skill_word": "Techniques",
 		"sheet": "res://assets/sprites/hero/warrior.png"},
 	&"archer": {"name": "Archer", "role": "Tire des flèches à distance. Fragile au contact.", "attack": "arrow",
-		"damage": 1, "cooldown": 0.35, "item": &"bow", "tint": Color(1, 1, 1), "icon": 224,
+		"cooldown": 0.35, "item": &"bow", "tint": Color(1, 1, 1), "icon": 224,
 		"stats": {&"str": 3, &"dex": 6, &"int": 2, &"wis": 2, &"vit": 3},
 		"growth": {&"str": 0.3, &"dex": 0.7, &"int": 0.2, &"wis": 0.2, &"vit": 0.4},
-		"main": &"dex", "resource": "Endurance", "res_stat": &"dex", "skill_word": "Techniques",
+		"main": &"dex", "resource": "Vigueur", "res_stat": &"dex", "skill_word": "Techniques",
 		"sheet": "res://assets/sprites/hero/archer.png"},
 	&"mage": {"name": "Mage", "role": "Projectiles de mana lents mais puissants.", "attack": "bolt",
-		"damage": 2, "cooldown": 0.7, "item": &"staff", "tint": Color(0.82, 0.85, 1.25), "icon": 240,
+		"cooldown": 0.7, "item": &"staff", "tint": Color(0.82, 0.85, 1.25), "icon": 240,
 		"stats": {&"str": 1, &"dex": 3, &"int": 6, &"wis": 4, &"vit": 2},
 		"growth": {&"str": 0.1, &"dex": 0.3, &"int": 0.8, &"wis": 0.4, &"vit": 0.3},
 		"main": &"int", "resource": "Mana", "res_stat": &"int", "skill_word": "Sorts"},
 	&"cleric": {"name": "Clerc", "role": "Lance des éclats de lumière sacrée qui traversent les ennemis, et referme lentement ses blessures.", "attack": "holy",
-		"damage": 1, "cooldown": 0.55, "item": &"holy_symbol", "tint": Color(1.15, 1.08, 0.8), "icon": 416,
+		"cooldown": 0.55, "item": &"holy_symbol", "tint": Color(1.15, 1.08, 0.8), "icon": 416,
 		"stats": {&"str": 2, &"dex": 2, &"int": 3, &"wis": 6, &"vit": 4},
 		"growth": {&"str": 0.2, &"dex": 0.2, &"int": 0.3, &"wis": 0.8, &"vit": 0.5},
 		"main": &"wis", "resource": "Mana", "res_stat": &"wis", "skill_word": "Sorts",
@@ -62,8 +62,6 @@ const CLASSES: Dictionary = {
 const ORDER: Array[StringName] = [&"warrior", &"archer", &"mage", &"cleric"]
 ## Nombre d'emplacements de techniques dans la barre (touches R, F, C).
 const SKILL_SLOTS := 3
-## XP rapportée par chaque ennemi vaincu.
-const KILL_XP := {&"Slime": 2, &"RockGoblin": 4, &"ObsidianSpider": 3, &"Boar": 3, &"QueenSpider": 40}
 
 var hero_name: String = "Heros"
 var current: StringName = &"warrior"
@@ -76,19 +74,22 @@ var points: Dictionary = {}
 var unspent: Dictionary = {}
 ## Techniques placées dans la barre, par classe : {classe: [id, id, id]}.
 var equipped: Dictionary = {}
-## Endurance : toutes les classes en ont (roulade, techniques des guerriers et archers).
+## Endurance : toutes les classes en ont, pour les roulades. Elle remonte partout.
 var stamina: float = 0.0
-## Mana : seulement les classes de magie (mage, clerc), pour leurs sorts.
+## Mana : les classes de magie (mage, clerc), pour leurs sorts.
 var mana: float = 0.0
-## La ressource des techniques de la classe : le mana pour la magie, sinon l'endurance.
+## Vigueur : les classes physiques (guerrier, archer), pour leurs techniques.
+var vigor: float = 0.0
+## La ressource des techniques de la classe : le mana pour la magie, sinon la vigueur.
+## Elle ne remonte pas toute seule dans les Abysses (potions, feu de camp).
 var energy: float:
 	get:
-		return mana if uses_mana() else stamina
+		return mana if uses_mana() else vigor
 	set(value):
 		if uses_mana():
 			mana = value
 		else:
-			stamina = value
+			vigor = value
 ## Équipement porté : {emplacement: identifiant de l'objet}. Partagé par toutes les classes.
 var gear: Dictionary = {}
 ## Effets temporaires : {stat: [valeur, fin en ms]}.
@@ -121,7 +122,7 @@ func level(id: StringName = &"") -> int:
 func xp_to_next(lvl: int) -> int:
 	if lvl >= MAX_LEVEL:
 		return 0
-	return int(round(8.0 * pow(float(lvl), 1.6)))
+	return Combat.xp_to_next(lvl)
 
 
 # ------------------------------------------------------------------ caractéristiques
@@ -167,48 +168,46 @@ func reset_points() -> void:
 	stats_changed.emit()
 
 
-## PV max : pendant le prologue, ceux du capitaine ; ensuite 10 + VIT / 2.
+## PV max : pendant le prologue, ceux du capitaine ; ensuite selon la classe et la VIT.
 func max_hp() -> int:
 	if not Game.has_flag(&"prologue_done"):
 		return Game.hero_max_health()
-	return Game.hero_max_health() + stat(&"vit") / 2
+	return Combat.max_hp(current, stat(&"vit"))
 
 
-## Ancien calcul gardé pour compatibilité : le bonus de PV au-delà de la base.
-func hp_bonus() -> int:
-	return max_hp() - Game.hero_max_health()
-
-
-## Dégâts de base de l'arme : ceux de la classe, +1 tous les 5 points gagnés dans la
-## caractéristique principale.
+## Dégâts d'un coup normal (voir Combat.damage) : arme de la classe + bonus des armes,
+## +2 % par point de la caractéristique principale.
 func damage() -> int:
-	var data := info()
-	var main: StringName = data["main"]
-	var gain := maxi(stat(main) - int(data["stats"][main]), 0)
-	return int(data["damage"]) + gain / 5 + gear_bonus(&"dmg")
+	return Combat.damage(current, stat(info()["main"]), gear_bonus(&"dmg"))
 
 
 ## Dégâts d'un coup, effets temporaires compris. crit : le coup est-il critique ?
 func hit_damage(mult: float = 1.0, crit: bool = false) -> int:
 	var d := float(damage()) * mult * buff(&"damage", 1.0)
 	if crit:
-		d *= 2.0
+		d *= Combat.CRIT_MULT
 	return maxi(int(round(d)), 1)
 
 
-## Réduction des dégâts reçus (toujours au moins 1 dégât).
+## Défense : armure de la classe, VIT et armures portées. Elle retire un pourcentage des
+## dégâts reçus (voir reduction_pct).
 func defense() -> int:
-	return stat(&"vit") / 10 + gear_bonus(&"def")
+	return Combat.defense(current, stat(&"vit"), gear_bonus(&"def"))
+
+
+## Part des dégâts retirée par la défense, en %.
+func reduction_pct() -> float:
+	return Combat.reduction(defense()) * 100.0
 
 
 ## Chance de parer complètement un coup, en %.
 func parry_chance() -> float:
-	return minf(30.0, stat(&"dex") * 0.25 + stat(&"vit") * 0.1 + gear_bonus(&"parry"))
+	return Combat.parry_chance(stat(&"dex"), stat(&"vit"), gear_bonus(&"parry"))
 
 
-## Chance de coup critique (double dégâts), en %.
+## Chance de coup critique (dégâts × 1,75), en %.
 func crit_chance() -> float:
-	return minf(60.0, 2.0 + stat(&"dex") * 0.4 + buff(&"crit", 0.0) + gear_bonus(&"crit"))
+	return Combat.crit_chance(stat(&"dex"), buff(&"crit", 0.0) + gear_bonus(&"crit"))
 
 
 func roll_crit() -> bool:
@@ -219,12 +218,21 @@ func uses_mana(cls: StringName = &"") -> bool:
 	return info(cls)["resource"] == "Mana"
 
 
-## Endurance maximum : vitalité et dextérité (et le bonus de la classe qui s'en sert).
+## Endurance maximum (roulades) : vitalité et dextérité.
 func stamina_max() -> float:
-	var v := 12.0 + stat(&"vit") + stat(&"dex") + gear_bonus(&"stamina")
-	if not uses_mana():
-		v += stat(info()["res_stat"])
-	return v
+	return 12.0 + stat(&"vit") + stat(&"dex") + gear_bonus(&"stamina")
+
+
+## Vigueur maximum (techniques des classes physiques ; 0 pour la magie).
+func vigor_max() -> float:
+	if uses_mana():
+		return 0.0
+	return 10.0 + 2.0 * stat(info()["res_stat"]) + gear_bonus(&"vigor")
+
+
+## Nom de la ressource des techniques : « Mana » ou « Vigueur ».
+func resource_name() -> String:
+	return "Mana" if uses_mana() else "Vigueur"
 
 
 ## Mana maximum (0 pour les classes sans magie).
@@ -236,7 +244,7 @@ func mana_max() -> float:
 
 ## Maximum de la ressource des techniques de la classe.
 func energy_max() -> float:
-	return mana_max() if uses_mana() else stamina_max()
+	return mana_max() if uses_mana() else vigor_max()
 
 
 ## Endurance récupérée par seconde (vite, dès qu'on souffle un peu).
@@ -249,9 +257,50 @@ func mana_regen() -> float:
 	return 1.0 + stat(&"wis") * 0.1
 
 
-## Endurance ou mana récupérée par seconde (la ressource de la classe).
+## Vigueur récupérée par seconde (hors des Abysses).
+func vigor_regen() -> float:
+	return 1.0 + stat(info()["res_stat"]) * 0.1
+
+
+## Mana ou vigueur récupérée par seconde (la ressource des techniques).
 func energy_regen() -> float:
-	return mana_regen() if uses_mana() else stamina_regen()
+	return mana_regen() if uses_mana() else vigor_regen()
+
+
+## Boit ou mange un objet : soin, mana, endurance. Renvoie true s'il a servi (et le retire du sac).
+func consume(item: ItemData) -> bool:
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if item == null or player == null or Inventory.get_count(item.id) <= 0:
+		return false
+	var parts: Array[String] = []
+	if item.use_heal > 0 and player.health.current_health < player.health.max_health:
+		parts.append("+%d PV" % item.use_heal)
+	if item.use_mana > 0 and uses_mana() and mana < mana_max():
+		parts.append("+%d mana" % item.use_mana)
+	if item.use_stamina > 0 and stamina < stamina_max():
+		parts.append("+%d end." % item.use_stamina)
+	if item.use_vigor > 0 and not uses_mana() and vigor < vigor_max():
+		parts.append("+%d vigueur" % item.use_vigor)
+	if parts.is_empty():
+		var why := "Déjà au maximum"
+		if item.use_mana > 0 and not uses_mana():
+			why = "Pas de mana"
+		elif item.use_vigor > 0 and uses_mana():
+			why = "Pas de vigueur"
+		Emote.show(player, why, Color(0.8, 0.8, 0.8), 34.0)
+		return false
+	Inventory.remove_item(item, 1)
+	if item.use_heal > 0:
+		player.health.heal(item.use_heal)
+	if item.use_mana > 0 and uses_mana():
+		mana = minf(mana + item.use_mana, mana_max())
+	if item.use_stamina > 0:
+		stamina = minf(stamina + item.use_stamina, stamina_max())
+	if item.use_vigor > 0 and not uses_mana():
+		vigor = minf(vigor + item.use_vigor, vigor_max())
+	energy_changed.emit(energy, energy_max())
+	Emote.show(player, " ".join(parts), Color(0.5, 1.0, 0.6) if item.use_heal > 0 else Color(0.6, 0.8, 1.0), 34.0)
+	return true
 
 
 func use_energy(amount: float) -> bool:
@@ -276,17 +325,24 @@ func use_stamina(amount: float) -> bool:
 func refill_energy() -> void:
 	stamina = stamina_max()
 	mana = mana_max()
+	vigor = vigor_max()
 
 
+## Récupération naturelle. Dans les Abysses, seule l'endurance remonte : pour le mana et
+## la vigueur, il faut des potions ou un feu de camp.
 func regen_energy(delta: float) -> void:
 	var s_top := stamina_max()
 	var m_top := mana_max()
-	if stamina >= s_top and mana >= m_top:
+	var v_top := vigor_max()
+	# L'endurance (roulades) remonte partout ; le mana et la vigueur pas dans les Abysses.
+	var town := not Game.in_dungeon()
+	if stamina >= s_top and (not town or (mana >= m_top and vigor >= v_top)):
 		stamina = s_top
-		mana = m_top
 		return
 	stamina = minf(stamina + stamina_regen() * delta, s_top)
-	mana = minf(mana + mana_regen() * delta, m_top)
+	if town:
+		mana = minf(mana + mana_regen() * delta, m_top)
+		vigor = minf(vigor + vigor_regen() * delta, v_top)
 	energy_changed.emit(energy, energy_max())
 
 
@@ -299,9 +355,9 @@ const GEAR_NAMES := {&"head": "Tête", &"body": "Armure", &"hands": "Gants", &"f
 ## Noms des bonus d'équipement.
 const BONUS_NAMES := {&"str": "Force", &"dex": "Dextérité", &"int": "Intelligence", &"wis": "Sagesse",
 	&"vit": "Vitalité", &"def": "Défense", &"dmg": "Dégâts", &"parry": "Parade %", &"crit": "Critique %",
-	&"stamina": "Endurance", &"mana": "Mana"}
+	&"stamina": "Endurance", &"mana": "Mana", &"vigor": "Vigueur"}
 const BONUS_SHORT := {&"str": "FOR", &"dex": "DEX", &"int": "INT", &"wis": "SAG", &"vit": "VIT", &"def": "DÉF",
-	&"dmg": "DÉG", &"parry": "% parade", &"crit": "% crit.", &"stamina": "END", &"mana": "Mana"}
+	&"dmg": "DÉG", &"parry": "% parade", &"crit": "% crit.", &"stamina": "END", &"mana": "Mana", &"vigor": "VIG"}
 
 
 ## L'objet peut-il être porté par la classe actuelle ?
@@ -354,6 +410,7 @@ func take_off(slot: StringName) -> bool:
 func _gear_updated() -> void:
 	stamina = minf(stamina, stamina_max())
 	mana = minf(mana, mana_max())
+	vigor = minf(vigor, vigor_max())
 	_refresh_player(false)
 	gear_changed.emit()
 	stats_changed.emit()
@@ -475,7 +532,7 @@ func gain_xp(amount: int) -> void:
 			if int(SkillBook.SKILLS[id]["level"]) == level():
 				_auto_equip(current)
 				skill_learned.emit(id)
-				Narration.say("Nouvelle %s : %s !" % ["technique" if info()["resource"] == "Endurance" else "formule",
+				Narration.say("Nouvelle %s : %s !" % ["technique" if not uses_mana() else "formule",
 					SkillBook.SKILLS[id]["name"]], 3.0)
 	if level() >= MAX_LEVEL:
 		xp[current] = 0
@@ -491,9 +548,9 @@ func _refresh_player(refill: bool) -> void:
 
 ## Appelé par les ennemis à leur mort.
 func reward_kill(enemy: Node) -> void:
-	var key := StringName(enemy.get_script().get_global_name()) if enemy.get_script() else &""
-	gain_xp(int(KILL_XP.get(key, 1)))
-	Roster.share_xp(int(KILL_XP.get(key, 1)))
+	var amount := Combat.kill_xp(enemy)
+	gain_xp(amount)
+	Roster.share_xp(amount)
 
 
 func serialize() -> Dictionary:

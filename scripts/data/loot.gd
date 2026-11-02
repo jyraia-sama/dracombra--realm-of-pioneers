@@ -15,7 +15,7 @@ const EXTRA_BONUSES := [0, 1, 2, 3, 4, 4, 5, 5]
 
 ## Familles d'équipement : classes qui les portent et bonus possibles [stat, min, max] au palier 1.
 const FAMILIES := {
-	&"lourd": {"classes": [&"warrior"], "stats": [[&"str", 1, 2], [&"vit", 1, 3], [&"def", 1, 1], [&"parry", 2, 4]]},
+	&"lourd": {"classes": [&"warrior"], "stats": [[&"str", 1, 2], [&"vit", 1, 3], [&"def", 2, 4], [&"parry", 2, 4]]},
 	&"cuir": {"classes": [&"archer"], "stats": [[&"dex", 1, 2], [&"crit", 2, 4], [&"stamina", 4, 8]]},
 	&"tissu": {"classes": [&"mage", &"cleric"], "stats": [[&"int", 1, 2], [&"wis", 1, 2], [&"mana", 4, 8]]},
 }
@@ -117,7 +117,7 @@ static func compare_text(item: ItemData) -> String:
 
 
 ## Poids d'un point de chaque bonus, pour juger « mieux / moins bien ».
-const WEIGHTS := {&"dmg": 3.0, &"def": 2.0, &"str": 1.0, &"dex": 1.0, &"int": 1.0, &"wis": 1.0, &"vit": 1.0,
+const WEIGHTS := {&"dmg": 1.0, &"def": 1.5, &"str": 1.0, &"dex": 1.0, &"int": 1.0, &"wis": 1.0, &"vit": 1.0,
 	&"crit": 0.5, &"parry": 0.5, &"stamina": 0.25, &"mana": 0.25}
 
 

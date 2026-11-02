@@ -175,7 +175,7 @@ static func _member_gear(m: Dictionary) -> void:
 			var it := Inventory.item_by_id(StringName(gear.get(String(slot), "")))
 			opts.append("%s : %s" % [Hero.GEAR_NAMES[slot], Loot.label(it) if it else "—"])
 		opts.append("Retour")
-		var i := await Choice.ask("Équipement de %s" % m["name"], "Les objets viennent de votre sac et y reviennent quand on les retire.\nPV %d · dégâts %d" % [Roster.max_hp(m), Roster.damage(m)], opts)
+		var i := await Choice.ask("Équipement de %s" % m["name"], "Les objets viennent de votre sac et y reviennent quand on les retire.\nPV %d · dégâts %d · défense %d (−%d %%)" % [Roster.max_hp(m), Roster.damage(m), Roster.defense(m), int(Combat.reduction(Roster.defense(m)) * 100.0)], opts)
 		if i < 0 or i >= Hero.GEAR_SLOTS.size():
 			return
 		var slot: StringName = Hero.GEAR_SLOTS[i]

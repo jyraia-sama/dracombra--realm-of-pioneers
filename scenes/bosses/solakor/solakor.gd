@@ -15,7 +15,7 @@ const FALLING_ROCK := preload("res://scenes/props/falling_rock.tscn")
 @export var claw_reach_tiles: float = 5.0
 ## Temps d'annonce d'un coup de griffe, en secondes.
 @export var claw_telegraph: float = 0.8
-@export var claw_damage: int = 2
+@export var claw_damage: int = 20
 ## Nombre de rochers par chute.
 @export var rocks_per_volley: int = 4
 ## Rayon de la zone de chute des rochers autour du guerrier, en tiles.
@@ -151,7 +151,7 @@ func rock_volley(center: Vector2) -> void:
 			Vector2.from_angle(randf() * TAU) * randf_range(1.0, rock_spread_tiles) * tile
 		rock.position = center + spread
 		rock.fall_time = randf_range(0.8, 1.1)
-		rock.damage = 1
+		rock.damage = 10
 		level.add_child(rock)
 
 

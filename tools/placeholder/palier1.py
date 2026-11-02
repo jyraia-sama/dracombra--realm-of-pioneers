@@ -33,22 +33,22 @@ ITEMS = [
     ("iron_armor", "Cuirasse de fer", "equipment", "body", {"def": 4, "vit": 2}, ["warrior"], "Armure lourde du palier 1.", "chest", IRON),
     ("iron_gauntlets", "Gantelets de fer", "equipment", "hands", {"def": 1, "str": 2}, ["warrior"], "Armure lourde du palier 1.", "gloves", IRON),
     ("iron_boots", "Bottes de fer", "equipment", "feet", {"def": 2, "stamina": 6}, ["warrior"], "Armure lourde du palier 1.", "boots", IRON),
-    ("iron_sword", "Épée de fer", "equipment", "main", {"dmg": 2, "str": 1}, ["warrior"], "Arme lourde du palier 1.", "sword", IRON),
+    ("iron_sword", "Épée de fer", "equipment", "main", {"dmg": 6, "str": 1}, ["warrior"], "Arme lourde du palier 1.", "sword", IRON),
     ("iron_shield", "Bouclier de fer", "equipment", "off", {"def": 2, "parry": 10}, ["warrior"], "Arme secondaire lourde du palier 1.", "shield", IRON),
     # Cuir (archer)
     ("chitin_hood", "Capuche de chitine", "equipment", "head", {"def": 1, "dex": 2}, ["archer"], "Armure de cuir du palier 1.", "helmet", CHITIN),
     ("chitin_armor", "Armure de chitine", "equipment", "body", {"def": 3, "dex": 2}, ["archer"], "Armure de cuir du palier 1.", "chest", CHITIN),
     ("chitin_bracers", "Brassards de chitine", "equipment", "hands", {"dex": 1, "crit": 5}, ["archer"], "Armure de cuir du palier 1.", "gloves", CHITIN),
     ("chitin_boots", "Bottes de chitine", "equipment", "feet", {"dex": 1, "stamina": 10}, ["archer"], "Armure de cuir du palier 1.", "boots", CHITIN),
-    ("chitin_bow", "Arc de chitine", "equipment", "main", {"dmg": 2, "dex": 1}, ["archer"], "Arme de cuir du palier 1. Corde en soie d'araignée.", "bow", CHITIN),
+    ("chitin_bow", "Arc de chitine", "equipment", "main", {"dmg": 6, "dex": 1}, ["archer"], "Arme de cuir du palier 1. Corde en soie d'araignée.", "bow", CHITIN),
     ("silk_quiver", "Carquois de soie", "equipment", "off", {"dex": 2, "crit": 8}, ["archer"], "Arme secondaire de cuir du palier 1.", "quiver", CHITIN),
     # Tissu (mage, clerc)
     ("silk_hood", "Capuche de soie", "equipment", "head", {"int": 1, "wis": 1, "mana": 6}, ["mage", "cleric"], "Armure de tissu du palier 1.", "hood", SILK),
     ("silk_robe", "Robe de soie", "equipment", "body", {"def": 2, "int": 1, "wis": 1, "mana": 10}, ["mage", "cleric"], "Armure de tissu du palier 1.", "robe", SILK),
     ("silk_gloves", "Gants de soie", "equipment", "hands", {"int": 2}, ["mage", "cleric"], "Armure de tissu du palier 1.", "gloves", SILK),
     ("silk_shoes", "Chaussons de soie", "equipment", "feet", {"wis": 2, "mana": 6}, ["mage", "cleric"], "Armure de tissu du palier 1.", "boots", SILK),
-    ("crystal_staff", "Bâton de cristal", "equipment", "main", {"dmg": 2, "int": 1}, ["mage"], "Arme de tissu du palier 1 (mage).", "staff", CRYSTAL),
-    ("sacred_book", "Livre sacré", "equipment", "main", {"dmg": 2, "wis": 1}, ["cleric"], "Arme de tissu du palier 1 (clerc). Reliure de soie, fermoir de cristal.", "book", CRYSTAL),
+    ("crystal_staff", "Bâton de cristal", "equipment", "main", {"dmg": 12, "int": 1}, ["mage"], "Arme de tissu du palier 1 (mage).", "staff", CRYSTAL),
+    ("sacred_book", "Livre sacré", "equipment", "main", {"dmg": 4, "wis": 1}, ["cleric"], "Arme de tissu du palier 1 (clerc). Reliure de soie, fermoir de cristal.", "book", CRYSTAL),
 ]
 
 

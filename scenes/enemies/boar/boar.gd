@@ -9,7 +9,7 @@ enum State { WANDER, IDLE, ALERT, CHARGE, HURT, DEAD }
 @export var charge_speed_tiles: float = 8.0
 ## Distance à laquelle il se sent menacé, en tiles.
 @export var alert_radius_tiles: float = 2.5
-@export var charge_damage: int = 2
+@export var charge_damage: int = 15
 @export var hurt_duration: float = 0.2
 
 ## Planche boar.png (regard vers la droite) : marche, charge, puis touché (2) et mort (2).

@@ -10,7 +10,7 @@ signal landed
 ## Hauteur de départ du rocher, en tiles.
 @export var fall_height_tiles: float = 11.0
 ## Dégâts infligés à l'impact (0 = aucun).
-@export var damage: int = 1
+@export var damage: int = 10
 ## Force du tremblement de caméra à l'impact, en pixels.
 @export var shake_strength: float = 3.0
 ## Si true, le rocher reste au sol après l'impact (pour former un éboulis).

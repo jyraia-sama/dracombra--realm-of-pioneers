@@ -40,9 +40,9 @@ func _run() -> void:
 	var s1: Slime = room.get_node("Slime")
 	var s2: Slime = room.get_node("Slime2")
 	var s3: Slime = room.get_node("Slime3")
-	_check(player.health.current_health == 20 and player.health.max_health == 20, "guerrier : 20 PV au départ (prologue)")
+	_check(player.health.current_health == 200 and player.health.max_health == 200, "guerrier : 200 PV au départ (prologue)")
 	_check(get_tree().get_nodes_in_group("enemies").size() == 3, "3 slimes dans la salle")
-	_check(room.get_node("HUD/HealthLabel").text == "PV : 20 / 20", "HUD affiche PV : 20 / 20")
+	_check(room.get_node("HUD/HealthLabel").text == "PV : 200 / 200", "HUD affiche PV : 200 / 200")
 
 	var p0 := s1.global_position
 	await _frames(30)
@@ -62,14 +62,14 @@ func _run() -> void:
 
 	for i in 180:
 		await get_tree().physics_frame
-		if player.health.current_health < 20:
+		if player.health.current_health < 200:
 			break
-	_check(player.health.current_health == 19, "contact : guerrier perd 1 PV")
+	_check(player.health.current_health == 192, "contact : guerrier perd 8 PV")
 	_check(player.health.is_invulnerable(), "guerrier invincible juste après le coup")
 	_check(player.state == Player.State.HURT, "guerrier repoussé (état HURT)")
-	_check(room.get_node("HUD/HealthLabel").text == "PV : 19 / 20", "HUD mis à jour : PV : 19 / 20")
+	_check(room.get_node("HUD/HealthLabel").text == "PV : 192 / 200", "HUD mis à jour : PV : 192 / 200")
 	await _frames(8)
-	_check(player.health.current_health == 19, "pas de deuxième coup pendant l'invincibilité")
+	_check(player.health.current_health == 192, "pas de deuxième coup pendant l'invincibilité")
 
 	# Attaque : 3 coups pour tuer le slime.
 	for hit in 3:
@@ -81,7 +81,7 @@ func _run() -> void:
 		player.facing = Vector2.RIGHT
 		await _press("attack")
 		await _frames(16)
-		_check(s1.health.current_health == 2 - hit, "attaque %d : slime à %d PV" % [hit + 1, 2 - hit])
+		_check(s1.health.current_health == maxi(18 - 12 * hit, 0), "attaque %d : slime à %d PV" % [hit + 1, maxi(18 - 12 * hit, 0)])
 		await _frames(12)
 	await _frames(80)
 	_check(not is_instance_valid(s1), "slime mort puis supprimé")
@@ -96,7 +96,7 @@ func _run() -> void:
 	player.health.set_invulnerable(1.0)
 	await _press("attack")
 	await _frames(16)
-	_check(s2.health.current_health == 3, "attaque vers la droite ne touche pas un slime à gauche")
+	_check(s2.health.current_health == 30, "attaque vers la droite ne touche pas un slime à gauche")
 	s2.global_position = Vector2(400, 300)
 	await _frames(40)
 
@@ -131,7 +131,7 @@ func _run() -> void:
 	_check(get_tree().current_scene != old_room and get_tree().current_scene != null, "salle rechargée après la mort")
 	if get_tree().current_scene:
 		var new_player: Player = get_tree().current_scene.get_node("Player")
-		_check(new_player.health.current_health == 20, "nouveau guerrier à 20 PV")
+		_check(new_player.health.current_health == 200, "nouveau guerrier à 200 PV")
 
 	print("TOTAL FAILURES: %d" % failures)
 	get_tree().quit(1 if failures > 0 else 0)

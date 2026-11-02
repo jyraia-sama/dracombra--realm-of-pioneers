@@ -178,9 +178,14 @@ func share_xp(amount: int) -> void:
 			Narration.say("%s passe niveau %d !" % [m["name"], lvl], 2.0)
 
 
-## PV max d'un compagnon : comme le héros (10 + VIT / 2), avec la VIT de sa classe à son niveau.
+## PV max d'un compagnon : mêmes formules que le héros (voir Combat), avec sa classe à son niveau.
 func max_hp(m: Dictionary) -> int:
-	return 10 + stat(m, &"vit") / 2
+	return Combat.max_hp(StringName(m["cls"]), stat(m, &"vit"))
+
+
+## Défense d'un compagnon (pourcentage de dégâts retiré : Combat.reduction).
+func defense(m: Dictionary) -> int:
+	return Combat.defense(StringName(m["cls"]), stat(m, &"vit"), gear_bonus(m, &"def"))
 
 
 func stat(m: Dictionary, key: StringName) -> int:
@@ -190,12 +195,10 @@ func stat(m: Dictionary, key: StringName) -> int:
 		+ gear_bonus(m, key)
 
 
-## Dégâts d'un coup : dégâts de la classe + 1 tous les 5 points de la caractéristique principale.
+## Dégâts d'un coup : arme de la classe + bonus, +2 % par point de la caractéristique principale.
 func damage(m: Dictionary) -> int:
 	var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
-	var main: StringName = info["main"]
-	var gain := maxi(stat(m, main) - int(info["stats"][main]), 0)
-	return int(info["damage"]) + gain / 5 + gear_bonus(m, &"dmg")
+	return Combat.damage(StringName(m["cls"]), stat(m, info["main"]), gear_bonus(m, &"dmg"))
 
 
 func gear_bonus(m: Dictionary, key: StringName) -> int:
@@ -276,13 +279,17 @@ func sprite_path(m: Dictionary) -> String:
 
 func serialize() -> Dictionary:
 	return {"members": members.duplicate(true), "candidates": candidates.duplicate(true), "next_id": _next_id,
-		"party": party.duplicate()}
+		"party": party.duplicate(), "scale": 10}
 
 
 func deserialize(data: Dictionary) -> void:
 	members.clear()
 	candidates.clear()
+	var old_scale := not data.has("scale")
 	for m in data.get("members", []):
+		# Anciennes sauvegardes (avant l'échelle ×10) : les PV des blessés.
+		if old_scale and int(m.get("hp", 0)) > 0:
+			m["hp"] = int(m["hp"]) * 10
 		members.append(m)
 	for m in data.get("candidates", []):
 		candidates.append(m)

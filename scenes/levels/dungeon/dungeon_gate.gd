@@ -8,6 +8,8 @@ extends StaticBody2D
 var cells: Array[Vector2i] = []
 var horizontal := true  # true : la herse barre un passage vertical (porte en haut ou en bas)
 
+## La herse barre-t-elle le passage ?
+var closed := false
 var _rise := 0.0  # 0 = sous terre, 1 = dressée
 var _shards: Array[Dictionary] = []
 var _shape: CollisionShape2D
@@ -45,6 +47,7 @@ func setup(door_cells: Array[Vector2i], dir: Vector2i) -> void:
 
 
 func close() -> void:
+	closed = true
 	_shape.set_deferred("disabled", false)
 	var tween := create_tween()
 	tween.tween_method(_set_rise, _rise, 1.0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -53,6 +56,7 @@ func close() -> void:
 
 
 func open() -> void:
+	closed = false
 	var tween := create_tween()
 	tween.tween_method(_set_rise, _rise, 0.0, 0.5).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void: _shape.set_deferred("disabled", true))

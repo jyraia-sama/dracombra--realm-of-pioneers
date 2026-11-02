@@ -72,7 +72,7 @@ func _run() -> void:
 		if e != goblin:
 			e.global_position = Vector2(-4000, -4000)
 	p.global_position = goblin.global_position + Vector2(-5 * 16, 0)
-	p.health.set_health(5)
+	p.health.set_health(50)
 	var thrown := await _wait_until(func(): return get_tree().current_scene.find_children("*", "ThrownRock", true, false).size() > 0, 400)
 	_check(thrown, "gobelin : lance une pierre")
 	var hp_before := p.health.current_health
@@ -293,7 +293,7 @@ func _run() -> void:
 	_check(free, "réveil : il se relève, le chapitre 1 commence")
 	_check(p.global_position.distance_to(city.get_node("Guild").global_position) < 64.0, "réveil : près du feu de camp de la future guilde")
 	_check(p.health.current_health == p.health.max_health, "réveil : ses blessures sont guéries (%d PV)" % p.health.current_health)
-	_check(p.health.max_health == 12, "réveil : la blessure de Solakor lui a coûté des PV max (%d = 10 + 2 du guerrier)" % p.health.max_health)
+	_check(p.health.max_health == 150, "réveil : la blessure de Solakor lui a coûté des PV max (%d = 120 + 6 × 5 VIT du guerrier)" % p.health.max_health)
 	_check(p.sprite.visible and p.get_node_or_null("Visual/WoundSprite") == null, "réveil : il a retrouvé son allure normale")
 	_check(not p.actions_locked and is_equal_approx(p.speed_multiplier, 1.0), "réveil : il peut de nouveau marcher, frapper et rouler")
 	_check(get_tree().root.get_node("Game").has_flag(&"prologue_done"), "réveil : le prologue est terminé, l'histoire commence")

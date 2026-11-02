@@ -51,13 +51,13 @@ func _run() -> void:
 	spider.position = player.global_position + Vector2(5 * 16, 0)
 	level.add_child(spider)
 	await _frames(2)
-	_check(spider.health.current_health == 2, "araignée : 2 PV")
+	_check(spider.health.current_health == 25, "araignée : 25 PV")
 	_check(await _until(func(): return spider.state == ObsidianSpider.State.CHASE, 30), "elle repère le guerrier et court")
 	_check(await _until(func(): return spider.state == ObsidianSpider.State.WINDUP, 120), "elle se ramasse avant de bondir")
 	var hp := player.health.current_health
 	_check(await _until(func(): return spider.state == ObsidianSpider.State.LEAP, 60), "elle bondit")
 	_check(await _until(func(): return player.health.current_health < hp, 40), "le bond blesse le guerrier")
-	_check(hp - player.health.current_health == 2, "le bond fait 2 dégâts (%d)" % (hp - player.health.current_health))
+	_check(hp - player.health.current_health == 18, "le bond fait 18 dégâts (%d)" % (hp - player.health.current_health))
 	_check(await _until(func(): return spider.state == ObsidianSpider.State.RECOVER, 40), "elle reste vulnérable après le bond")
 
 	# Esquive : un guerrier qui roule pendant le bond n'est pas touché.

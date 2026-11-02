@@ -20,10 +20,12 @@ var _enraged := false
 var _brood: Array[Node2D] = []
 
 
-static func create(hp: int) -> QueenSpider:
+## lvl : niveau de la reine (étage + nombre de victoires). PV et dégâts suivent Combat.
+static func create(lvl: int) -> QueenSpider:
 	var q := SPIDER_SCENE.instantiate()
 	q.set_script(load("res://scenes/bosses/queen_spider/queen_spider.gd"))
-	q.max_hp = hp
+	q.max_hp = int(ceil(int(Combat.MONSTERS[&"QueenSpider"]["hp"]) * Combat.hp_mult(lvl)))
+	Combat.set_level(q, lvl)
 	q.name = "QueenSpider"
 	return q as QueenSpider
 
@@ -40,10 +42,10 @@ func _ready() -> void:
 	lose_interest_radius_tiles = 40.0
 	leap_range_tiles = 5.5
 	leap_distance_tiles = 4.0
-	leap_damage = 4
+	leap_damage = 30
 	leap_cooldown = 2.4
 	windup_time = 0.6
-	contact_damage = 2
+	contact_damage = 15
 	contact_hitbox.damage = contact_damage
 	hurt_duration = 0.08
 	health.health_changed.connect(func(cur: int, mx: int) -> void:
@@ -107,9 +109,11 @@ func _lay_eggs() -> void:
 			s.name = "Spiderling"
 			s.position = at
 			s.scale = Vector2(0.7, 0.7)
+			Combat.set_level(s, Combat.monster_level(self))
 			var h := s.get_node("Health") as HealthComponent
-			h.max_health = 2
-			s.set("leap_damage", 1)
+			h.max_health = int(ceil(15 * Combat.hp_mult(Combat.monster_level(self))))
+			h.current_health = h.max_health
+			s.set("leap_damage", 10)
 			s.set("detection_radius_tiles", 30.0)
 			s.set("lose_interest_radius_tiles", 40.0)
 			get_parent().add_child(s)

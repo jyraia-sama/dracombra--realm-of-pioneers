@@ -61,14 +61,14 @@ func blocked_reason(id: StringName) -> String:
 	if cooldown_left(id) > 0.0:
 		return "recharge"
 	if Hero.energy < float(s["cost"]):
-		return "Mana" if Hero.info()["resource"] == "Mana" else "Endurance"
+		return Hero.resource_name()
 	return ""
 
 
 func try_cast(id: StringName) -> bool:
 	var why := blocked_reason(id)
 	if why != "":
-		if why == "Mana" or why == "Endurance":
+		if why == "Mana" or why == "Vigueur":
 			Emote.show(player, "%s !" % why, Color(0.6, 0.75, 1.0), 34.0)
 		return false
 	var s := SkillBook.get_skill(id)

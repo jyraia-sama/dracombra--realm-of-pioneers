@@ -7,6 +7,10 @@ extends CharacterBody2D
 ##   equilibre : attaque, mais revient près du héros sous 40 % de PV ;
 ##   soins     : un clerc soigne d'abord (héros ou compagnon sous 70 %), puis attaque ;
 ##               les autres classes restent près du héros et défendent (ennemis à 4 cases).
+## Les monstres peuvent les viser (voir Combat.pick_target). Ils esquivent les attaques
+## annoncées (bond, charge), cherchent leur chemin autour des murs et des grilles (donjon),
+## et rejoignent le héros s'ils restent coincés. Le clerc soigne avec son mana, qui ne
+## remonte pas dans les Abysses (feu de camp, ou retour en ville).
 ## À 0 PV : à terre jusqu'à la fin du combat, puis se relève avec 1 PV et sera blessé au
 ## retour en ville. S'il était déjà blessé en partant : il meurt (deux étapes, GUILDE.md).
 
@@ -34,6 +38,19 @@ var _melee: Hitbox
 var _swing := 0.0
 var _calm := 0.0
 var _slot := 0  # 0 à gauche du héros, 1 à droite
+var mana := 0.0
+var _dodge_cd := 1.0
+var _dodge_t := 0.0
+var _dodge_dir := Vector2.ZERO
+var _path := PackedVector2Array()
+var _path_goal := Vector2.INF
+var _path_t := 0.0
+var _last_pos := Vector2.ZERO
+var _stuck := 0.0
+
+const HEAL_COST := 6.0
+const HEAL_COOLDOWN := 8.0
+const DODGE_COOLDOWN := 2.5
 
 
 static func create(m: Dictionary, slot: int) -> Companion:
@@ -76,11 +93,17 @@ func _ready() -> void:
 	add_child(health)
 	health.current_health = int(_m.get("hp", health.max_health)) if int(_m.get("hp", 0)) > 0 else health.max_health
 	health.died.connect(_on_down)
+	# Mana (clerc) : plein en ville ; dans les Abysses, il garde ce qui lui reste.
+	mana = mana_max()
+	if Game.in_dungeon() and _m.has("mp"):
+		mana = minf(float(_m["mp"]), mana_max())
 	hurtbox = Hurtbox.new()
 	hurtbox.name = "Hurtbox"
 	hurtbox.collision_layer = 8
 	hurtbox.collision_mask = 0
 	hurtbox.health = health
+	# Sa défense retire un pourcentage des dégâts (comme le héros).
+	hurtbox.damage_filter = func(amount: int) -> int: return Combat.after_defense(amount, Roster.defense(_m))
 	var hs := CollisionShape2D.new()
 	var hr := RectangleShape2D.new()
 	hr.size = Vector2(12, 22)
@@ -107,6 +130,35 @@ func _ready() -> void:
 	add_child(_melee)
 
 
+func mana_max() -> float:
+	return 10.0 + 2.0 * Roster.stat(_m, &"wis") if _cls == &"cleric" else 0.0
+
+
+## Les monstres peuvent-ils le viser ?
+func can_be_targeted() -> bool:
+	return state != State.DOWN and state != State.DEAD
+
+
+## Rejoint le héros d'un coup (coincé, ou resté dehors quand les grilles se ferment).
+func teleport_near(at: Vector2) -> void:
+	PixelBurst.spawn(get_parent(), global_position, PixelBurst.SMOKE, Vector2.ZERO, 0.6)
+	global_position = at + _offset()
+	_path = PackedVector2Array()
+	_stuck = 0.0
+	_last_pos = global_position
+	PixelBurst.spawn(get_parent(), global_position, PixelBurst.SMOKE, Vector2.ZERO, 0.6)
+
+
+## Repos (feu de camp) : PV et mana au maximum.
+func rest() -> void:
+	if state == State.DEAD:
+		return
+	if state == State.DOWN:
+		_get_up()
+	health.heal(health.max_health)
+	mana = mana_max()
+
+
 func _player() -> Player:
 	return get_tree().get_first_node_in_group("player") as Player
 
@@ -115,6 +167,8 @@ func _physics_process(delta: float) -> void:
 	_t += delta
 	_cooldown = maxf(0.0, _cooldown - delta)
 	_heal_cd = maxf(0.0, _heal_cd - delta)
+	_dodge_cd = maxf(0.0, _dodge_cd - delta)
+	_path_t = maxf(0.0, _path_t - delta)
 	if _swing > 0.0:
 		_swing -= delta
 		if _swing <= 0.0:
@@ -133,11 +187,23 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		_animate()
 		return
+	# Roulade en cours.
+	if _dodge_t > 0.0:
+		_dodge_t -= delta
+		velocity = _dodge_dir * Game.TILE_SIZE * 10.0
+		move_and_slide()
+		_animate()
+		return
+	if _dodge_cd <= 0.0 and _try_dodge():
+		move_and_slide()
+		_animate()
+		return
 	# Trop loin (changement d'étage, téléportation) : il rejoint le héros.
 	if global_position.distance_to(player.global_position) > Game.TILE_SIZE * 14.0:
-		global_position = player.global_position + _offset()
+		teleport_near(player.global_position)
+	_check_stuck(delta, player)
 	var stance: String = Roster.by_id(member_id).get("stance", "equilibre")
-	if _cls == &"cleric" and _heal_cd <= 0.0 and (stance == "soins" or stance == "equilibre"):
+	if _cls == &"cleric" and _heal_cd <= 0.0 and mana >= HEAL_COST and (stance == "soins" or stance == "equilibre"):
 		if _try_heal(0.7 if stance == "soins" else 0.45):
 			move_and_slide()
 			_animate()
@@ -166,8 +232,7 @@ func _follow(player: Player) -> void:
 	var to := goal - global_position
 	if to.length() > 6.0:
 		var speed := 5.2 if to.length() > Game.TILE_SIZE * 4 else 4.0
-		velocity = to.normalized() * Game.TILE_SIZE * speed
-		_facing = to.normalized()
+		_move_to(goal, speed)
 	else:
 		velocity = Vector2.ZERO
 
@@ -180,7 +245,8 @@ func _fight(_delta: float) -> void:
 	var ranged := _cls != &"warrior"
 	var want := ARROW_RANGE * 0.7 if ranged else MELEE_RANGE * 0.8
 	if dist > want:
-		velocity = to.normalized() * Game.TILE_SIZE * 4.0
+		_move_to(_target.global_position, 4.0)
+		_facing = to.normalized()
 	elif ranged and dist < 2.0:
 		velocity = -to.normalized() * Game.TILE_SIZE * 3.0  # garde ses distances
 	else:
@@ -216,13 +282,85 @@ func _try_heal(threshold: float) -> bool:
 		return false
 	var who: Node2D = hurt[0]
 	var hp: HealthComponent = who.get("health")
-	var amount := maxi(2, int(hp.max_health * 0.3))
+	var amount := maxi(20, int(hp.max_health * 0.3))
 	hp.heal(amount)
 	Emote.show(who, "+%d" % amount, Color(0.6, 1.0, 0.6), 34.0)
 	PixelBurst.spawn(who, who.global_position, PixelBurst.PLANT, Vector2.ZERO, 1.5)
-	_heal_cd = 5.0
+	_heal_cd = HEAL_COOLDOWN
+	mana -= HEAL_COST
 	velocity = Vector2.ZERO
 	return true
+
+
+## Se déplace vers un point : en ligne droite si rien ne gêne, sinon en suivant un chemin
+## autour des murs et des grilles (si le niveau sait en calculer : le donjon).
+func _move_to(goal: Vector2, speed: float) -> void:
+	var dir := goal - global_position
+	var level := get_tree().current_scene
+	var blocked := test_move(global_transform, dir.limit_length(Game.TILE_SIZE * 1.5))
+	if blocked and level and level.has_method("nav_path"):
+		if _path.is_empty() or _path_t <= 0.0 or _path_goal.distance_to(goal) > Game.TILE_SIZE * 2.0:
+			_path = level.nav_path(global_position, goal)
+			_path_goal = goal
+			_path_t = 0.4
+		while not _path.is_empty() and global_position.distance_to(_path[0]) < 5.0:
+			_path.remove_at(0)
+		if not _path.is_empty():
+			dir = _path[0] - global_position
+	elif not blocked:
+		_path = PackedVector2Array()
+	velocity = dir.normalized() * Game.TILE_SIZE * speed
+	if dir.length() > 0.1:
+		_facing = dir.normalized()
+
+
+## Coincé (il veut bouger mais n'avance plus) : au bout d'un moment, il rejoint le héros.
+func _check_stuck(delta: float, player: Player) -> void:
+	var moved := global_position.distance_to(_last_pos)
+	_last_pos = global_position
+	if velocity.length() > 10.0 and moved < 0.3:
+		_stuck += delta
+	else:
+		_stuck = maxf(0.0, _stuck - delta * 2.0)
+	if _stuck > 1.2 and global_position.distance_to(player.global_position) > Game.TILE_SIZE * 2.0:
+		teleport_near(player.global_position)
+
+
+## Esquive : une attaque annoncée (bond d'araignée, charge) tout près ? Roulade sur le côté.
+func _try_dodge() -> bool:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var en := e as Node2D
+		if en == null or not ("state" in en):
+			continue
+		var winding := false
+		if en is ObsidianSpider:
+			winding = en.state == ObsidianSpider.State.WINDUP
+		elif en is RockGoblin:
+			winding = en.state == RockGoblin.State.CHARGE_WINDUP
+		if not winding:
+			continue
+		var to := global_position - en.global_position
+		if to.length() > Game.TILE_SIZE * 4.5:
+			continue
+		# Pas forcément visé : il esquive si la menace est proche, selon sa dextérité.
+		_dodge_cd = DODGE_COOLDOWN
+		var chance := clampf(0.55 + 0.02 * Roster.stat(_m, &"dex"), 0.0, 0.9)
+		if randf() > chance:
+			return false
+		var side := to.orthogonal().normalized()
+		if randf() < 0.5:
+			side = -side
+		if test_move(global_transform, side * Game.TILE_SIZE * 2.0):
+			side = -side
+		_dodge_dir = (side + to.normalized() * 0.5).normalized()
+		_dodge_t = 0.25
+		health.set_invulnerable(0.4)
+		_facing = _dodge_dir
+		var tween := create_tween()
+		tween.tween_property(_visual, "rotation", TAU * signf(_dodge_dir.x if _dodge_dir.x != 0.0 else 1.0), 0.25)
+		tween.tween_callback(func() -> void: _visual.rotation = 0.0)
+		return true
+	return false
 
 
 func _nearest_enemy(around: Vector2, tiles: float) -> Node2D:
@@ -282,6 +420,7 @@ func _exit_tree() -> void:
 	var m := Roster.by_id(member_id)
 	if not m.is_empty() and health:
 		m["hp"] = health.current_health
+		m["mp"] = mana
 
 
 func _animate() -> void:

@@ -8,6 +8,8 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"rope", "n": 1, "station": &"workbench", "in": {&"flax": 3}},
 	{"out": &"cloth", "n": 1, "station": &"workbench", "in": {&"flax": 4}},
 	{"out": &"balm", "n": 1, "station": &"workbench", "in": {&"herb": 3}},
+	{"out": &"potion_stamina", "n": 1, "station": &"workbench", "in": {&"herb": 2, &"meat": 1}},
+	{"out": &"potion_mana", "n": 1, "station": &"workbench", "in": {&"herb": 2, &"mana_crystal": 1}},
 	{"out": &"short_sword", "n": 1, "station": &"workbench", "in": {&"wood": 2, &"stone": 4, &"leather": 1}},
 	{"out": &"bow", "n": 1, "station": &"workbench", "in": {&"wood": 4, &"rope": 1, &"leather": 2}},
 	{"out": &"staff", "n": 1, "station": &"workbench", "in": {&"wood": 3, &"gem": 1, &"cloth": 2}},

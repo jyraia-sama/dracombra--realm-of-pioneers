@@ -304,6 +304,8 @@ func _start_fight(room: Vector2i) -> void:
 		gate.close()
 		gates.append(gate)
 	_gates[room] = gates
+	_gather_companions(room)
+	_nav_dirty = true
 	Fx.shake(1.5, 0.2)
 	if is_boss_room(room):
 		_start_boss(room)
@@ -324,6 +326,73 @@ func _start_fight(room: Vector2i) -> void:
 	_spawning = false
 
 
+## Les compagnons restés dans le couloir rejoignent le héros avant que les grilles ne bloquent.
+func _gather_companions(room: Vector2i) -> void:
+	var player := get_player()
+	if player == null:
+		return
+	var inner := DungeonGen.inner_rect(room).grow(-1)
+	for c in get_tree().get_nodes_in_group("companions"):
+		var comp := c as Companion
+		var cell := ground.local_to_map(ground.to_local(comp.global_position))
+		if not inner.has_point(cell):
+			comp.teleport_near(player.global_position)
+
+
+# ------------------------------------------------------------------ chemins (compagnons)
+
+var _astar: AStarGrid2D
+var _nav_dirty := true
+
+
+## Chemin entre deux points en évitant les murs et les grilles fermées (pour les compagnons).
+## Renvoie une liste de points (vide si pas de chemin).
+func nav_path(from: Vector2, to: Vector2) -> PackedVector2Array:
+	if _astar == null or _nav_dirty:
+		_build_nav()
+	var a := ground.local_to_map(ground.to_local(from))
+	var b := ground.local_to_map(ground.to_local(to))
+	if not _astar.is_in_boundsv(a) or not _astar.is_in_boundsv(b) or _astar.is_point_solid(b):
+		return PackedVector2Array()
+	if _astar.is_point_solid(a):
+		return PackedVector2Array([to])
+	var cells := _astar.get_id_path(a, b, true)
+	var out := PackedVector2Array()
+	for i in range(1, cells.size()):
+		out.append(_cell_pos(cells[i]))
+	return out
+
+
+func _build_nav() -> void:
+	_nav_dirty = false
+	var used := Rect2i()
+	var first := true
+	for cell in gen.floor_cells:
+		if first:
+			used = Rect2i(cell, Vector2i.ONE)
+			first = false
+		else:
+			used = used.expand(cell)
+	used = used.grow(1)
+	_astar = AStarGrid2D.new()
+	_astar.region = used
+	_astar.cell_size = Vector2.ONE
+	_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	_astar.update()
+	_astar.fill_solid_region(used, true)
+	for cell in gen.floor_cells:
+		_astar.set_point_solid(cell, false)
+	for cell in walls.get_used_cells():
+		if _astar.is_in_boundsv(cell):
+			_astar.set_point_solid(cell, true)
+	for room in _gates:
+		for gate in _gates[room]:
+			if is_instance_valid(gate) and gate.closed:
+				for cell in gate.cells:
+					if _astar.is_in_boundsv(cell):
+						_astar.set_point_solid(cell, true)
+
+
 ## Au dernier étage de la zone, la salle de l'escalier est le repaire de la reine.
 func is_boss_room(room: Vector2i) -> bool:
 	return floor_number >= last_floor() and room == gen.stairs
@@ -333,7 +402,7 @@ func _start_boss(room: Vector2i) -> void:
 	await Narration.title_card("La reine araignée d'obsidienne", zone_name(), 2.0)
 	if not is_inside_tree():
 		return
-	var queen := QueenSpider.create(70 + 15 * Game.abyss_clears)
+	var queen := QueenSpider.create(floor_number + Game.abyss_clears)
 	queen.position = _cell_pos(DungeonGen.slot_center(room) + Vector2i(-7, -3))
 	add_child(queen)
 	_alive.append(queen)
@@ -369,7 +438,8 @@ func _on_queen_died(queen: Node2D) -> void:
 
 
 func _enemy_count(room: Vector2i) -> int:
-	var base := 2 + floor_number
+	# Un monstre de plus par compagnon.
+	var base := 2 + floor_number + Roster.party_members().size()
 	if gen.rooms[room]["kind"] == DungeonGen.Kind.STAIRS:
 		base += 2
 	return base + rng.randi_range(0, 1)
@@ -397,7 +467,7 @@ func _spawn_spots(room: Vector2i, count: int) -> Array[Vector2]:
 	return out
 
 
-## Un monstre adapté à l'étage : plus de PV et de dégâts en descendant.
+## Un monstre adapté à l'étage : son niveau est celui de l'étage.
 func _make_enemy() -> Node2D:
 	var roll := rng.randf()
 	var scene: PackedScene = SLIME
@@ -410,8 +480,13 @@ func _make_enemy() -> Node2D:
 			scene = GOBLIN if roll < 0.4 else (SPIDER if roll < 0.85 else SLIME)
 	var enemy: Node2D = scene.instantiate()
 	var health := enemy.get_node_or_null("Health") as HealthComponent
-	if health:
-		health.max_health = int(ceil(health.max_health * (1.0 + 0.35 * (floor_number - 1))))
+	# Niveau du monstre = étage (voir Combat) : plus de PV, de dégâts et d'XP.
+	Combat.set_level(enemy, floor_number)
+	# Avec des compagnons, les monstres sont plus solides (+30 % de PV par compagnon).
+	var party := Roster.party_members().size()
+	if health and party > 0:
+		health.max_health = int(ceil(health.max_health * (1.0 + 0.3 * party)))
+		health.current_health = health.max_health
 	# Les monstres du donjon chassent dans toute la salle.
 	for prop in ["detection_radius_tiles", "lose_interest_radius_tiles"]:
 		if prop in enemy:
@@ -423,6 +498,9 @@ func _make_enemy() -> Node2D:
 				return
 			if randf() < 0.7:
 				DungeonRoomProps.drop(self, Inventory.item_by_id(&"gold"), rng.randi_range(1, 2 + floor_number), enemy.global_position)
+			# Parfois une potion d'endurance ou de mana (selon la classe du héros).
+			if randf() < 0.08:
+				DungeonRoomProps.drop(self, Inventory.item_by_id(Hotbar.energy_potion()), 1, enemy.global_position)
 			# Rarement, une pièce d'équipement du palier 1.
 			if randf() < 0.03 + 0.01 * floor_number:
 				DungeonRoomProps.drop(self, Loot.piece(1, [60, 30, 10]), 1, enemy.global_position)
@@ -450,6 +528,7 @@ func _check_fight() -> void:
 	_fight_room = Vector2i(-1, -1)
 	for gate in _gates.get(room, []):
 		gate.open()
+	_nav_dirty = true
 	if room == gen.stairs:
 		_stairs_down.reveal()
 		Narration.say("Le passage vers les profondeurs s'ouvre.", 2.5)

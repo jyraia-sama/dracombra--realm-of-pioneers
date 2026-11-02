@@ -7,9 +7,9 @@ extends Node
 const TILE_SIZE: int = 16
 
 ## PV maximum du héros pendant le prologue : un capitaine aguerri.
-const HERO_PROLOGUE_HEALTH: int = 20
+const HERO_PROLOGUE_HEALTH: int = 200
 ## PV maximum après le prologue : la blessure de Solakor l'a durablement affaibli.
-const HERO_BASE_HEALTH: int = 10
+const HERO_BASE_HEALTH: int = 100
 
 signal day_changed(day: int)
 
@@ -37,6 +37,9 @@ var pending_message: String = ""
 var abyss_clears: int = 0
 
 var _sleeping := false
+## Le joueur utilise-t-il la manette (dernière touche pressée) ? Les aides affichent ses boutons.
+var using_pad := false
+signal input_device_changed(pad: bool)
 
 
 # ------------------------------------------------------------------ jour et nuit
@@ -143,6 +146,12 @@ func set_flag(flag: StringName, value: bool = true) -> void:
 	flags[flag] = value
 
 
+## Le héros est-il dans les Abysses ? (L'endurance et le mana n'y remontent pas tout seuls.)
+func in_dungeon() -> bool:
+	var scene := get_tree().current_scene
+	return scene != null and scene.scene_file_path.contains("/dungeon/")
+
+
 func hero_max_health() -> int:
 	return HERO_BASE_HEALTH if has_flag(&"prologue_done") else HERO_PROLOGUE_HEALTH
 
@@ -237,3 +246,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		var full := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
 		get_viewport().set_input_as_handled()
+
+
+func _input(event: InputEvent) -> void:
+	var pad := using_pad
+	if event is InputEventJoypadButton and event.pressed:
+		pad = true
+	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5:
+		pad = true
+	elif (event is InputEventKey and event.pressed) or event is InputEventMouseButton:
+		pad = false
+	if pad != using_pad:
+		using_pad = pad
+		input_device_changed.emit(pad)

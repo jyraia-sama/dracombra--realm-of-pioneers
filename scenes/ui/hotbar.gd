@@ -1,13 +1,18 @@
 class_name Hotbar
 extends HBoxContainer
-## Barre d'outils en bas de l'écran : l'arme de la classe, la hache, la pioche, puis les
-## soins (baume, viande, potion). Touches 1 à 6 pour utiliser un consommable ; H (ou RB) prend
-## le meilleur soin disponible. Les outils servent tout seuls quand on frappe.
-## À droite, les trois techniques ou sorts placés (R, F, C) avec leur temps de recharge.
+## Barre d'outils en bas de l'écran : l'arme de la classe, la hache, la pioche, les soins
+## (baume, viande, potion) et la potion de mana (mage, clerc) ou de vigueur (guerrier, archer).
+## Touches 1 à 7 ; H (RB) prend le meilleur soin, G (L3) la potion de mana ou de vigueur.
+## Les outils servent tout seuls quand on frappe.
+## À droite, les trois techniques ou sorts placés (R, F, C / LT, RT, R3) avec leur temps de recharge.
+## Les touches affichées suivent l'appareil utilisé : clavier ou manette.
 
-const SLOTS: Array[StringName] = [&"__weapon", &"axe", &"pickaxe", &"balm", &"meat", &"potion_heal"]
+const SLOTS: Array[StringName] = [&"__weapon", &"axe", &"pickaxe", &"balm", &"meat", &"potion_heal", &"__energy"]
 const SLOT := 22
 const SKILL_KEYS := ["R", "F", "C"]
+const SKILL_PAD := ["LT", "RT", "R3"]
+## Boutons de la manette pour les cases (vide = pas de bouton direct).
+const SLOT_PAD := ["", "", "", "", "", "RB", "L3"]
 
 var _cells: Array[Dictionary] = []
 var _skill_cells: Array[Control] = []
@@ -43,7 +48,7 @@ func _ready() -> void:
 		count.size = Vector2(13, 10)
 		panel.add_child(count)
 		add_child(panel)
-		_cells.append({"panel": panel, "style": style, "icon": icon, "count": count})
+		_cells.append({"panel": panel, "style": style, "icon": icon, "count": count, "key": key})
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(6, SLOT)
 	add_child(gap)
@@ -55,7 +60,17 @@ func _ready() -> void:
 		_skill_cells.append(cell)
 	Inventory.item_changed.connect(func(_item: ItemData, _n: int) -> void: refresh())
 	Hero.class_changed.connect(func(_c: StringName) -> void: refresh())
+	Game.input_device_changed.connect(func(_pad: bool) -> void: refresh())
 	refresh()
+
+
+## La potion de la case 7 : mana pour les classes de magie, vigueur pour les autres.
+static func energy_potion() -> StringName:
+	return &"potion_mana" if Hero.uses_mana() else &"potion_stamina"
+
+
+func _slot_id(i: int) -> StringName:
+	return energy_potion() if SLOTS[i] == &"__energy" else SLOTS[i]
 
 
 func _process(_delta: float) -> void:
@@ -86,8 +101,9 @@ func _draw_skill(cell: Control, i: int) -> void:
 			cell.draw_string(font, Vector2(0, 21), "%d" % ceili(cd), HORIZONTAL_ALIGNMENT_RIGHT, SLOT - 1, 8, Color.WHITE)
 		cell.tooltip_text = s["name"]
 	cell.draw_rect(Rect2(Vector2.ZERO, size), Color(0.55, 0.45, 0.75), false, 1.0)
-	cell.draw_string_outline(font, Vector2(1, 8), SKILL_KEYS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color.BLACK)
-	cell.draw_string(font, Vector2(1, 8), SKILL_KEYS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.85, 0.8, 0.9))
+	var key: String = SKILL_PAD[i] if Game.using_pad else SKILL_KEYS[i]
+	cell.draw_string_outline(font, Vector2(1, 8), key, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color.BLACK)
+	cell.draw_string(font, Vector2(1, 8), key, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.85, 0.8, 0.9))
 
 
 func _label(text: String, at: Vector2, color: Color) -> Label:
@@ -104,7 +120,8 @@ func _label(text: String, at: Vector2, color: Color) -> Label:
 func refresh() -> void:
 	for i in SLOTS.size():
 		var cell: Dictionary = _cells[i]
-		var id := SLOTS[i]
+		var id := _slot_id(i)
+		cell["key"].text = SLOT_PAD[i] if Game.using_pad else str(i + 1)
 		if id == &"__weapon":
 			var atlas := AtlasTexture.new()
 			atlas.atlas = load("res://assets/sprites/items/items.png")
@@ -131,8 +148,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			use_slot(i)
 			return
+	if event.is_action_pressed("quick_energy"):
+		get_viewport().set_input_as_handled()
+		use_slot(6)
+		return
 	if event.is_action_pressed("quick_heal"):
 		get_viewport().set_input_as_handled()
+		if player.health.current_health >= player.health.max_health:
+			Emote.show(player, "PV max", Color(0.7, 1.0, 0.7), 34.0)
+			return
 		# Le moins précieux d'abord : viande, baume, puis potion.
 		for i in [4, 3, 5]:
 			if use_slot(i):
@@ -141,19 +165,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Utilise l'objet de la case (s'il se consomme). Renvoie true s'il a servi.
 func use_slot(i: int) -> bool:
-	var id := SLOTS[i]
+	var id := _slot_id(i)
 	var item := Inventory.item_by_id(id) if id != &"__weapon" else null
-	var player := get_tree().get_first_node_in_group("player") as Player
 	_blink(i)
-	if item == null or player == null or item.use_heal <= 0 or Inventory.get_count(id) <= 0:
+	if item == null or Inventory.get_count(id) <= 0:
 		return false
-	if player.health.current_health >= player.health.max_health:
-		Emote.show(player, "PV max", Color(0.7, 1.0, 0.7), 34.0)
-		return false
-	Inventory.remove_item(item, 1)
-	player.health.heal(item.use_heal)
-	Emote.show(player, "+%d" % item.use_heal, Color(0.5, 1.0, 0.5), 34.0)
-	return true
+	return Hero.consume(item)
 
 
 func _blink(i: int) -> void:
