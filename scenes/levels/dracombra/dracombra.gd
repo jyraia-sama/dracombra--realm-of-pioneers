@@ -93,5 +93,7 @@ func _spawn_members() -> void:
 	for m in Roster.living():
 		if Roster.party.has(int(m["id"])):
 			continue  # ceux du groupe suivent le héros
-		var npc := MemberNPC.create(m, area)
+		# Les artisans affectés flânent près de leur lieu de travail le jour.
+		var zone := Roster.work_area(m)
+		var npc := MemberNPC.create(m, zone if zone.has_area() and not Game.is_night() else area)
 		$Props.add_child(npc)

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BuildingData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_data.gd" id="1_b"]
+[ext_resource type="Texture2D" path="res://assets/sprites/buildings/work/jardin_herbes.png" id="2_t"]
+
+[resource]
+script = ExtResource("1_b")
+id = &"herb_garden"
+display_name = "Jardin d'herbes"
+description = "Les herboristes y cultivent des herbes médicinales et du lin."
+tier_required = 0
+size = Vector2i(2, 1)
+cost = Dictionary[StringName, int]({&"wood": 6, &"stone": 2})
+build_days = 1
+texture = ExtResource("2_t")
+housing = 0
+can_sleep = false
+job = &"herboriste"
+workers = 2
+produces = {&"herb": 2, &"flax": 1}

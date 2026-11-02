@@ -20,9 +20,13 @@ const TRAITS := ["Courageux", "Prudent", "Bavard", "Taciturne", "Gourmand", "Mat
 	"Fils de forgeron", "Fille de marchands", "Superstitieux", "Infatigable"]
 ## Métiers des artisans (leurs effets arrivent avec les étapes 4 et 5).
 const JOBS := {
-	&"forgeron": "Forgeron", &"fermier": "Fermier", &"bucheron": "Bûcheron",
-	&"mineur": "Mineur", &"tisserand": "Tisserand", &"herboriste": "Herboriste",
+	&"bucheron": "Bûcheron", &"mineur": "Mineur", &"chasseur": "Chasseur", &"herboriste": "Herboriste",
+	&"forgeron": "Forgeron", &"fermier": "Fermier", &"tisserand": "Tisserand",
 }
+## Bâtiment de travail de chaque métier (vide = pas encore de bâtiment : forge sur commande,
+## champs de l'étape 5, atelier de tissage plus tard).
+const WORKPLACE := {&"bucheron": &"lumber_hut", &"mineur": &"quarry", &"chasseur": &"hunter_cabin",
+	&"herboriste": &"herb_garden"}
 const STANCES := {"agressif": "Agressif", "equilibre": "Équilibré", "soins": "Soins en premier"}
 const CLASS_SPRITES := {
 	&"warrior": "res://assets/sprites/guild/membre_guerrier/membre_guerrier",
@@ -80,6 +84,10 @@ func _on_new_morning(_day: int) -> void:
 	candidates.clear()
 	for i in randi_range(1, 2):
 		candidates.append(make_candidate())
+	# Les artisans sans travail rejoignent un bâtiment de leur métier terminé entre-temps.
+	for m in living():
+		auto_assign(m)
+	_produce()
 	# Une nuit de repos : PV au maximum ; les blessés se reposent.
 	for m in members:
 		m["hp"] = 0
@@ -99,7 +107,9 @@ func make_candidate() -> Dictionary:
 		if not taken.has(name):
 			break
 		name = NAMES[randi() % NAMES.size()]
-	var combat := randf() < 0.55
+	# Tous les arrivants sont des villageois avec un métier ; on les forme ensuite au
+	# combat à la guilde (voir ECONOMIE.md).
+	var combat := false
 	var cls: StringName = Hero.ORDER[randi() % Hero.ORDER.size()] if combat else &""
 	var job: StringName = JOBS.keys()[randi() % JOBS.size()] if not combat else &""
 	var lvl := randi_range(1, 3)
@@ -122,6 +132,7 @@ func recruit(index: int) -> bool:
 	_next_id += 1
 	m["day"] = Game.day
 	members.append(m)
+	auto_assign(m)
 	changed.emit()
 	return true
 
@@ -233,7 +244,14 @@ func sheet(m: Dictionary) -> String:
 		lines.append("Combattant : %s" % info["role"])
 		lines.append("Comportement au combat : %s." % STANCES.get(m["stance"], "Équilibré"))
 	else:
-		lines.append("Artisan : son métier servira quand la ville grandira (ateliers, champs…).")
+		var want: StringName = WORKPLACE.get(StringName(m["job"]), &"")
+		var work := Town.site_by_uid(int(m.get("work", 0)))
+		if not work.is_empty():
+			lines.append("Travaille à : %s." % Town.building(StringName(work["id"])).display_name)
+		elif want != &"":
+			lines.append("Sans travail : construisez un bâtiment « %s »." % Town.building(want).display_name)
+		else:
+			lines.append("Son métier servira bientôt (forge sur commande, champs, atelier de tissage).")
 	if int(m["id"]) > 0:
 		lines.append("État : %s · arrivé le jour %d." % [state_text(m), int(m["day"])])
 	return "\n".join(lines)
@@ -292,3 +310,82 @@ func settle_after_outing() -> void:
 		changed.emit()
 		Narration.say("%s doi%s se reposer (blessé%s, 2 jours)." % [", ".join(hurt), "t" if hurt.size() == 1 else "vent",
 			"" if hurt.size() == 1 else "s"], 4.0)
+
+
+# ------------------------------------------------------------------ métiers et production
+
+## Les travailleurs d'un bâtiment (site de Town.sites).
+func workers_of(uid: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for m in living():
+		if int(m.get("work", 0)) == uid:
+			out.append(m)
+	return out
+
+
+## Place un artisan dans le premier bâtiment de son métier qui a de la place.
+func auto_assign(m: Dictionary) -> bool:
+	if m["kind"] != "artisan" or int(m.get("work", 0)) > 0:
+		return false
+	var want: StringName = WORKPLACE.get(StringName(m["job"]), &"")
+	if want == &"":
+		return false
+	for r in Town.sites:
+		if r["built"] and StringName(r["id"]) == want:
+			var data := Town.building(want)
+			if workers_of(int(r["uid"])).size() < data.workers:
+				m["work"] = int(r["uid"])
+				return true
+	return false
+
+
+func assign(m: Dictionary, uid: int) -> void:
+	m["work"] = uid
+	changed.emit()
+
+
+func unassign(m: Dictionary) -> void:
+	m["work"] = 0
+	changed.emit()
+
+
+## Chaque matin, les bâtiments de travail produisent selon leurs travailleurs en forme.
+func _produce() -> void:
+	var total := {}
+	for r in Town.sites:
+		if not r["built"]:
+			continue
+		var data := Town.building(StringName(r["id"]))
+		if data == null or data.job == &"" or data.produces.is_empty():
+			continue
+		var stock: Dictionary = r.get("stock", {})
+		for m in workers_of(int(r["uid"])):
+			if m["state"] != "ok":
+				continue
+			var skill := 1.0 + 0.2 * (int(m.get("job_level", 1)) - 1)
+			for id in data.produces:
+				var n := int(round(float(data.produces[id]) * skill))
+				var before := int(stock.get(String(id), 0))
+				var after := mini(data.stock_cap, before + n)
+				stock[String(id)] = after
+				total[id] = int(total.get(id, 0)) + (after - before)
+			# La carrière donne parfois une gemme.
+			if data.id == &"quarry" and randf() < 0.12:
+				stock["gem"] = mini(data.stock_cap, int(stock.get("gem", 0)) + 1)
+				total[&"gem"] = int(total.get(&"gem", 0)) + 1
+		r["stock"] = stock
+	if total.is_empty():
+		return
+	Town.changed.emit()
+	Narration.say("Production de la nuit : %s." % Building.cost_text(total), 3.5)
+
+
+## Fait apparaître l'artisan près de son lieu de travail (rectangle autour du bâtiment), ou {}.
+func work_area(m: Dictionary) -> Rect2:
+	var r := Town.site_by_uid(int(m.get("work", 0)))
+	if r.is_empty():
+		return Rect2()
+	var data := Town.building(StringName(r["id"]))
+	var rect := Building.footprint_rect(data, Town.site_cell(r))
+	var t := float(Game.TILE_SIZE)
+	return Rect2(rect.position + Vector2(-t * 2, rect.size.y), Vector2(rect.size.x + t * 4, t * 3))

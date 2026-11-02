@@ -141,6 +141,13 @@ func deliver(cost: Dictionary, delivered: Dictionary) -> int:
 	return moved
 
 
+func site_by_uid(uid: int) -> Dictionary:
+	for r in sites:
+		if int(r["uid"]) == uid:
+			return r
+	return {}
+
+
 func count_built(id: StringName) -> int:
 	var n := 0
 	for record in sites:
@@ -215,10 +222,16 @@ func serialize() -> Dictionary:
 func deserialize(data: Dictionary) -> void:
 	tier = int(data.get("tier", 0))
 	sites.clear()
+	# Les identifiants sont gardés (les habitants y sont affectés) ; anciens enregistrements numérotés.
 	var uid := 1
 	for record in data.get("sites", []):
-		record["uid"] = uid
-		uid += 1
+		uid = maxi(uid, int(record.get("uid", 0)) + 1)
+	for record in data.get("sites", []):
+		if int(record.get("uid", 0)) <= 0:
+			record["uid"] = uid
+			uid += 1
+		else:
+			record["uid"] = int(record["uid"])
 		sites.append(record)
 	guild_upgrade = data.get("guild_upgrade", {})
 	changed.emit()

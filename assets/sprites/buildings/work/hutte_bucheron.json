@@ -1,0 +1,17 @@
+{
+ "cell": [
+  72,
+  74
+ ],
+ "anchor": [
+  36,
+  72
+ ],
+ "scale": 0.5,
+ "footprint": [
+  2,
+  2
+ ],
+ "fonction": "production",
+ "provisoire": true
+}

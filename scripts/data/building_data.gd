@@ -18,3 +18,12 @@ extends Resource
 @export var housing: int = 0
 ## On peut y dormir (et faire passer les jours).
 @export var can_sleep: bool = false
+
+## Bâtiment de travail : métier des habitants qui y travaillent (vide = aucun).
+@export var job: StringName = &""
+## Travailleurs au maximum.
+@export var workers: int = 0
+## Production par travailleur et par jour : { objet : quantité }.
+@export var produces: Dictionary = {}
+## Stock maximum par objet dans le bâtiment (avant l'entrepôt).
+@export var stock_cap: int = 40

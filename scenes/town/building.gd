@@ -50,8 +50,8 @@ func setup(building: BuildingData, site: Dictionary) -> void:
 	_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_label.add_theme_constant_override("outline_size", 3)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label.size = Vector2(80, 12)
-	_label.position = Vector2(-40, 2)
+	_label.size = Vector2(170, 12)
+	_label.position = Vector2(-85, 2)
 	# Au-dessus des décors (un pilier devant le chantier cachait le texte).
 	_label.z_index = 50
 	add_child(_label)
@@ -74,7 +74,12 @@ func refresh() -> void:
 		_label.text = ""
 		var station := Crafting.STATION_NAMES.has(data.id)
 		_interact.prompt = "Dormir" if data.can_sleep else data.display_name
-		_interact.enabled = data.can_sleep or station
+		_interact.enabled = data.can_sleep or station or data.job != &""
+		if data.job != &"":
+			var stock: Dictionary = record.get("stock", {})
+			var n := Roster.workers_of(int(record["uid"])).size()
+			_label.text = "%s · %d/%d trav.%s" % [data.display_name, n, data.workers,
+				(" · " + _stock_text(stock)) if not stock.is_empty() else ""]
 	elif need.is_empty():
 		_label.text = "%s : %d / %d jours" % [data.display_name, int(record["days"]), data.build_days]
 		_interact.enabled = false
@@ -86,6 +91,10 @@ func refresh() -> void:
 
 func _on_interacted() -> void:
 	if record["built"]:
+		if data.job != &"":
+			await _workplace_menu()
+			refresh()
+			return
 		if data.can_sleep:
 			var i := await Choice.ask(data.display_name, "Dormir jusqu'au lendemain ?", ["Dormir", "Annuler"])
 			if i == 0:
@@ -113,6 +122,64 @@ func _on_interacted() -> void:
 	elif Town.missing(data.cost, record["delivered"]).is_empty():
 		Narration.say("Tout est là. Le chantier avancera chaque jour : dormez pour le voir grandir.", 3.0)
 	refresh()
+
+
+static func _stock_text(stock: Dictionary) -> String:
+	var d := {}
+	for k in stock:
+		if int(stock[k]) > 0:
+			d[StringName(k)] = int(stock[k])
+	return cost_text(d)
+
+
+## Bâtiment de travail : récupérer le stock, affecter ou retirer des travailleurs.
+func _workplace_menu() -> void:
+	while true:
+		var uid := int(record["uid"])
+		var stock: Dictionary = record.get("stock", {})
+		var workers := Roster.workers_of(uid)
+		var names: Array[String] = []
+		for m in workers:
+			names.append("%s (%s)" % [m["name"], Roster.specialty(m)])
+		var body := "%s\nTravailleurs (%d/%d) : %s.\nProduction par travailleur et par jour : %s." % [data.description,
+			workers.size(), data.workers, ", ".join(names) if not names.is_empty() else "personne",
+			cost_text(data.produces)]
+		var options: Array[String] = []
+		var acts: Array = []
+		var has_stock := not _stock_text(stock).is_empty()
+		if has_stock:
+			options.append("Récupérer : %s" % _stock_text(stock))
+			acts.append(["take"])
+		for m in Roster.living():
+			if m["kind"] == "artisan" and String(m["job"]) == String(data.job) and int(m.get("work", 0)) != uid \
+					and workers.size() < data.workers:
+				options.append("Affecter %s (%s)" % [m["name"], Roster.specialty(m)])
+				acts.append(["add", int(m["id"])])
+		for m in workers:
+			options.append("Retirer %s du travail" % m["name"])
+			acts.append(["remove", int(m["id"])])
+		options.append("Fermer")
+		acts.append(["close"])
+		var i := await Choice.ask(data.display_name, body, options)
+		if i < 0 or acts[i][0] == "close":
+			return
+		match acts[i][0]:
+			"take":
+				var got := {}
+				for k in stock:
+					var n := int(stock[k])
+					if n > 0:
+						var item := Inventory.item_by_id(StringName(k))
+						if item:
+							Inventory.add_item(item, n)
+							got[StringName(k)] = n
+				record["stock"] = {}
+				Narration.say("Récupéré : %s." % cost_text(got), 2.0)
+			"add":
+				Roster.assign(Roster.by_id(acts[i][1]), uid)
+			"remove":
+				Roster.unassign(Roster.by_id(acts[i][1]))
+		refresh()
 
 
 static func _minus(a: Dictionary, b: Dictionary) -> Dictionary:

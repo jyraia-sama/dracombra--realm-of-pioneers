@@ -23,6 +23,11 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `scenes/levels/guild_hall/guild_hall.gd` | PROVISOIRE | 2026-11-01 | salle de la guilde : plancher, murs, tapis, pupitre, tableau (dessinés par le code) |
 | `res://assets/sprites/npc/lysia/lysia.png` | PROVISOIRE | 2026-11-01 | perso pnj (généré) |
 | `res://assets/sprites/npc/lysia/lysia.png` | PROVISOIRE | 2026-11-01 | Lysia, intendante de la guilde (PNJ généré, teinté lavande en jeu) |
+| `res://assets/sprites/buildings/work/hutte_bucheron.png` | PROVISOIRE | 2026-11-02 | bâtiment 2x2 production (généré) |
+| `res://assets/sprites/buildings/work/carriere.png` | PROVISOIRE | 2026-11-02 | bâtiment 2x2 defense (généré) |
+| `res://assets/sprites/buildings/work/cabane_chasseur.png` | PROVISOIRE | 2026-11-02 | bâtiment 2x2 commerce (généré) |
+| `res://assets/sprites/buildings/work/jardin_herbes.png` | PROVISOIRE | 2026-11-02 | bâtiment 2x1 logement (généré) |
+| `res://assets/sprites/buildings/work/*.png` | PROVISOIRE | 2026-11-02 | bâtiments de travail : hutte du bûcheron, carrière, cabane du chasseur, jardin d'herbes (générés) |
 <!-- fin provisoires -->
 
 ## Existants au 2026-11-01 (version 0.4.1)
