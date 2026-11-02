@@ -460,12 +460,19 @@ func _check_fight() -> void:
 # ------------------------------------------------------------------ escaliers
 
 func _on_stairs_up() -> void:
+	if props.get_node_or_null("Cocon") != null and not Lysia.rescued():
+		await Ysolde.lines(Hero.hero_name, ["Je ne peux pas laisser cette personne prisonnière de la soie."])
+		return
 	var i := await Choice.ask("Remonter", "Rentrer à Dracombra ?", ["Remonter en ville", "Rester"])
 	if i == 0:
 		_leave_to_city()
 
 
 func _on_stairs_down() -> void:
+	# Tant que Lysia est prisonnière de son cocon, on ne descend pas.
+	if props.get_node_or_null("Cocon") != null and not Lysia.rescued():
+		await Ysolde.lines(Hero.hero_name, ["Ce cocon remue encore... Il y a quelqu'un là-dedans. Je ne peux pas partir sans l'avoir libéré."])
+		return
 	if floor_number >= last_floor():
 		var j := await Choice.ask("Fond de la %s" % zone_name(),
 			"Plus bas, la galerie est effondrée : la zone suivante des Abysses n'est pas encore creusée.\n(Elle arrivera avec une prochaine étape.)",
