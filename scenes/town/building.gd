@@ -74,7 +74,12 @@ func refresh() -> void:
 		_label.text = ""
 		var station := Crafting.STATION_NAMES.has(data.id)
 		_interact.prompt = "Dormir" if data.can_sleep else data.display_name
-		_interact.enabled = data.can_sleep or station or data.job != &""
+		_interact.enabled = data.can_sleep or station or data.job != &"" or data.id == &"warehouse"
+		if data.id == &"warehouse":
+			var total := 0
+			for k in Town.warehouse:
+				total += int(Town.warehouse[k])
+			_label.text = "Entrepôt · %d objets" % total
 		if data.job != &"":
 			var stock: Dictionary = record.get("stock", {})
 			var n := Roster.workers_of(int(record["uid"])).size()
@@ -91,6 +96,10 @@ func refresh() -> void:
 
 func _on_interacted() -> void:
 	if record["built"]:
+		if data.id == &"warehouse":
+			await _warehouse_menu()
+			refresh()
+			return
 		if data.job != &"":
 			await _workplace_menu()
 			refresh()
@@ -105,7 +114,7 @@ func _on_interacted() -> void:
 	var need := Town.missing(data.cost, record["delivered"])
 	var have := {}
 	for id in need:
-		var n := mini(int(need[id]), Inventory.get_count(id))
+		var n := mini(int(need[id]), Town.amount_of(id))
 		if n > 0:
 			have[id] = n
 	if not have.is_empty():
@@ -179,6 +188,59 @@ func _workplace_menu() -> void:
 				Roster.assign(Roster.by_id(acts[i][1]), uid)
 			"remove":
 				Roster.unassign(Roster.by_id(acts[i][1]))
+		refresh()
+
+
+## Entrepôt : voir le stock, y déposer les ressources du sac, en retirer.
+func _warehouse_menu() -> void:
+	while true:
+		var ids: Array = Town.warehouse.keys()
+		ids.sort()
+		var lines: Array[String] = []
+		for k in ids:
+			var item := Inventory.item_by_id(StringName(k))
+			lines.append("%s ×%d" % [item.display_name if item else k, int(Town.warehouse[k])])
+		var body := "Stock : %s.\nL'établi, la forge et les chantiers puisent ici directement." % (", ".join(lines) if not lines.is_empty() else "vide")
+		var options: Array[String] = ["Déposer toutes mes ressources", "Retirer un objet", "Fermer"]
+		var i := await Choice.ask("Entrepôt", body, options)
+		match i:
+			0:
+				var moved := {}
+				for item in Inventory.get_items():
+					if item.category == &"resource":
+						var n := Inventory.get_count(item.id)
+						Inventory.remove_item(item, n)
+						Town.store(item.id, n)
+						moved[item.id] = n
+				Narration.say("Déposé : %s." % cost_text(moved) if not moved.is_empty() else "Rien à déposer.", 2.0)
+			1:
+				if ids.is_empty():
+					continue
+				var opts: Array[String] = []
+				for k in ids:
+					var item := Inventory.item_by_id(StringName(k))
+					opts.append("%s ×%d" % [item.display_name if item else k, int(Town.warehouse[k])])
+				opts.append("Retour")
+				var j := await Choice.ask("Retirer", "Quel objet ?", opts)
+				if j < 0 or j >= ids.size():
+					continue
+				var id := StringName(ids[j])
+				var have := int(Town.warehouse[ids[j]])
+				var amounts: Array[int] = []
+				for n in [1, 5, 10]:
+					if n < have:
+						amounts.append(n)
+				amounts.append(have)
+				var aopts: Array[String] = []
+				for n in amounts:
+					aopts.append("%s%d" % ["Tout : " if n == have else "", n])
+				aopts.append("Retour")
+				var k := await Choice.ask("Retirer", "Combien ?", aopts)
+				if k >= 0 and k < amounts.size():
+					Town.consume_from_warehouse(id, amounts[k])
+					Inventory.add_item(Inventory.item_by_id(id), amounts[k])
+			_:
+				return
 		refresh()
 
 

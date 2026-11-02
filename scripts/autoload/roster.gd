@@ -374,10 +374,18 @@ func _produce() -> void:
 				stock["gem"] = mini(data.stock_cap, int(stock.get("gem", 0)) + 1)
 				total[&"gem"] = int(total.get(&"gem", 0)) + 1
 		r["stock"] = stock
+	# Avec un entrepôt, tous les stocks des bâtiments y sont transportés chaque matin.
+	if Town.has_warehouse():
+		for r in Town.sites:
+			var st: Dictionary = r.get("stock", {})
+			for k in st:
+				if int(st[k]) > 0:
+					Town.warehouse[k] = int(Town.warehouse.get(k, 0)) + int(st[k])
+			r["stock"] = {}
 	if total.is_empty():
 		return
 	Town.changed.emit()
-	Narration.say("Production de la nuit : %s." % Building.cost_text(total), 3.5)
+	Narration.say("Production de la nuit : %s%s." % [Building.cost_text(total), " (à l'entrepôt)" if Town.has_warehouse() else ""], 3.5)
 
 
 ## Fait apparaître l'artisan près de son lieu de travail (rectangle autour du bâtiment), ou {}.

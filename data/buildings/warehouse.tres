@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildingData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/building_data.gd" id="1_b"]
+[ext_resource type="Texture2D" path="res://assets/sprites/buildings/work/entrepot.png" id="2_t"]
+
+[resource]
+script = ExtResource("1_b")
+id = &"warehouse"
+display_name = "Entrepôt"
+description = "Toute la production de la ville y arrive. L'établi, la forge et les chantiers y puisent directement."
+tier_required = 1
+size = Vector2i(3, 2)
+cost = Dictionary[StringName, int]({&"wood": 25, &"stone": 15})
+build_days = 2
+texture = ExtResource("2_t")
+housing = 0
+can_sleep = false

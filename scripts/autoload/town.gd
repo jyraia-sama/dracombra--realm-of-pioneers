@@ -46,6 +46,7 @@ func _ready() -> void:
 func reset() -> void:
 	tier = 0
 	sites.clear()
+	warehouse = {}
 	guild_upgrade = {}
 	changed.emit()
 
@@ -124,16 +125,61 @@ func missing(cost: Dictionary, delivered: Dictionary) -> Dictionary:
 	return out
 
 
-## Dépose ce que le héros possède. Renvoie le nombre d'objets déposés.
+# ------------------------------------------------------------------ l'entrepôt
+## Stock commun de la ville : { identifiant : quantité }. Rempli par la production une fois
+## l'entrepôt construit ; l'établi, la forge et les chantiers y puisent (après le sac).
+var warehouse: Dictionary = {}
+
+
+func has_warehouse() -> bool:
+	return count_built(&"warehouse") > 0
+
+
+func stored(id: StringName) -> int:
+	return int(warehouse.get(String(id), 0)) if has_warehouse() else 0
+
+
+func store(id: StringName, n: int) -> void:
+	warehouse[String(id)] = int(warehouse.get(String(id), 0)) + n
+	changed.emit()
+
+
+## Quantité disponible : sac du héros + entrepôt.
+func amount_of(id: StringName) -> int:
+	return Inventory.get_count(id) + stored(id)
+
+
+## Prend `n` objets : d'abord dans le sac, puis dans l'entrepôt. false (rien pris) s'il en manque.
+func consume(id: StringName, n: int) -> bool:
+	if amount_of(id) < n:
+		return false
+	var item := Inventory.item_by_id(id)
+	var from_bag := mini(Inventory.get_count(id), n)
+	if from_bag > 0:
+		Inventory.remove_item(item, from_bag)
+	var rest := n - from_bag
+	if rest > 0:
+		warehouse[String(id)] = int(warehouse.get(String(id), 0)) - rest
+		if int(warehouse[String(id)]) <= 0:
+			warehouse.erase(String(id))
+		changed.emit()
+	return true
+
+
+func consume_from_warehouse(id: StringName, n: int) -> void:
+	warehouse[String(id)] = int(warehouse.get(String(id), 0)) - n
+	if int(warehouse[String(id)]) <= 0:
+		warehouse.erase(String(id))
+	changed.emit()
+
+
+## Dépose ce que le héros possède (et ce qu'il y a à l'entrepôt). Renvoie le nombre d'objets déposés.
 func deliver(cost: Dictionary, delivered: Dictionary) -> int:
 	var moved := 0
 	var need := missing(cost, delivered)
 	for id in need:
-		var item := Inventory.item_by_id(id)
-		if item == null:
-			continue
-		var n := mini(Inventory.get_count(id), int(need[id]))
-		if n > 0 and Inventory.remove_item(item, n):
+		var n := mini(amount_of(id), int(need[id]))
+		if n > 0 and consume(id, n):
 			delivered[String(id)] = int(delivered.get(String(id), 0)) + n
 			moved += n
 	if moved > 0:
@@ -216,7 +262,8 @@ func advance_day() -> Array[String]:
 # ------------------------------------------------------------------ sauvegarde
 
 func serialize() -> Dictionary:
-	return {"tier": tier, "sites": sites.duplicate(true), "guild_upgrade": guild_upgrade.duplicate(true)}
+	return {"tier": tier, "sites": sites.duplicate(true), "guild_upgrade": guild_upgrade.duplicate(true),
+		"warehouse": warehouse.duplicate()}
 
 
 func deserialize(data: Dictionary) -> void:
@@ -234,4 +281,5 @@ func deserialize(data: Dictionary) -> void:
 			record["uid"] = int(record["uid"])
 		sites.append(record)
 	guild_upgrade = data.get("guild_upgrade", {})
+	warehouse = data.get("warehouse", {}).duplicate()
 	changed.emit()

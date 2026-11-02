@@ -79,7 +79,7 @@ func recipes_for(station: StringName) -> Array[Dictionary]:
 
 func can_craft(recipe: Dictionary) -> bool:
 	for id in recipe["in"]:
-		if Inventory.get_count(id) < int(recipe["in"][id]):
+		if Town.amount_of(id) < int(recipe["in"][id]):
 			return false
 	return true
 
@@ -88,7 +88,7 @@ func craft(recipe: Dictionary) -> bool:
 	if not can_craft(recipe):
 		return false
 	for id in recipe["in"]:
-		Inventory.remove_item(Inventory.item_by_id(id), int(recipe["in"][id]))
+		Town.consume(id, int(recipe["in"][id]))
 	var item := Inventory.item_by_id(recipe["out"])
 	Inventory.add_item(item, int(recipe["n"]))
 	# L'équipement d'une classe la débloque.

@@ -28,6 +28,7 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `res://assets/sprites/buildings/work/cabane_chasseur.png` | PROVISOIRE | 2026-11-02 | bâtiment 2x2 commerce (généré) |
 | `res://assets/sprites/buildings/work/jardin_herbes.png` | PROVISOIRE | 2026-11-02 | bâtiment 2x1 logement (généré) |
 | `res://assets/sprites/buildings/work/*.png` | PROVISOIRE | 2026-11-02 | bâtiments de travail : hutte du bûcheron, carrière, cabane du chasseur, jardin d'herbes (générés) |
+| `res://assets/sprites/buildings/work/entrepot.png` | PROVISOIRE | 2026-11-02 | bâtiment 3x2 commerce (généré) |
 <!-- fin provisoires -->
 
 ## Existants au 2026-11-01 (version 0.4.1)
