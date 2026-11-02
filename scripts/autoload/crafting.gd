@@ -46,6 +46,28 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"silk_robe", "n": 1, "station": &"workbench", "in": {&"silk_cloth": 4, &"mana_crystal": 1}},
 	{"out": &"silk_gloves", "n": 1, "station": &"workbench", "in": {&"silk_cloth": 2}},
 	{"out": &"silk_shoes", "n": 1, "station": &"workbench", "in": {&"silk_cloth": 2, &"leather": 1}},
+	# ---- Palier 2 (cryptes des pionniers), voir DONJON.md ----
+	# Forge : argent et équipement lourd.
+	{"out": &"silver_ingot", "n": 1, "station": &"forge", "in": {&"silver_ore": 2, &"wood": 1}},
+	{"out": &"silver_sword", "n": 1, "station": &"forge", "in": {&"silver_ingot": 3, &"iron_ingot": 1, &"wood": 1}},
+	{"out": &"silver_shield", "n": 1, "station": &"forge", "in": {&"silver_ingot": 3, &"wood": 2}},
+	{"out": &"silver_helmet", "n": 1, "station": &"forge", "in": {&"silver_ingot": 2, &"iron_ingot": 1}},
+	{"out": &"silver_armor", "n": 1, "station": &"forge", "in": {&"silver_ingot": 5, &"crypt_leather": 2}},
+	{"out": &"silver_gauntlets", "n": 1, "station": &"forge", "in": {&"silver_ingot": 2, &"crypt_leather": 1}},
+	{"out": &"silver_boots", "n": 1, "station": &"forge", "in": {&"silver_ingot": 2, &"crypt_leather": 1}},
+	# Établi : os et cuir des cryptes (archer), bandelettes et essence spectrale (mage, clerc).
+	{"out": &"bone_bow", "n": 1, "station": &"workbench", "in": {&"ancient_bone": 4, &"silk": 3, &"crypt_leather": 1}},
+	{"out": &"bone_quiver", "n": 1, "station": &"workbench", "in": {&"crypt_leather": 2, &"ancient_bone": 2}},
+	{"out": &"bone_hood", "n": 1, "station": &"workbench", "in": {&"ancient_bone": 2, &"crypt_leather": 2}},
+	{"out": &"crypt_leather_armor", "n": 1, "station": &"workbench", "in": {&"crypt_leather": 5, &"ancient_bone": 2}},
+	{"out": &"bone_bracers", "n": 1, "station": &"workbench", "in": {&"ancient_bone": 3, &"crypt_leather": 1}},
+	{"out": &"crypt_boots", "n": 1, "station": &"workbench", "in": {&"crypt_leather": 3, &"ancient_bone": 1}},
+	{"out": &"wraps_hood", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 3, &"spectral_essence": 1}},
+	{"out": &"spectral_robe", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 5, &"spectral_essence": 2, &"silk_cloth": 1}},
+	{"out": &"wraps_gloves", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 2, &"spectral_essence": 1}},
+	{"out": &"wraps_shoes", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 2, &"crypt_leather": 1}},
+	{"out": &"spectral_staff", "n": 1, "station": &"workbench", "in": {&"wood": 2, &"spectral_essence": 3, &"mana_crystal": 2}},
+	{"out": &"spectral_tome", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 3, &"spectral_essence": 2, &"silver_ingot": 1}},
 ]
 const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à peaux", &"camp": "Feu de camp", &"forge": "Forge"}
 
@@ -65,6 +87,16 @@ const CATEGORIES := {
 	&"crystal_staff": "Palier 1 · tissu (mage, clerc)", &"sacred_book": "Palier 1 · tissu (mage, clerc)",
 	&"silk_hood": "Palier 1 · tissu (mage, clerc)", &"silk_robe": "Palier 1 · tissu (mage, clerc)",
 	&"silk_gloves": "Palier 1 · tissu (mage, clerc)", &"silk_shoes": "Palier 1 · tissu (mage, clerc)",
+	&"silver_sword": "Palier 2 · lourd (guerrier)", &"silver_shield": "Palier 2 · lourd (guerrier)",
+	&"silver_helmet": "Palier 2 · lourd (guerrier)", &"silver_armor": "Palier 2 · lourd (guerrier)",
+	&"silver_gauntlets": "Palier 2 · lourd (guerrier)", &"silver_boots": "Palier 2 · lourd (guerrier)",
+	&"bone_bow": "Palier 2 · cuir (archer)", &"bone_quiver": "Palier 2 · cuir (archer)",
+	&"bone_hood": "Palier 2 · cuir (archer)", &"crypt_leather_armor": "Palier 2 · cuir (archer)",
+	&"bone_bracers": "Palier 2 · cuir (archer)", &"crypt_boots": "Palier 2 · cuir (archer)",
+	&"spectral_staff": "Palier 2 · tissu (mage, clerc)", &"spectral_tome": "Palier 2 · tissu (mage, clerc)",
+	&"wraps_hood": "Palier 2 · tissu (mage, clerc)", &"spectral_robe": "Palier 2 · tissu (mage, clerc)",
+	&"wraps_gloves": "Palier 2 · tissu (mage, clerc)", &"wraps_shoes": "Palier 2 · tissu (mage, clerc)",
+	&"potion_mana": "Potions", &"potion_stamina": "Potions",
 }
 
 

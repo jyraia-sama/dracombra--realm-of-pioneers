@@ -4,7 +4,8 @@ extends Node
 ## niveaux ou des ressources, aller directement à un étage du donjon, passer un jour.
 
 const RESOURCES := [&"wood", &"stone", &"flax", &"herb", &"hide", &"leather", &"rope", &"cloth", &"gem", &"slime_gel", &"obsidian_shard",
-	&"iron_ore", &"iron_ingot", &"chitin", &"silk", &"silk_cloth", &"mana_crystal", &"gold"]
+	&"iron_ore", &"iron_ingot", &"chitin", &"silk", &"silk_cloth", &"mana_crystal", &"gold",
+	&"silver_ore", &"silver_ingot", &"ancient_bone", &"crypt_leather", &"spectral_essence", &"linen_wraps"]
 
 var invincible := false
 
@@ -89,8 +90,12 @@ func _pick_class() -> void:
 
 
 func _pick_floor() -> void:
-	var i := await Choice.ask("Donjon", "Aller directement à l'étage :", ["Étage 1", "Étage 2", "Étage 3", "Fermer"])
-	if i < 0 or i > 2:
+	var names: Array[String] = []
+	for f in range(1, 8):
+		names.append("Étage %d%s" % [f, " (cryptes)" if f >= 4 else ""])
+	names.append("Fermer")
+	var i := await Choice.ask("Donjon", "Aller directement à l'étage :", names)
+	if i < 0 or i > 6:
 		return
 	Game.dungeon_floor = i + 1
 	Transition.change_scene("res://scenes/levels/dungeon/dungeon.tscn")

@@ -168,3 +168,10 @@ Tous marqués FINAL par défaut : passer une ligne en À DESSINER si l'asset doi
 | `res://assets/tilesets/cave_tiles.png` | FINAL | 2026-11-01 | |
 | `res://assets/tilesets/dracombra_tiles.png` | FINAL | 2026-11-01 | |
 | `res://assets/tilesets/sylve_tiles.png` | FINAL | 2026-11-01 | |
+| `res://assets/sprites/items/items_p2.png` | PROVISOIRE | 2026-11-02 | icônes du palier 2, cryptes (tools/placeholder/palier2.py) |
+| `res://assets/sprites/props/crypt/*.png` | PROVISOIRE | 2026-11-02 | décors des cryptes : sarcophages, bougies, candélabre, toile, tas d'os, pilier brisé, urne, mur fissuré (tools/placeholder/cryptes.py) |
+| `res://assets/sprites/enemies/crypt/skeleton.png` | PROVISOIRE | 2026-11-02 | squelette guerrier, planche 4 × 4 (tools/placeholder/cryptes.py) |
+| `res://assets/sprites/enemies/crypt/skeleton_archer.png` | PROVISOIRE | 2026-11-02 | squelette archer, planche 4 × 4 (tools/placeholder/cryptes.py) |
+| `res://assets/sprites/enemies/crypt/wisp.png` | PROVISOIRE | 2026-11-02 | feu follet, planche 4 × 2 (tools/placeholder/cryptes.py) |
+| `res://assets/sprites/enemies/crypt/crypt_rat.png` | PROVISOIRE | 2026-11-02 | rat des cryptes, planche 4 × 2 (tools/placeholder/cryptes.py) |
+| `res://assets/sprites/enemies/crypt/crypt_guardian.png` | PROVISOIRE | 2026-11-02 | boss Gardien des cryptes, planche 4 × 4 en cases de 128 (tools/placeholder/cryptes.py) |

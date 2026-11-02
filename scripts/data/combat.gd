@@ -33,6 +33,12 @@ const MONSTERS := {
 	&"RockGoblin": {"hp": 35, "xp": 6},
 	&"Boar": {"hp": 45, "xp": 6},
 	&"QueenSpider": {"hp": 600, "xp": 150, "poise": 25},
+	# Zone 2 : les cryptes des pionniers.
+	&"Skeleton": {"hp": 45, "xp": 7},
+	&"SkeletonArcher": {"hp": 32, "xp": 7},
+	&"Wisp": {"hp": 26, "xp": 8},
+	&"CryptRat": {"hp": 18, "xp": 3},
+	&"CryptGuardian": {"hp": 800, "xp": 300, "poise": 40},
 }
 
 

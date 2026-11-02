@@ -337,6 +337,8 @@ func _try_dodge() -> bool:
 			winding = en.state == ObsidianSpider.State.WINDUP
 		elif en is RockGoblin:
 			winding = en.state == RockGoblin.State.CHARGE_WINDUP
+		elif en is CryptMonster:
+			winding = en.state == CryptMonster.State.WINDUP and not (en is SkeletonArcher)
 		if not winding:
 			continue
 		var to := global_position - en.global_position

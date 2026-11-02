@@ -19,7 +19,7 @@ const DOOR := 3
 ## Taille de la grille des salles.
 const GRID := Vector2i(6, 6)
 
-enum Kind { START, COMBAT, CALM, STAIRS, REST, TREASURE }
+enum Kind { START, COMBAT, CALM, STAIRS, REST, TREASURE, SECRET }
 
 const DIRS: Array[Vector2i] = [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vector2i.UP]
 
@@ -27,6 +27,13 @@ const DIRS: Array[Vector2i] = [Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT, Vec
 var rooms: Dictionary = {}
 ## Cases de sol (Vector2i -> true), en coordonnées de tuiles.
 var floor_cells: Dictionary = {}
+## Salles construites (cryptes) : sols rectangulaires, sans bords grignotés.
+var built := false
+## Ajouter une salle secrète (cachée derrière un mur fissuré) ?
+var secret_room := false
+## La salle secrète et la salle d'où l'on y entre (Vector2i(-1, -1) s'il n'y en a pas).
+var secret := Vector2i(-1, -1)
+var secret_from := Vector2i(-1, -1)
 ## Cases de passage entre salles (portes) : utile pour ne rien poser dessus.
 var lane_cells: Dictionary = {}
 var start: Vector2i
@@ -111,12 +118,37 @@ func _generate_once(rng: RandomNumberGenerator, room_count: int, loops: float) -
 	for pos in rooms:
 		if rooms[pos]["kind"] == Kind.COMBAT and _rng.randf() < 0.2:
 			rooms[pos]["kind"] = Kind.CALM
+	secret = Vector2i(-1, -1)
+	secret_from = Vector2i(-1, -1)
+	if secret_room:
+		_add_secret()
 	for pos in rooms:
 		_carve_room(pos)
 	for pos in rooms:
 		for dir in rooms[pos]["doors"]:
 			if dir == Vector2i.RIGHT or dir == Vector2i.DOWN:
 				_carve_lane(pos, dir)
+
+
+## Une petite salle cachée, collée à une salle ordinaire (pas le départ ni l'escalier).
+func _add_secret() -> void:
+	var options: Array = []
+	for pos in rooms:
+		var k: int = rooms[pos]["kind"]
+		if k == Kind.START or k == Kind.STAIRS:
+			continue
+		for dir in DIRS:
+			var to: Vector2i = pos + dir
+			if _inside(to) and not rooms.has(to) and _neighbours(to) == 1:
+				options.append([pos, dir])
+	if options.is_empty():
+		return
+	var pick: Array = options[_rng.randi() % options.size()]
+	secret_from = pick[0]
+	secret = secret_from + pick[1]
+	rooms[secret] = {"kind": Kind.SECRET, "dist": rooms[secret_from]["dist"] + 1, "doors": [],
+		"shrink": Vector2i(_rng.randi_range(5, 8), _rng.randi_range(3, 5))}
+	_link(secret_from, secret)
 
 
 func _inside(p: Vector2i) -> bool:
@@ -205,6 +237,12 @@ func _carve_room(pos: Vector2i) -> void:
 func _wavy(length: int) -> PackedInt32Array:
 	var out := PackedInt32Array()
 	out.resize(length)
+	if built:
+		# Salle construite : murs droits, seulement les coins cassés.
+		out.fill(0)
+		out[0] = 1
+		out[length - 1] = 1
+		return out
 	var depth := _rng.randi_range(0, BITE)
 	for i in length:
 		# Change de profondeur de temps en temps, d'une case à la fois.

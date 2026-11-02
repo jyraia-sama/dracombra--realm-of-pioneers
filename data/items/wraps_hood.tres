@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/items_p2.png" id="2_icons"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icons")
+region = Rect2(576, 0, 32, 32)
+
+[resource]
+script = ExtResource("1_item")
+id = &"wraps_hood"
+display_name = "Capuche de bandelettes"
+icon = SubResource("AtlasTexture_icon")
+description = "Armure de tissu du palier 2."
+category = &"equipment"
+slot = &"head"
+bonus = {&"int": 2, &"wis": 2, &"mana": 10}
+classes = Array[StringName]([&"mage", &"cleric"])

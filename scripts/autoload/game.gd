@@ -35,6 +35,8 @@ var dungeon_run: Dictionary = {}
 var pending_message: String = ""
 ## Nombre de fois où la reine araignée a été vaincue (le donjon durcit un peu à chaque fois).
 var abyss_clears: int = 0
+## Victoires sur le boss de chaque zone des Abysses au-delà de la première : {zone: nombre}.
+var zone_clears: Dictionary = {}
 
 var _sleeping := false
 ## Le joueur utilise-t-il la manette (dernière touche pressée) ? Les aides affichent ses boutons.
@@ -163,6 +165,7 @@ func reset() -> void:
 	time_minutes = 480.0
 	harvested.clear()
 	abyss_clears = 0
+	zone_clears = {}
 	next_spawn = &""
 	pending_position = null
 	Inventory.clear()
@@ -223,7 +226,7 @@ func serialize() -> Dictionary:
 	var f := {}
 	for k in flags:
 		f[String(k)] = flags[k]
-	return {"flags": f, "day": day, "time": time_minutes, "harvested": harvested.duplicate(), "abyss_clears": abyss_clears}
+	return {"flags": f, "day": day, "time": time_minutes, "harvested": harvested.duplicate(), "abyss_clears": abyss_clears, "zone_clears": zone_clears.duplicate()}
 
 
 func deserialize(data: Dictionary) -> void:
@@ -234,6 +237,10 @@ func deserialize(data: Dictionary) -> void:
 	time_minutes = float(data.get("time", 480.0))
 	harvested = data.get("harvested", {}).duplicate()
 	abyss_clears = int(data.get("abyss_clears", 0))
+	zone_clears = {}
+	var zc: Dictionary = data.get("zone_clears", {})
+	for k in zc:
+		zone_clears[int(k)] = int(zc[k])
 
 
 ## F11 (ou Alt+Entrée) : plein écran. En 1080p plein écran, chaque pixel du dessin HD

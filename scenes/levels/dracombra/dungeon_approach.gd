@@ -74,9 +74,17 @@ func _enter() -> void:
 	if not Game.has_flag(&"prologue_done"):
 		return
 	var body := "Un escalier s'enfonce sous les ruines. Un air froid en remonte, chargé d'éclats d'obsidienne."
+	var options: Array[String] = ["Descendre (étage 1)"]
+	var floors: Array[int] = [1]
+	# Raccourcis : battre le boss d'une zone ouvre un passage direct vers la suivante.
 	if Game.has_flag(&"abyss_zone1_queen"):
-		body += "\n\nRaccourci débloqué (reine vaincue %d fois) : il mènera directement à la zone suivante dès qu'elle sera creusée." % Game.abyss_clears
-	var i := await Choice.ask("Les Abysses de Dracombra", body, ["Descendre (étage 1)", "Plus tard"])
-	if i == 0:
-		Game.dungeon_floor = 1
+		body += "\n\nRaccourci ouvert par la reine araignée : les cryptes des pionniers (étage 4)."
+		options.append("Raccourci : les cryptes (étage 4)")
+		floors.append(4)
+	if Game.has_flag(&"abyss_zone2_guardian"):
+		body += "\nLe Gardien des cryptes est tombé : la zone suivante n'est pas encore creusée."
+	options.append("Plus tard")
+	var i := await Choice.ask("Les Abysses de Dracombra", body, options)
+	if i >= 0 and i < floors.size():
+		Game.dungeon_floor = floors[i]
 		Transition.change_scene(DUNGEON)

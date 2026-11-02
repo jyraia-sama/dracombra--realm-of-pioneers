@@ -23,7 +23,7 @@ const DUST_SCENE := preload("res://scenes/props/dust_puff.tscn")
 
 ## Outil qui rend la récolte deux fois plus rapide (et plus généreuse), selon la ressource.
 const TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe", &"iron_ore": &"pickaxe",
-	&"mana_crystal": &"pickaxe", &"obsidian_shard": &"pickaxe"}
+	&"mana_crystal": &"pickaxe", &"obsidian_shard": &"pickaxe", &"silver_ore": &"pickaxe"}
 
 var health: HealthComponent
 var _sprite: CanvasItem

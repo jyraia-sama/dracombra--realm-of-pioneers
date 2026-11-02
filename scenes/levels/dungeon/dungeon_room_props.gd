@@ -155,7 +155,8 @@ static func _sell_amount(id: StringName) -> void:
 # ------------------------------------------------------------------ trésor
 
 ## Coffre : de l'or, des ressources, parfois une potion. floor : étage (plus de butin en bas).
-static func chest(floor_number: int) -> Node2D:
+## tier : palier de l'équipement trouvé (zone). rich : coffre de salle secrète (plus de butin).
+static func chest(floor_number: int, tier: int = 1, rich: bool = false) -> Node2D:
 	var c := Node2D.new()
 	c.name = "Coffre"
 	var sprite := Sprite2D.new()
@@ -182,14 +183,20 @@ static func chest(floor_number: int) -> Node2D:
 		sprite.modulate = Color(0.6, 0.55, 0.5)
 		Fx.squash(sprite as Node2D, Vector2(1.2, 0.85), 0.2)
 		var loot := [[&"gold", 10 + 6 * floor_number, 20 + 10 * floor_number],
-			[&"gem", 1, 2], [&"obsidian_shard", 2, 4]]
+			[&"gem", 1, 2], [&"obsidian_shard", 2, 4]] if tier <= 1 else [[&"gold", 10 + 6 * floor_number, 20 + 10 * floor_number],
+			[&"gem", 1, 2], [&"ancient_bone", 2, 4], [&"linen_wraps", 1, 3], [&"silver_ore", 1, 3]]
+		if rich:
+			loot.append([&"gold", 30, 60])
+			loot.append([&"spectral_essence", 1, 3])
 		if randf() < 0.5:
 			loot.append([&"potion_heal", 1, 1])
 		if randf() < 0.5:
 			loot.append([[&"potion_mana", 1, 1], [&"potion_stamina", 1, 1]][randi() % 2])
 		# Une chance sur trois de trouver une pièce d'équipement du palier 1.
-		if randf() < 0.33:
-			drop(c, Loot.piece(1, [45, 35, 20]), 1, c.global_position + Vector2(0, 6))
+		if rich:
+			drop(c, Loot.piece(tier, [0, 50, 40, 10]), 1, c.global_position + Vector2(0, 6))
+		elif randf() < 0.33:
+			drop(c, Loot.piece(tier, [45, 35, 20]), 1, c.global_position + Vector2(0, 6))
 		for entry in loot:
 			var item := Inventory.item_by_id(entry[0])
 			if item == null:
@@ -221,7 +228,9 @@ static func drop(from: Node, item: ItemData, count: int, at: Vector2) -> void:
 ## mémoire d'un jour à l'autre (persistent = false).
 ## Filon tiré au hasard, en grand format et signalé par un OreMarker (étincelles + icône).
 ## Pas de collision, pas de mémoire d'un passage à l'autre (persistent = false).
-static func ore(rng: RandomNumberGenerator) -> Node2D:
+static func ore(rng: RandomNumberGenerator, tier: int = 1) -> Node2D:
+	if tier >= 2:
+		return _crypt_ore(rng)
 	var roll := rng.randf()
 	var node: Node2D
 	var color := Color.WHITE
@@ -255,6 +264,55 @@ static func ore(rng: RandomNumberGenerator) -> Node2D:
 	if body:
 		node.remove_child(body)
 		body.free()
+	var item_id := &""
+	for c in node.get_children():
+		if c is Harvestable:
+			(c as Harvestable).persistent = false
+			(c as Harvestable).regrow_days = 0
+			item_id = (c as Harvestable).item_id
+	var marker := OreMarker.new()
+	marker.name = "OreMarker"
+	marker.color = color
+	marker.height = height / node.scale.y
+	var item := Inventory.item_by_id(item_id)
+	marker.icon = item.icon if item else null
+	node.add_child(marker)
+	return node
+
+
+## Ressources des cryptes (palier 2) : filons d'argent, tas d'os, sarcophages (bandelettes),
+## urnes (or) et quelques cristaux de mana.
+static func _crypt_ore(rng: RandomNumberGenerator) -> Node2D:
+	var roll := rng.randf()
+	var node: Node2D
+	var color := Color.WHITE
+	var height := 22.0
+	if roll < 0.32:
+		node = ROCK_BIG.instantiate()
+		node.scale = Vector2(1.5, 1.5)
+		(node.get_node("Sprite2D") as CanvasItem).modulate = Color(0.82, 0.88, 1.1)
+		_set_harvest(node, &"silver_ore", 1, 2, 4)
+		color = Color(0.85, 0.9, 1.0)
+	elif roll < 0.52:
+		node = load("res://scenes/props/crypt/bone_pile.tscn").instantiate()
+		_add_harvest(node, &"ancient_bone", 1, 3, 2)
+		color = Color(0.95, 0.92, 0.8)
+		height = 14.0
+	elif roll < 0.72:
+		node = load("res://scenes/props/crypt/sarcophagus.tscn").instantiate()
+		_add_harvest(node, &"linen_wraps", 1, 3, 3)
+		color = Color(0.9, 0.86, 0.72)
+		height = 24.0
+	elif roll < 0.86:
+		node = load("res://scenes/props/crypt/urn.tscn").instantiate()
+		_add_harvest(node, &"gold", 2, 6, 1)
+		color = Color(1.0, 0.85, 0.4)
+		height = 20.0
+	else:
+		node = CRYSTAL_BLUE.instantiate()
+		_add_harvest(node, &"mana_crystal", 1, 2, 3)
+		color = Color(0.5, 0.85, 1.0)
+		height = 28.0
 	var item_id := &""
 	for c in node.get_children():
 		if c is Harvestable:

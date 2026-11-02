@@ -1,6 +1,7 @@
 extends Level
 ## Un étage des Abysses de Dracombra, tiré au sort à chaque entrée (voir DONJON.md).
-## Zone 1 : la caverne d'obsidienne, étages 1 à 3.
+## Zone 1 : la caverne d'obsidienne, étages 1 à 3. Zone 2 : les cryptes des pionniers,
+## étages 4 à 7 (salles construites, squelettes, feux follets, salle secrète).
 ##
 ## Déroulé : salle de départ (escalier vers la ville) → salles de combat (les passages se
 ## ferment, il faut vaincre tous les monstres) et salles calmes → salle de l'escalier,
@@ -30,9 +31,27 @@ const DECOR := [
 	["res://scenes/props/cave/roots_a.tscn", 1, true],
 ]
 
-## Zones du donjon : nom et nombre d'étages (les zones s'allongent en descendant).
+## Décors des cryptes : [scène, poids, contre un mur ?].
+const DECOR_CRYPT := [
+	["res://scenes/props/crypt/sarcophagus.tscn", 2, true],
+	["res://scenes/props/crypt/sarcophagus_open.tscn", 1, true],
+	["res://scenes/props/crypt/candles.tscn", 3, false],
+	["res://scenes/props/crypt/candelabra.tscn", 2, true],
+	["res://scenes/props/crypt/cobweb.tscn", 2, true],
+	["res://scenes/props/crypt/bone_pile.tscn", 2, false],
+	["res://scenes/props/crypt/pillar_broken.tscn", 2, true],
+	["res://scenes/props/crypt/urn.tscn", 2, true],
+	["res://scenes/props/cave/skull_bones.tscn", 1, false],
+	["res://scenes/props/cave/rock_fragments.tscn", 1, false],
+]
+
+## Zones du donjon (les zones s'allongent en descendant). tier : palier de l'équipement ;
+## look : sol et murs (GroundPainter) ; flag : posé quand le boss de la zone est vaincu.
 const ZONES := [
-	{"name": "Caverne d'obsidienne", "floors": 3},
+	{"name": "Caverne d'obsidienne", "floors": 3, "look": &"cave", "tier": 1, "built": false,
+		"darkness": Color(0.3, 0.27, 0.4), "boss": "La reine araignée d'obsidienne", "flag": &"abyss_zone1_queen"},
+	{"name": "Cryptes des pionniers", "floors": 4, "look": &"crypt", "tier": 2, "built": true,
+		"darkness": Color(0.24, 0.25, 0.34), "boss": "Le Gardien des cryptes", "flag": &"abyss_zone2_guardian"},
 ]
 
 var gen := DungeonGen.new()
@@ -65,20 +84,27 @@ func _ready() -> void:
 	if Game.dungeon_run.is_empty():
 		Game.dungeon_run = {"start": Inventory.serialize()}
 	rng.randomize()
+	gen.built = bool(zone()["built"])
+	gen.secret_room = zone_index() >= 1
 	gen.generate(rng, 5 + floor_number + rng.randi_range(0, 1))
+	$Darkness.color = zone()["darkness"]
 	_paint_tiles()
 	_place_start_and_stairs()
 	_decorate()
 	_furnish()
 	super()
-	GroundPainter.apply(self, ground, &"cave", walls)
+	GroundPainter.apply(self, ground, zone()["look"], walls)
+	_place_secret_wall()
 	var player := get_player()
 	_add_hero_light(player)
 	player.health.died.connect(_on_hero_died)
 	if _camera:
 		_camera.limit_smoothed = true
 	_update_room(true)
-	Narration.say("%s — étage %d" % [zone_name(), floor_number], 2.5)
+	if floor_number == first_floor() and zone_index() > 0:
+		Narration.title_card(zone_name(), "Les Abysses de Dracombra — étage %d" % floor_number, 2.5)
+	else:
+		Narration.say("%s — étage %d" % [zone_name(), floor_number], 2.5)
 
 
 ## Pas de sauvegarde dans le donjon : il change à chaque entrée (voir Save.save_game).
@@ -95,12 +121,48 @@ func map_hidden_rects() -> Array:
 	return out
 
 
+## Indice de la zone de l'étage (0 = caverne, 1 = cryptes...).
+static func zone_of(floor_n: int) -> int:
+	var last := 0
+	for i in ZONES.size():
+		last += int(ZONES[i]["floors"])
+		if floor_n <= last:
+			return i
+	return ZONES.size() - 1
+
+
+## Premier étage d'une zone.
+static func zone_first_floor(z: int) -> int:
+	var f := 1
+	for i in z:
+		f += int(ZONES[i]["floors"])
+	return f
+
+
+func zone_index() -> int:
+	return zone_of(floor_number)
+
+
+func zone() -> Dictionary:
+	return ZONES[zone_index()]
+
+
 func zone_name() -> String:
-	return ZONES[0]["name"]
+	return zone()["name"]
 
 
+func first_floor() -> int:
+	return zone_first_floor(zone_index())
+
+
+## Dernier étage de la zone actuelle (celui du boss).
 func last_floor() -> int:
-	return ZONES[0]["floors"]
+	return first_floor() + int(zone()["floors"]) - 1
+
+
+## Dernier étage creusé des Abysses.
+static func deepest_floor() -> int:
+	return zone_first_floor(ZONES.size() - 1) + int(ZONES[ZONES.size() - 1]["floors"]) - 1
 
 
 # ------------------------------------------------------------------ construction
@@ -144,8 +206,9 @@ func _place_start_and_stairs() -> void:
 
 
 func _decorate() -> void:
+	var decor: Array = DECOR_CRYPT if zone()["look"] == &"crypt" else DECOR
 	var total := 0
-	for d in DECOR:
+	for d in decor:
 		total += int(d[1])
 	var taken := _taken
 	for pos in gen.rooms:
@@ -159,8 +222,8 @@ func _decorate() -> void:
 			if not _free_for_decor(cell, center, taken):
 				continue
 			var pick := rng.randi() % total
-			var spec: Array = DECOR[0]
-			for d in DECOR:
+			var spec: Array = decor[0]
+			for d in decor:
 				pick -= int(d[1])
 				if pick < 0:
 					spec = d
@@ -220,9 +283,13 @@ func _furnish() -> void:
 				m.position = c + Vector2(-28, -6)
 				props.add_child(m)
 			DungeonGen.Kind.TREASURE:
-				var chest := DungeonRoomProps.chest(floor_number)
+				var chest := DungeonRoomProps.chest(floor_number, int(zone()["tier"]))
 				chest.position = c
 				props.add_child(chest)
+			DungeonGen.Kind.SECRET:
+				var rich := DungeonRoomProps.chest(floor_number, int(zone()["tier"]), true)
+				rich.position = c
+				props.add_child(rich)
 		if kind == DungeonGen.Kind.START:
 			continue
 		var count := rng.randi_range(1, 3)
@@ -233,13 +300,34 @@ func _furnish() -> void:
 			var cell := Vector2i(rng.randi_range(r.position.x, r.end.x - 1), rng.randi_range(r.position.y, r.end.y - 1))
 			if not _free_for_decor(cell, DungeonGen.slot_center(pos), _taken) or _wall_distance(cell) > 2:
 				continue
-			var ore := DungeonRoomProps.ore(rng)
+			var ore := DungeonRoomProps.ore(rng, int(zone()["tier"]))
 			ore.position = _cell_pos(cell)
 			props.add_child(ore)
 			for dy in range(-1, 2):
 				for dx in range(-1, 2):
 					_taken[cell + Vector2i(dx, dy)] = true
 			count -= 1
+
+
+## Le mur fissuré qui cache la salle secrète (cryptes).
+func _place_secret_wall() -> void:
+	if gen.secret == Vector2i(-1, -1):
+		return
+	var dir := gen.secret - gen.secret_from
+	var wall := CrackedWall.new()
+	wall.name = "MurFissure"
+	wall.setup(DungeonGen.door_cells(gen.secret_from, dir), _cell_pos)
+	props.add_child(wall)
+	_secret_wall = wall
+	_nav_dirty = true
+	wall.broken.connect(func() -> void:
+		_secret_wall = null
+		_nav_dirty = true
+		Narration.say("Le mur s'écroule : une salle oubliée des pionniers !", 3.0)
+		BugReport.log_event("Salle secrète ouverte"))
+
+
+var _secret_wall: CrackedWall
 
 
 func _add_hero_light(player: Player) -> void:
@@ -385,6 +473,10 @@ func _build_nav() -> void:
 	for cell in walls.get_used_cells():
 		if _astar.is_in_boundsv(cell):
 			_astar.set_point_solid(cell, true)
+	if is_instance_valid(_secret_wall):
+		for cell in _secret_wall.cells:
+			if _astar.is_in_boundsv(cell):
+				_astar.set_point_solid(cell, true)
 	for room in _gates:
 		for gate in _gates[room]:
 			if is_instance_valid(gate) and gate.closed:
@@ -399,8 +491,11 @@ func is_boss_room(room: Vector2i) -> bool:
 
 
 func _start_boss(room: Vector2i) -> void:
-	await Narration.title_card("La reine araignée d'obsidienne", zone_name(), 2.0)
+	await Narration.title_card(zone()["boss"], zone_name(), 2.0)
 	if not is_inside_tree():
+		return
+	if zone_index() == 1:
+		_start_guardian(room)
 		return
 	var queen := QueenSpider.create(floor_number + Game.abyss_clears)
 	queen.position = _cell_pos(DungeonGen.slot_center(room) + Vector2i(-7, -3))
@@ -413,6 +508,40 @@ func _start_boss(room: Vector2i) -> void:
 	PixelBurst.spawn(self, queen.position, PixelBurst.SMOKE, Vector2.ZERO, 2.0)
 	Fx.shake(4.0, 0.5)
 	_spawning = false
+
+
+func _start_guardian(room: Vector2i) -> void:
+	var lvl := floor_number + int(Game.zone_clears.get(1, 0))
+	var boss := CryptGuardian.new()
+	Combat.set_level(boss, lvl)
+	boss.position = _cell_pos(DungeonGen.slot_center(room) + Vector2i(0, -4))
+	add_child(boss)
+	_alive.append(boss)
+	boss.spawned.connect(func(n: Node2D) -> void: _alive.append(n))
+	boss.health.died.connect(_on_guardian_died.bind(boss), CONNECT_ONE_SHOT)
+	_boss_bar = BossBar.create("Gardien des cryptes", boss.health)
+	add_child(_boss_bar)
+	PixelBurst.spawn(self, boss.position, PixelBurst.SMOKE, Vector2.ZERO, 2.5)
+	Fx.shake(4.0, 0.5)
+	Narration.say("Son bouclier arrête les coups de face : frappez-le de dos, ou quand il manque son coup.", 4.0)
+	_spawning = false
+
+
+## Butin du Gardien : une pièce du palier 2 garantie (souvent rare ou mieux) et des ressources.
+func _on_guardian_died(boss: Node2D) -> void:
+	var at := boss.global_position
+	DungeonRoomProps.drop(self, Loot.piece(2, [0, 60, 32, 8]), 1, at)
+	for entry in [[&"gold", 70, 110], [&"silver_ore", 3, 6], [&"ancient_bone", 3, 5], [&"spectral_essence", 2, 4], [&"linen_wraps", 2, 4]]:
+		DungeonRoomProps.drop(self, Inventory.item_by_id(entry[0]), rng.randi_range(entry[1], entry[2]), at)
+	Fx.shake(5.0, 0.6)
+	Fx.hit_stop(0.2)
+	var first := not Game.has_flag(&"abyss_zone2_guardian")
+	Game.set_flag(&"abyss_zone2_guardian")
+	Game.zone_clears[1] = int(Game.zone_clears.get(1, 0)) + 1
+	if first:
+		Narration.say("Le Gardien des cryptes tombe en poussière. Le passage vers les profondeurs est à vous.", 4.5)
+	if _boss_bar:
+		_boss_bar.queue_free()
 
 
 ## Butin de la reine : une pièce du palier 1 garantie (≈ 25 % rare) et beaucoup de ressources.
@@ -471,14 +600,18 @@ func _spawn_spots(room: Vector2i, count: int) -> Array[Vector2]:
 func _make_enemy() -> Node2D:
 	var roll := rng.randf()
 	var scene: PackedScene = SLIME
-	match floor_number:
-		1:
-			scene = SPIDER if roll < 0.45 else SLIME
-		2:
-			scene = GOBLIN if roll < 0.3 else (SPIDER if roll < 0.7 else SLIME)
-		_:
-			scene = GOBLIN if roll < 0.4 else (SPIDER if roll < 0.85 else SLIME)
-	var enemy: Node2D = scene.instantiate()
+	var enemy: Node2D
+	if zone_index() >= 1:
+		enemy = _make_crypt_enemy(roll)
+	else:
+		match floor_number:
+			1:
+				scene = SPIDER if roll < 0.45 else SLIME
+			2:
+				scene = GOBLIN if roll < 0.3 else (SPIDER if roll < 0.7 else SLIME)
+			_:
+				scene = GOBLIN if roll < 0.4 else (SPIDER if roll < 0.85 else SLIME)
+		enemy = scene.instantiate()
 	var health := enemy.get_node_or_null("Health") as HealthComponent
 	# Niveau du monstre = étage (voir Combat) : plus de PV, de dégâts et d'XP.
 	Combat.set_level(enemy, floor_number)
@@ -501,9 +634,13 @@ func _make_enemy() -> Node2D:
 			# Parfois une potion d'endurance ou de mana (selon la classe du héros).
 			if randf() < 0.08:
 				DungeonRoomProps.drop(self, Inventory.item_by_id(Hotbar.energy_potion()), 1, enemy.global_position)
-			# Rarement, une pièce d'équipement du palier 1.
-			if randf() < 0.03 + 0.01 * floor_number:
-				DungeonRoomProps.drop(self, Loot.piece(1, [60, 30, 10]), 1, enemy.global_position)
+			# Rarement, une pièce d'équipement du palier de la zone.
+			if randf() < 0.03 + 0.01 * (floor_number - first_floor() + 1):
+				DungeonRoomProps.drop(self, Loot.piece(int(zone()["tier"]), [60, 30, 10]), 1, enemy.global_position)
+			# Ressources des monstres des cryptes (palier 2).
+			for entry in _crypt_drops(enemy):
+				if randf() < float(entry[1]):
+					DungeonRoomProps.drop(self, Inventory.item_by_id(entry[0]), rng.randi_range(1, int(entry[2])), enemy.global_position)
 			# Les araignées laissent de la chitine et de la soie (palier 1).
 			if scene == SPIDER:
 				if randf() < 0.55:
@@ -511,6 +648,33 @@ func _make_enemy() -> Node2D:
 				if randf() < 0.45:
 					DungeonRoomProps.drop(self, Inventory.item_by_id(&"silk"), rng.randi_range(1, 2), enemy.global_position), CONNECT_ONE_SHOT)
 	return enemy
+
+
+## Monstres des cryptes, selon l'étage (4 : squelettes et rats ; ensuite archers et feux follets).
+func _make_crypt_enemy(roll: float) -> Node2D:
+	var deep := floor_number - first_floor()
+	if deep == 0:
+		if roll < 0.45:
+			return Skeleton.new()
+		return CryptRat.new() if roll < 0.8 else SkeletonArcher.new()
+	if roll < 0.35:
+		return Skeleton.new()
+	if roll < 0.6:
+		return SkeletonArcher.new()
+	return Wisp.new() if roll < 0.8 else CryptRat.new()
+
+
+## [objet, chance, maximum] laissés par un monstre des cryptes.
+static func _crypt_drops(enemy: Node) -> Array:
+	if enemy is SkeletonArcher:
+		return [[&"ancient_bone", 0.6, 2]]
+	if enemy is Skeleton:
+		return [[&"ancient_bone", 0.6, 2], [&"linen_wraps", 0.3, 1]]
+	if enemy is Wisp:
+		return [[&"spectral_essence", 0.7, 1]]
+	if enemy is CryptRat:
+		return [[&"crypt_leather", 0.55, 1]]
+	return []
 
 
 func _check_fight() -> void:
@@ -552,15 +716,18 @@ func _on_stairs_down() -> void:
 	if props.get_node_or_null("Cocon") != null and not Lysia.rescued():
 		await Ysolde.lines(Hero.hero_name, ["Ce cocon remue encore... Il y a quelqu'un là-dedans. Je ne peux pas partir sans l'avoir libéré."])
 		return
-	if floor_number >= last_floor():
-		var j := await Choice.ask("Fond de la %s" % zone_name(),
+	if floor_number >= deepest_floor():
+		var j := await Choice.ask("Fond des %s" % zone_name(),
 			"Plus bas, la galerie est effondrée : la zone suivante des Abysses n'est pas encore creusée.\n(Elle arrivera avec une prochaine étape.)",
 			["Remonter en ville", "Rester"])
 		if j == 0:
 			_leave_to_city()
 		return
-	var i := await Choice.ask("Étage %d terminé" % floor_number,
-		"Descendre plus profond, ou rentrer en ville avec votre butin ?",
+	var next_zone := zone_of(floor_number + 1)
+	var body := "Descendre plus profond, ou rentrer en ville avec votre butin ?"
+	if next_zone != zone_index():
+		body = "Un escalier taillé dans la pierre descend vers les %s.\nDescendre, ou rentrer en ville avec votre butin ?" % String(ZONES[next_zone]["name"]).to_lower()
+	var i := await Choice.ask("Étage %d terminé" % floor_number, body,
 		["Descendre à l'étage %d" % (floor_number + 1), "Remonter en ville", "Rester"])
 	if i == 0:
 		Game.dungeon_floor = floor_number + 1

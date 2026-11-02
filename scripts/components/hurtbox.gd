@@ -12,6 +12,8 @@ signal hit_received(hitbox: Hitbox)
 var damage_filter: Callable
 ## Dégâts réellement encaissés au dernier coup.
 var last_amount: int = 0
+## La hitbox du coup en cours (lisible par damage_filter : d'où vient le coup ?).
+var current_hitbox: Hitbox
 
 
 func _ready() -> void:
@@ -25,6 +27,7 @@ func receive_hit(hitbox: Hitbox) -> bool:
 		return false
 	# Les dégâts du coup, augmentés selon le niveau de celui qui frappe (voir Combat).
 	var amount := Combat.hit_amount(hitbox)
+	current_hitbox = hitbox
 	if damage_filter.is_valid():
 		amount = int(damage_filter.call(amount))
 		if amount <= 0:

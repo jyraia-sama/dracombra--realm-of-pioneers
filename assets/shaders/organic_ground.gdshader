@@ -242,7 +242,10 @@ vec3 cobble(ivec2 px) {
 }
 
 // Dalles de la grande place : 16 px, rangées décalées, joints, quelques fissures.
-vec3 slab(ivec2 px) {
+// Teinte des dalles (1, 1, 1 = dalles claires de la ville ; cryptes : pierre froide).
+uniform vec3 slab_tint = vec3(1.0, 1.0, 1.0);
+
+vec3 slab_raw(ivec2 px) {
 	int S = 16 * hd;
 	int row = px.y / S;
 	int sx = px.x + (row % 2) * (S / 2);
@@ -268,6 +271,11 @@ vec3 slab(ivec2 px) {
 	}
 	return col;
 }
+
+vec3 slab(ivec2 px) {
+	return slab_raw(px) * slab_tint;
+}
+
 
 vec3 painted_color(int m, ivec2 px) {
 	int k;

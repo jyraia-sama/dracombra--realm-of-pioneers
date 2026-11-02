@@ -25,7 +25,18 @@ const TIER_GEAR := {
 	1: [&"iron_helmet", &"iron_armor", &"iron_gauntlets", &"iron_boots", &"iron_sword", &"iron_shield",
 		&"chitin_hood", &"chitin_armor", &"chitin_bracers", &"chitin_boots", &"chitin_bow", &"silk_quiver",
 		&"silk_hood", &"silk_robe", &"silk_gloves", &"silk_shoes", &"crystal_staff", &"sacred_book"],
+	2: [&"silver_helmet", &"silver_armor", &"silver_gauntlets", &"silver_boots", &"silver_sword", &"silver_shield",
+		&"bone_hood", &"crypt_leather_armor", &"bone_bracers", &"crypt_boots", &"bone_bow", &"bone_quiver",
+		&"wraps_hood", &"spectral_robe", &"wraps_gloves", &"wraps_shoes", &"spectral_staff", &"spectral_tome"],
 }
+
+
+## Palier d'un objet de base (1 si inconnu).
+static func tier_of(base_id: StringName) -> int:
+	for t in TIER_GEAR:
+		if TIER_GEAR[t].has(base_id):
+			return int(t)
+	return 1
 
 
 static func rarity_name(item: ItemData) -> String:
@@ -88,6 +99,8 @@ static func make(base_id: StringName, rarity: int, rng: RandomNumberGenerator = 
 		var s: Array = pool[k]
 		pool.remove_at(k)
 		var v := (rng.randi_range(s[1], s[2]) if rng else randi_range(s[1], s[2])) + (rarity - 1) / 2
+		# Les bonus grandissent avec le palier (+50 % par palier au-delà du 1er).
+		v = int(round(v * (1.0 + 0.5 * (tier_of(base_id) - 1))))
 		extra[s[0]] = int(extra.get(s[0], 0)) + v
 	return Inventory.register_unique(base_id, rarity, extra)
 

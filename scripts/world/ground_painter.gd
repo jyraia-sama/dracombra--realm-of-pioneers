@@ -27,6 +27,10 @@ const LOOKS := {
 	&"cave": {"rock_top": Color8(34, 30, 42), "rock_top_light": Color8(44, 40, 54),
 		"rock_face": Color8(104, 94, 112), "rock_face_dark": Color8(76, 68, 86), "rock_face_light": Color8(140, 128, 146),
 		"cave_floor": Color8(110, 94, 88), "cave_floor_dark": Color8(98, 82, 78), "cave_floor_light": Color8(122, 106, 98)},
+	# Cryptes des pionniers (zone 2 des Abysses) : murs de pierre taillée, dalles froides.
+	&"crypt": {"rock_top": Color8(30, 30, 40), "rock_top_light": Color8(40, 40, 52),
+		"rock_face": Color8(98, 100, 116), "rock_face_dark": Color8(70, 72, 88), "rock_face_light": Color8(136, 138, 154),
+		"slab_tint": Color(0.66, 0.68, 0.78)},
 }
 
 
@@ -86,7 +90,7 @@ func _build(kind: StringName) -> void:
 			sm.set_shader_parameter("atlas%d" % _layer.tile_set.get_source_id(i), source.texture)
 	var look: Dictionary = LOOKS.get(kind, {})
 	sm.set_shader_parameter("hd", HD)
-	sm.set_shader_parameter("face_height", (22 if kind == &"cave" else 18) * HD)
+	sm.set_shader_parameter("face_height", (22 if kind == &"cave" or kind == &"crypt" else 18) * HD)
 	for key in look:
 		var col: Color = look[key]
 		sm.set_shader_parameter(key, Vector3(col.r, col.g, col.b))
@@ -166,7 +170,7 @@ func _bake() -> void:
 
 ## [matériau, coordonnées de la tuile à dessiner].
 func _classify(kind: StringName, src: int, at: Vector2i, rng: RandomNumberGenerator) -> Array:
-	if kind != &"cave" and src == 0:
+	if kind != &"cave" and kind != &"crypt" and src == 0:
 		# Atlas de la Sylve (aussi utilisé pour l'herbe de Dracombra).
 		match at.y:
 			0:
@@ -187,6 +191,8 @@ func _classify(kind: StringName, src: int, at: Vector2i, rng: RandomNumberGenera
 				return [Mat.DIRT, Vector2i(rng.randi_range(0, 3), 2)]
 	elif kind == &"cave":
 		return [Mat.LAIR if at.y == 5 else Mat.CAVE, at]
+	elif kind == &"crypt":
+		return [Mat.SLABS, at]
 	elif kind == &"city" and src == 1:
 		match at.y:
 			0, 1:
