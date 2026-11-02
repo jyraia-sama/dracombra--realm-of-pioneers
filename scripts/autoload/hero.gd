@@ -21,12 +21,13 @@ const POINTS_PER_LEVEL := 2
 const STATS: Array[StringName] = [&"str", &"dex", &"int", &"wis", &"vit"]
 const STAT_NAMES := {&"str": "Force", &"dex": "Dextérité", &"int": "Intelligence", &"wis": "Sagesse", &"vit": "Vitalité"}
 const STAT_SHORT := {&"str": "FOR", &"dex": "DEX", &"int": "INT", &"wis": "SAG", &"vit": "VIT"}
+## Ce que fait chaque caractéristique (affiché dans le menu Personnage).
 const STAT_HELP := {
-	&"str": "Dégâts du guerrier et du clerc.",
-	&"dex": "Dégâts de l'archer, coups critiques, parade.",
-	&"int": "Dégâts et mana du mage.",
-	&"wis": "Mana du clerc, récupération d'endurance et de mana.",
-	&"vit": "PV max, défense, parade.",
+	&"str": "Dégâts du guerrier : +1 dégât tous les 5 points.",
+	&"dex": "Dégâts de l'archer (+1 tous les 5 points). Critique +0,4 %, parade +0,25 % et endurance +1 par point.",
+	&"int": "Dégâts du mage (+1 tous les 5 points) et son mana (+2 par point).",
+	&"wis": "Dégâts du clerc (+1 tous les 5 points), son mana (+2 par point) et la récupération du mana (+0,1/s par point).",
+	&"vit": "PV max (+1 tous les 2 points), défense (+1 tous les 10 points), parade +0,1 % et endurance +1 par point.",
 }
 
 ## Les classes de base. attack : melee (épée), arrow (flèches), bolt (projectile magique),

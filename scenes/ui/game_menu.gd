@@ -24,6 +24,7 @@ var _sheet: RichTextLabel
 var _class_box: HBoxContainer
 var _stat_rows: Dictionary = {}
 var _derived: Label
+var _stat_help: Label
 var _reset_points: Button
 var _skill_title: Label
 var _skill_box: VBoxContainer
@@ -36,6 +37,7 @@ var _gear_slot: StringName = &"head"
 var _gear_title: Label
 var _gear_info: Label
 var _gear_choices: VBoxContainer
+var _gear_compare: Label
 var _gear_total: Label
 var _gear_portrait: TextureRect
 # Carte
@@ -134,10 +136,8 @@ func _refresh() -> void:
 		1:
 			_refresh_sheet()
 			await get_tree().process_frame
-			for b in _skill_box.get_children():
-				if b is Button and not b.disabled:
-					b.grab_focus()
-					break
+			# Les caractéristiques d'abord (en haut à gauche), puis les techniques en dessous.
+			(_stat_rows[Hero.STATS[0]]["plus"] as Button).grab_focus()
 		TAB_GEAR:
 			_refresh_gear()
 			_gear_buttons[_gear_slot].grab_focus()
@@ -293,27 +293,32 @@ func _build_sheet() -> void:
 	_sheet.add_theme_font_size_override("bold_font_size", 11)
 	left.add_child(_sheet)
 	var grid := GridContainer.new()
-	grid.columns = 3
+	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 6)
-	grid.add_theme_constant_override("v_separation", 0)
+	grid.add_theme_constant_override("v_separation", 1)
 	left.add_child(grid)
 	for k in Hero.STATS:
-		var name := _small("%s" % Hero.STAT_NAMES[k])
-		name.custom_minimum_size = Vector2(80, 0)
-		name.tooltip_text = Hero.STAT_HELP[k]
-		name.mouse_filter = Control.MOUSE_FILTER_PASS
-		grid.add_child(name)
+		# Chaque caractéristique est un bouton : la sélectionner affiche ce qu'elle fait,
+		# la valider (A / Entrée) y place un point.
+		var b := _small_button("")
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(150, 0)
+		b.focus_entered.connect(func() -> void: _show_stat_help(k))
+		b.mouse_entered.connect(func() -> void: _show_stat_help(k))
+		b.pressed.connect(func() -> void:
+			if Hero.spend_point(k):
+				_refresh_sheet()
+			_show_stat_help(k))
+		grid.add_child(b)
 		var value := _small("")
-		value.custom_minimum_size = Vector2(60, 0)
+		value.custom_minimum_size = Vector2(80, 0)
 		grid.add_child(value)
-		var plus := _small_button("+")
-		plus.custom_minimum_size = Vector2(20, 0)
-		plus.tooltip_text = Hero.STAT_HELP[k]
-		plus.pressed.connect(func() -> void:
-			Hero.spend_point(k)
-			_refresh_sheet())
-		grid.add_child(plus)
-		_stat_rows[k] = {"value": value, "plus": plus}
+		_stat_rows[k] = {"value": value, "plus": b}
+	_stat_help = _small("", 9)
+	_stat_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_stat_help.custom_minimum_size = Vector2(240, 30)
+	_stat_help.add_theme_color_override("font_color", Color(1.0, 0.86, 0.55))
+	left.add_child(_stat_help)
 	_derived = _small("", 10)
 	_derived.add_theme_color_override("font_color", Color(0.8, 0.78, 0.86))
 	left.add_child(_derived)
@@ -375,7 +380,7 @@ func _refresh_sheet() -> void:
 		var extra := Hero.allocated(k)
 		var main := "  ★" if c["main"] == k else ""
 		row["value"].text = "%d%s%s" % [Hero.stat(k), " (+%d)" % extra if extra > 0 else "", main]
-		row["plus"].disabled = pts <= 0
+		row["plus"].text = "%s%s" % [Hero.STAT_NAMES[k], "   [+]" if pts > 0 else ""]
 	_derived.text = "Dégâts %d · Défense %d · Parade %d %% · Critique %d %% · %s +%.1f/s" % [
 		Hero.damage(), Hero.defense(), int(Hero.parry_chance()), int(Hero.crit_chance()), c["resource"], Hero.energy_regen()]
 	var spent := 0
@@ -439,6 +444,12 @@ func _refresh_sheet() -> void:
 		var l := _small("  (changer de classe : à Dracombra)", 10)
 		l.add_theme_color_override("font_color", Color(0.55, 0.52, 0.6))
 		_class_box.add_child(l)
+
+
+func _show_stat_help(k: StringName) -> void:
+	var pts := Hero.free_points()
+	_stat_help.text = "%s : %s%s" % [Hero.STAT_NAMES[k], Hero.STAT_HELP[k],
+		"\nA / Entrée : placer un point (%d restant%s)." % [pts, "s" if pts > 1 else ""] if pts > 0 else ""]
 
 
 func _select_skill(id: StringName, refresh_buttons: bool = true) -> void:
@@ -605,6 +616,10 @@ func _build_gear() -> void:
 	_gear_choices = VBoxContainer.new()
 	_gear_choices.add_theme_constant_override("separation", 2)
 	right.add_child(_gear_choices)
+	# Comparaison de l'objet sélectionné avec celui qui est porté.
+	_gear_compare = _small("", 10)
+	_gear_compare.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	right.add_child(_gear_compare)
 
 
 static func bonus_text(item: ItemData, short: bool = false) -> String:
@@ -667,8 +682,15 @@ func _refresh_gear() -> void:
 	_select_gear(_gear_slot)
 
 
+func _show_gear_compare(item: ItemData) -> void:
+	_gear_compare.text = "%s\n%s" % [Loot.compare_short(item), Loot.compare_text(item)]
+	_gear_compare.add_theme_color_override("font_color", Loot.verdict_color(item))
+
+
 func _select_gear(slot: StringName) -> void:
 	_gear_slot = slot
+	_gear_compare.text = "▲ mieux · ▼ moins bien · ≈ équivalent (comparé à l'objet porté)"
+	_gear_compare.add_theme_color_override("font_color", Color(0.7, 0.68, 0.76))
 	_gear_title.text = Hero.GEAR_NAMES[slot]
 	for c in _gear_choices.get_children():
 		c.queue_free()
@@ -682,7 +704,7 @@ func _select_gear(slot: StringName) -> void:
 		info = "Porté : %s\n%s" % [Loot.label(worn), bonus_text(worn)]
 		if not Hero.can_wear(worn):
 			info += "\n(sans effet pour un %s)" % String(Hero.info()["name"]).to_lower()
-		var off := _small_button("Retirer (ranger dans le sac)")
+		var off := _small_button("Retirer : %s (ranger dans le sac)" % Loot.label(worn))
 		off.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		off.pressed.connect(func() -> void:
 			Hero.take_off(slot)
@@ -696,10 +718,13 @@ func _select_gear(slot: StringName) -> void:
 		if item.slot != slot:
 			continue
 		found += 1
-		var b := _small_button("%s  %s" % [Loot.label(item), bonus_text(item, true)])
-		if item.rarity > 0:
-			b.add_theme_color_override("font_color", Loot.color(item))
+		var v := Loot.verdict(item) if Hero.worn(slot) != null else 1
+		var mark := "▲" if v > 0 else ("▼" if v < 0 else "≈")
+		var b := _small_button("%s Équiper : %s  %s" % [mark, Loot.label(item), bonus_text(item, true)])
+		b.add_theme_color_override("font_color", Loot.color(item) if item.rarity > 0 else Loot.verdict_color(item))
 		b.tooltip_text = Loot.compare_text(item)
+		b.focus_entered.connect(_show_gear_compare.bind(item))
+		b.mouse_entered.connect(_show_gear_compare.bind(item))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.icon = item.icon

@@ -114,3 +114,64 @@ static func compare_text(item: ItemData) -> String:
 	if parts.is_empty():
 		return "Comparé à %s : identique." % label(worn)
 	return "Comparé à %s : %s." % [label(worn), ", ".join(parts)]
+
+
+## Poids d'un point de chaque bonus, pour juger « mieux / moins bien ».
+const WEIGHTS := {&"dmg": 3.0, &"def": 2.0, &"str": 1.0, &"dex": 1.0, &"int": 1.0, &"wis": 1.0, &"vit": 1.0,
+	&"crit": 0.5, &"parry": 0.5, &"stamina": 0.25, &"mana": 0.25}
+
+
+## Différences avec l'objet porté au même emplacement : {stat: écart}.
+static func diff(item: ItemData) -> Dictionary:
+	var worn := Hero.worn(item.slot)
+	var out := {}
+	var keys := {}
+	for k in item.bonus:
+		keys[k] = true
+	if worn:
+		for k in worn.bonus:
+			keys[k] = true
+	for k in keys:
+		var d := int(item.bonus.get(k, 0)) - (int(worn.bonus.get(k, 0)) if worn else 0)
+		if d != 0:
+			out[k] = d
+	return out
+
+
+## Verdict : 1 = mieux, -1 = moins bien, 0 = équivalent / différent.
+static func verdict(item: ItemData) -> int:
+	var worn := Hero.worn(item.slot)
+	if worn and worn.id == item.id:
+		return 0
+	var score := 0.0
+	var d := diff(item)
+	for k in d:
+		score += float(d[k]) * float(WEIGHTS.get(k, 1.0))
+	if score > 0.25:
+		return 1
+	if score < -0.25:
+		return -1
+	return 0
+
+
+## « ▲ mieux (+1 DÉF, +2 % parade) » en abrégé, pour les listes.
+static func compare_short(item: ItemData) -> String:
+	var worn := Hero.worn(item.slot)
+	if worn and worn.id == item.id:
+		return "porté"
+	var d := diff(item)
+	var parts: Array[String] = []
+	for k in d:
+		parts.append("%s%d %s" % ["+" if d[k] > 0 else "−", absi(d[k]), Hero.BONUS_SHORT.get(k, String(k))])
+	var v := verdict(item)
+	var head := "▲ mieux" if v > 0 else ("▼ moins bien" if v < 0 else "≈ équivalent")
+	if worn == null:
+		head = "▲ rien de porté"
+	return "%s%s" % [head, " (%s)" % ", ".join(parts) if not parts.is_empty() else ""]
+
+
+static func verdict_color(item: ItemData) -> Color:
+	if Hero.worn(item.slot) == null:
+		return Color(0.55, 1.0, 0.55)
+	var v := verdict(item)
+	return Color(0.55, 1.0, 0.55) if v > 0 else (Color(1.0, 0.5, 0.45) if v < 0 else Color(0.85, 0.85, 0.85))
