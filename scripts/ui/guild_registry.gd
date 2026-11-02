@@ -30,14 +30,14 @@ static func open_party() -> void:
 		var pool: Array[Dictionary] = []
 		var labels: Array[String] = []
 		for m in Roster.living():
-			if m["kind"] != "combat" or Roster.party.has(int(m["id"])):
+			if m["kind"] != "combat" or Roster.party.has(int(m["id"])) or not Roster.has_weapon(m):
 				continue
 			pool.append(m)
 			labels.append("%s — %s%s" % [m["name"], Roster.specialty(m), "  ⚠ blessé" if m["state"] == "blessé" else ""])
 		if i < current.size():
 			labels.append("Retirer %s du groupe" % current[i]["name"])
 		labels.append("Retour")
-		var j := await Choice.ask("Place %d" % (i + 1), "Choisir un combattant de la guilde." if not pool.is_empty() else "Aucun autre combattant disponible.", labels)
+		var j := await Choice.ask("Place %d" % (i + 1), "Choisir un combattant de la guilde (avec une arme)." if not pool.is_empty() else "Aucun combattant armé disponible. Formez un villageois au combat (registre), ou équipez une arme à un combattant.", labels)
 		if j < 0:
 			continue
 		if j < pool.size():
@@ -88,8 +88,15 @@ static func member_sheet(id: int) -> void:
 		var options: Array[String] = []
 		var actions: Array[String] = []
 		if m["kind"] == "combat":
+			options.append("Équipement…")
+			actions.append("gear")
 			options.append("Comportement au combat : %s" % Roster.STANCES.get(m["stance"], "Équilibré"))
 			actions.append("stance")
+			options.append("Revenir à son métier (%s)" % String(Roster.JOBS.get(StringName(m.get("job", "")), "villageois")).to_lower())
+			actions.append("back_to_work")
+		else:
+			options.append("Former au combat…")
+			actions.append("train")
 		options.append("Renvoyer de la guilde")
 		actions.append("dismiss")
 		options.append("Retour")
@@ -98,6 +105,15 @@ static func member_sheet(id: int) -> void:
 		if i < 0 or actions[i] == "back":
 			return
 		match actions[i]:
+			"gear":
+				await _member_gear(m)
+			"train":
+				await _train(m)
+			"back_to_work":
+				var k := await Choice.ask("Revenir au métier ?", "%s rend son équipement (il revient dans votre sac) et reprend son métier. Ses niveaux de combat sont gardés." % m["name"], ["Confirmer", "Annuler"])
+				if k == 0:
+					Roster.back_to_work(m)
+					Narration.say("%s reprend son métier." % m["name"], 2.0)
 			"stance":
 				var keys := Roster.STANCES.keys()
 				var labels: Array[String] = []
@@ -115,6 +131,73 @@ static func member_sheet(id: int) -> void:
 					Roster.dismiss(id)
 					Narration.say("%s a quitté la guilde." % m["name"], 2.0)
 					return
+
+
+## Former un villageois : choisir la classe, puis l'arme (prise dans le sac).
+static func _train(m: Dictionary) -> void:
+	var classes: Array = Hero.ORDER
+	var opts: Array[String] = []
+	for cls in classes:
+		var n := Roster.weapons_in_bag(cls).size()
+		var base := Inventory.item_by_id(Roster.CLASS_WEAPONS[cls])
+		opts.append("%s — %s" % [Hero.CLASSES[cls]["name"], "%d arme%s dans le sac" % [n, "s" if n > 1 else ""] if n > 0 else "il faut : %s (ou une arme de la classe)" % base.display_name])
+	opts.append("Retour")
+	var bonus: Array = Roster.ORIGIN_BONUS.get(StringName(m.get("job", "")), [])
+	var body := "%s quitte son métier et devient combattant. Il lui faut l'arme de sa classe (prise dans votre sac)." % m["name"]
+	if not bonus.is_empty():
+		body += "\nSon passé de %s lui donne +%d %s." % [String(Roster.JOBS.get(StringName(m["job"]), "")).to_lower(), int(bonus[1]), Hero.STAT_NAMES[bonus[0]]]
+	var i := await Choice.ask("Former %s au combat" % m["name"], body, opts)
+	if i < 0 or i >= classes.size():
+		return
+	var cls: StringName = classes[i]
+	var weapons := Roster.weapons_in_bag(cls)
+	if weapons.is_empty():
+		Narration.say("Il faut d'abord fabriquer l'arme : %s (établi)." % Inventory.item_by_id(Roster.CLASS_WEAPONS[cls]).display_name, 3.0)
+		return
+	var wopts: Array[String] = []
+	for w in weapons:
+		wopts.append(Loot.label(w))
+	wopts.append("Retour")
+	var j := await Choice.ask("Arme de %s" % m["name"], "Quelle arme lui donner ?", wopts)
+	if j < 0 or j >= weapons.size():
+		return
+	if Roster.train(m, cls, weapons[j]):
+		Narration.say("%s devient %s !" % [m["name"], String(Hero.CLASSES[cls]["name"]).to_lower()], 3.0)
+
+
+## Équipement d'un membre : chaque emplacement, objets du sac qui lui conviennent.
+static func _member_gear(m: Dictionary) -> void:
+	while true:
+		var cls := StringName(m["cls"])
+		var gear: Dictionary = m.get("gear", {})
+		var opts: Array[String] = []
+		for slot in Hero.GEAR_SLOTS:
+			var it := Inventory.item_by_id(StringName(gear.get(String(slot), "")))
+			opts.append("%s : %s" % [Hero.GEAR_NAMES[slot], Loot.label(it) if it else "—"])
+		opts.append("Retour")
+		var i := await Choice.ask("Équipement de %s" % m["name"], "Les objets viennent de votre sac et y reviennent quand on les retire.\nPV %d · dégâts %d" % [Roster.max_hp(m), Roster.damage(m)], opts)
+		if i < 0 or i >= Hero.GEAR_SLOTS.size():
+			return
+		var slot: StringName = Hero.GEAR_SLOTS[i]
+		var items: Array[ItemData] = []
+		var labels: Array[String] = []
+		for item in Inventory.get_items():
+			var fits := Roster.weapon_fits(item, cls) if slot == &"main" else \
+				(item.slot == slot and (item.classes.is_empty() or item.classes.has(cls)))
+			if fits:
+				items.append(item)
+				labels.append("Équiper : %s  %s" % [Loot.label(item), GameMenu.bonus_text(item, true)])
+		var has := gear.has(String(slot))
+		if has:
+			labels.append("Retirer")
+		labels.append("Retour")
+		var j := await Choice.ask(Hero.GEAR_NAMES[slot], "Rien dans le sac pour cet emplacement." if items.is_empty() else "Choisir un objet.", labels)
+		if j < 0:
+			continue
+		if j < items.size():
+			Roster.equip_member(m, items[j])
+		elif has and j == items.size():
+			Roster.unequip_member(m, slot)
 
 
 ## Candidats du jour : fiche et recrutement (gratuit s'il reste une place).

@@ -8,6 +8,7 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"rope", "n": 1, "station": &"workbench", "in": {&"flax": 3}},
 	{"out": &"cloth", "n": 1, "station": &"workbench", "in": {&"flax": 4}},
 	{"out": &"balm", "n": 1, "station": &"workbench", "in": {&"herb": 3}},
+	{"out": &"short_sword", "n": 1, "station": &"workbench", "in": {&"wood": 2, &"stone": 4, &"leather": 1}},
 	{"out": &"bow", "n": 1, "station": &"workbench", "in": {&"wood": 4, &"rope": 1, &"leather": 2}},
 	{"out": &"staff", "n": 1, "station": &"workbench", "in": {&"wood": 3, &"gem": 1, &"cloth": 2}},
 	{"out": &"holy_symbol", "n": 1, "station": &"workbench", "in": {&"wood": 2, &"cloth": 2, &"balm": 1}},
@@ -49,7 +50,7 @@ const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à pe
 
 ## Rubriques des longues listes (établi) : objet fabriqué -> rubrique. Défaut : « Matériaux ».
 const CATEGORIES := {
-	&"bow": "Armes de classe", &"staff": "Armes de classe", &"holy_symbol": "Armes de classe",
+	&"short_sword": "Armes de classe", &"bow": "Armes de classe", &"staff": "Armes de classe", &"holy_symbol": "Armes de classe",
 	&"leather_hood": "Palier 0 · équipement", &"leather_armor": "Palier 0 · équipement",
 	&"leather_gloves": "Palier 0 · équipement", &"leather_boots": "Palier 0 · équipement",
 	&"wooden_shield": "Palier 0 · équipement", &"quiver": "Palier 0 · équipement", &"spell_tome": "Palier 0 · équipement",

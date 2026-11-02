@@ -17,7 +17,7 @@ const NAMES := ["Aldric", "Brune", "Cassien", "Daëlle", "Edmond", "Faïna", "Ga
 	"Fennic", "Gwenaël", "Hadrien", "Ilona", "Jasper", "Katell", "Loïc", "Mireille", "Nolwenn", "Osric"]
 const TRAITS := ["Courageux", "Prudent", "Bavard", "Taciturne", "Gourmand", "Matinal", "Rêveur", "Têtu",
 	"Loyal", "Curieux", "Rieur", "Ancien soldat d'Elysia", "Exilé du Nord", "Ancien bandit repenti",
-	"Fils de forgeron", "Fille de marchands", "Superstitieux", "Infatigable"]
+	"Enfant de forgerons", "Enfant de marchands", "Superstitieux", "Infatigable"]
 ## Métiers des artisans (leurs effets arrivent avec les étapes 4 et 5).
 const JOBS := {
 	&"bucheron": "Bûcheron", &"mineur": "Mineur", &"chasseur": "Chasseur", &"herboriste": "Herboriste",
@@ -149,7 +149,7 @@ func party_members() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for id in party:
 		var m := by_id(id)
-		if not m.is_empty() and m["state"] != "mort":
+		if not m.is_empty() and m["state"] != "mort" and has_weapon(m):
 			out.append(m)
 	return out
 
@@ -180,13 +180,14 @@ func share_xp(amount: int) -> void:
 
 ## PV max d'un compagnon : comme le héros (10 + VIT / 2), avec la VIT de sa classe à son niveau.
 func max_hp(m: Dictionary) -> int:
-	return 10 + stat(m, &"vit") / 2 + int(gear_bonus(m, &"vit")) / 2
+	return 10 + stat(m, &"vit") / 2
 
 
 func stat(m: Dictionary, key: StringName) -> int:
 	var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
 	var lvl := int(m["levels"].get(m["cls"], 1))
-	return int(info["stats"][key]) + int(floor(float(info["growth"][key]) * (lvl - 1)))
+	return int(info["stats"][key]) + int(floor(float(info["growth"][key]) * (lvl - 1))) + origin_bonus(m, key) \
+		+ gear_bonus(m, key)
 
 
 ## Dégâts d'un coup : dégâts de la classe + 1 tous les 5 points de la caractéristique principale.
@@ -243,6 +244,16 @@ func sheet(m: Dictionary) -> String:
 		var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
 		lines.append("Combattant : %s" % info["role"])
 		lines.append("Comportement au combat : %s." % STANCES.get(m["stance"], "Équilibré"))
+		var gear: Array[String] = []
+		for slot in m.get("gear", {}):
+			var it := Inventory.item_by_id(StringName(m["gear"][slot]))
+			if it:
+				gear.append(Loot.label(it))
+		lines.append("Équipement : %s." % (", ".join(gear) if not gear.is_empty() else "aucun"))
+		if not has_weapon(m):
+			lines.append("⚠ Sans arme : ne peut pas partir au combat.")
+		if m.get("job", "") != "":
+			lines.append("Ancien %s." % String(JOBS.get(StringName(m["job"]), "artisan")).to_lower())
 	else:
 		var want: StringName = WORKPLACE.get(StringName(m["job"]), &"")
 		var work := Town.site_by_uid(int(m.get("work", 0)))
@@ -397,3 +408,106 @@ func work_area(m: Dictionary) -> Rect2:
 	var rect := Building.footprint_rect(data, Town.site_cell(r))
 	var t := float(Game.TILE_SIZE)
 	return Rect2(rect.position + Vector2(-t * 2, rect.size.y), Vector2(rect.size.x + t * 4, t * 3))
+
+
+# ------------------------------------------------------------------ former au combat, équipement
+
+## Armes de base qui permettent de former un villageois à chaque classe.
+const CLASS_WEAPONS := {&"warrior": &"short_sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"holy_symbol"}
+## Ce que l'ancien métier apporte au combattant : {métier: [caractéristique, bonus]}.
+const ORIGIN_BONUS := {&"bucheron": [&"str", 2], &"mineur": [&"vit", 2], &"chasseur": [&"dex", 2],
+	&"herboriste": [&"wis", 2], &"forgeron": [&"str", 1], &"fermier": [&"vit", 1], &"tisserand": [&"int", 2]}
+
+
+## Une arme convient à la classe : son arme de base, ou une arme principale de la classe.
+static func weapon_fits(item: ItemData, cls: StringName) -> bool:
+	if item == null:
+		return false
+	if CLASS_WEAPONS.get(cls, &"") == item.id or CLASS_WEAPONS.get(cls, &"") == item.base_id:
+		return true
+	return item.slot == &"main" and item.classes.has(cls)
+
+
+func weapon_of(m: Dictionary) -> ItemData:
+	return Inventory.item_by_id(StringName(m.get("gear", {}).get("main", "")))
+
+
+func has_weapon(m: Dictionary) -> bool:
+	return m["kind"] == "combat" and weapon_fits(weapon_of(m), StringName(m["cls"]))
+
+
+## Armes du sac qui permettent de former à une classe.
+func weapons_in_bag(cls: StringName) -> Array[ItemData]:
+	var out: Array[ItemData] = []
+	for item in Inventory.get_items():
+		if weapon_fits(item, cls):
+			out.append(item)
+	return out
+
+
+## Forme un villageois au combat : l'arme passe du sac à ses mains, il quitte son métier.
+func train(m: Dictionary, cls: StringName, weapon: ItemData) -> bool:
+	if m["kind"] != "artisan" or not weapon_fits(weapon, cls) or Inventory.get_count(weapon.id) <= 0:
+		return false
+	Inventory.remove_item(weapon, 1)
+	m["kind"] = "combat"
+	m["cls"] = String(cls)
+	if not m["levels"].has(String(cls)):
+		m["levels"][String(cls)] = 1
+	m["gear"] = {"main": String(weapon.id)}
+	m["work"] = 0
+	m["stance"] = "soins" if cls == &"cleric" else "equilibre"
+	changed.emit()
+	return true
+
+
+## Retour au métier : tout l'équipement revient dans le sac, les niveaux de classe sont gardés.
+func back_to_work(m: Dictionary) -> void:
+	for slot in m.get("gear", {}):
+		var item := Inventory.item_by_id(StringName(m["gear"][slot]))
+		if item:
+			Inventory.add_item(item, 1)
+	m["gear"] = {}
+	m["kind"] = "artisan"
+	m["cls"] = ""
+	party.erase(int(m["id"]))
+	auto_assign(m)
+	changed.emit()
+
+
+## Équipe un objet du sac sur un membre (l'ancien revient dans le sac).
+func equip_member(m: Dictionary, item: ItemData) -> bool:
+	if item == null or Inventory.get_count(item.id) <= 0 or m["kind"] != "combat":
+		return false
+	var cls := StringName(m["cls"])
+	var slot := &"main" if weapon_fits(item, cls) else item.slot
+	if slot == &"" or (slot != &"main" and not (item.classes.is_empty() or item.classes.has(cls))):
+		return false
+	Inventory.remove_item(item, 1)
+	var gear: Dictionary = m.get("gear", {})
+	if gear.has(String(slot)):
+		var old := Inventory.item_by_id(StringName(gear[String(slot)]))
+		if old:
+			Inventory.add_item(old, 1)
+	gear[String(slot)] = String(item.id)
+	m["gear"] = gear
+	changed.emit()
+	return true
+
+
+func unequip_member(m: Dictionary, slot: StringName) -> void:
+	var gear: Dictionary = m.get("gear", {})
+	if not gear.has(String(slot)):
+		return
+	var item := Inventory.item_by_id(StringName(gear[String(slot)]))
+	if item:
+		Inventory.add_item(item, 1)
+	gear.erase(String(slot))
+	if slot == &"main":
+		party.erase(int(m["id"]))
+	changed.emit()
+
+
+func origin_bonus(m: Dictionary, key: StringName) -> int:
+	var b: Array = ORIGIN_BONUS.get(StringName(m.get("job", "")), [])
+	return int(b[1]) if not b.is_empty() and b[0] == key else 0
