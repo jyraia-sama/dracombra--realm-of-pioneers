@@ -21,12 +21,12 @@ const TRAITS := ["Courageux", "Prudent", "Bavard", "Taciturne", "Gourmand", "Mat
 ## Métiers des artisans (leurs effets arrivent avec les étapes 4 et 5).
 const JOBS := {
 	&"bucheron": "Bûcheron", &"mineur": "Mineur", &"chasseur": "Chasseur", &"herboriste": "Herboriste",
-	&"forgeron": "Forgeron", &"fermier": "Fermier", &"tisserand": "Tisserand",
+	&"forgeron": "Forgeron", &"fermier": "Fermier", &"tisserand": "Artisan",
 }
-## Bâtiment de travail de chaque métier (vide = pas encore de bâtiment : forge sur commande,
-## champs de l'étape 5, atelier de tissage plus tard).
+## Bâtiment de travail de chaque métier (vide = pas encore de bâtiment : champs de l'étape 5).
+## Forgerons et artisans travaillent sur les commandes de la guilde (GuildOrders).
 const WORKPLACE := {&"bucheron": &"lumber_hut", &"mineur": &"quarry", &"chasseur": &"hunter_cabin",
-	&"herboriste": &"herb_garden"}
+	&"herboriste": &"herb_garden", &"forgeron": &"forge", &"tisserand": &"workbench"}
 const STANCES := {"agressif": "Agressif", "equilibre": "Équilibré", "soins": "Soins en premier"}
 const CLASS_SPRITES := {
 	&"warrior": "res://assets/sprites/guild/membre_guerrier/membre_guerrier",
@@ -189,7 +189,7 @@ func defense(m: Dictionary) -> int:
 
 
 func stat(m: Dictionary, key: StringName) -> int:
-	var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
+	var info: Dictionary = Hero.class_data(StringName(m["cls"]))
 	var lvl := int(m["levels"].get(m["cls"], 1))
 	return int(info["stats"][key]) + int(floor(float(info["growth"][key]) * (lvl - 1))) + origin_bonus(m, key) \
 		+ gear_bonus(m, key)
@@ -197,7 +197,7 @@ func stat(m: Dictionary, key: StringName) -> int:
 
 ## Dégâts d'un coup : arme de la classe + bonus, +2 % par point de la caractéristique principale.
 func damage(m: Dictionary) -> int:
-	var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
+	var info: Dictionary = Hero.class_data(StringName(m["cls"]))
 	return Combat.damage(StringName(m["cls"]), stat(m, info["main"]), gear_bonus(m, &"dmg"))
 
 
@@ -205,7 +205,7 @@ func gear_bonus(m: Dictionary, key: StringName) -> int:
 	var total := 0
 	for slot in m.get("gear", {}):
 		var item := Inventory.item_by_id(StringName(m["gear"][slot]))
-		if item and (item.classes.is_empty() or item.classes.has(StringName(m["cls"]))):
+		if item and Hero.classes_fit(item.classes, StringName(m["cls"])):
 			total += int(item.bonus.get(key, 0))
 	return total
 
@@ -221,7 +221,7 @@ func by_id(id: int) -> Dictionary:
 
 func specialty(m: Dictionary) -> String:
 	if m["kind"] == "combat":
-		return "%s niv. %d" % [Hero.CLASSES[StringName(m["cls"])]["name"], level_of(m)]
+		return "%s niv. %d" % [Hero.class_data(StringName(m["cls"]))["name"], level_of(m)]
 	return "%s niv. %d" % [JOBS.get(StringName(m["job"]), "Artisan"), int(m.get("job_level", 1))]
 
 
@@ -244,7 +244,7 @@ func sheet(m: Dictionary) -> String:
 	lines.append("%s — %s" % [m["name"], specialty(m)])
 	lines.append("Trait : %s." % m["trait"])
 	if m["kind"] == "combat":
-		var info: Dictionary = Hero.CLASSES[StringName(m["cls"])]
+		var info: Dictionary = Hero.class_data(StringName(m["cls"]))
 		lines.append("Combattant : %s" % info["role"])
 		lines.append("Comportement au combat : %s." % STANCES.get(m["stance"], "Équilibré"))
 		var gear: Array[String] = []
@@ -272,7 +272,13 @@ func sheet(m: Dictionary) -> String:
 
 
 func sprite_path(m: Dictionary) -> String:
-	return CLASS_SPRITES.get(StringName(m["cls"]), ARTISAN_SPRITE) if m["kind"] == "combat" else ARTISAN_SPRITE
+	if m["kind"] != "combat":
+		return ARTISAN_SPRITE
+	# Classe mixte : l'apparence de sa première classe d'origine (en attendant ses images).
+	var cls := StringName(m["cls"])
+	if Hero.is_mixed(cls):
+		cls = Hero.MIXED[cls]["bases"][0]
+	return CLASS_SPRITES.get(cls, ARTISAN_SPRITE)
 
 
 # ------------------------------------------------------------------ sauvegarde
@@ -430,9 +436,10 @@ const ORIGIN_BONUS := {&"bucheron": [&"str", 2], &"mineur": [&"vit", 2], &"chass
 static func weapon_fits(item: ItemData, cls: StringName) -> bool:
 	if item == null:
 		return false
-	if CLASS_WEAPONS.get(cls, &"") == item.id or CLASS_WEAPONS.get(cls, &"") == item.base_id:
-		return true
-	return item.slot == &"main" and item.classes.has(cls)
+	for b in Hero.bases_of(cls):
+		if CLASS_WEAPONS.get(b, &"") == item.id or CLASS_WEAPONS.get(b, &"") == item.base_id:
+			return true
+	return item.slot == &"main" and not item.classes.is_empty() and Hero.classes_fit(item.classes, cls)
 
 
 func weapon_of(m: Dictionary) -> ItemData:
@@ -468,6 +475,60 @@ func train(m: Dictionary, cls: StringName, weapon: ItemData) -> bool:
 	return true
 
 
+## Classes mixtes : arme demandée et prix en or pour qu'un membre y passe.
+const MIXED_WEAPONS := {&"knight": &"long_sword", &"paladin": &"long_sword"}
+const PROMOTE_GOLD := 150
+
+
+## Classes mixtes ouvertes à ce membre : débloquées par le héros, et sa classe actuelle est une
+## de leurs classes d'origine, au niveau demandé (pour un mélange, l'autre classe aussi).
+func promotions(m: Dictionary) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if m["kind"] != "combat":
+		return out
+	var cls := StringName(m["cls"])
+	for id in Hero.MIXED_ORDER:
+		if not Hero.unlocked.has(id) or id == cls:
+			continue
+		var data: Dictionary = Hero.MIXED[id]
+		if not data["bases"].has(cls):
+			continue
+		var ok := true
+		for b in data["bases"]:
+			if int(m["levels"].get(String(b), 0)) < int(data["unlock_level"]):
+				ok = false
+		if ok:
+			out.append(id)
+	return out
+
+
+## Passe un membre dans une classe mixte. Renvoie "" si c'est fait, sinon la raison.
+func promote(m: Dictionary, id: StringName) -> String:
+	if not promotions(m).has(id):
+		return "%s n'a pas le niveau." % m["name"]
+	var weapon := Inventory.item_by_id(MIXED_WEAPONS[id])
+	if Inventory.get_count(weapon.id) <= 0:
+		return "Il faut une %s dans votre sac (forge)." % weapon.display_name.to_lower()
+	if Town.amount_of(&"gold") < PROMOTE_GOLD:
+		return "Il faut %d pièces d'or." % PROMOTE_GOLD
+	Town.consume(&"gold", PROMOTE_GOLD)
+	Inventory.remove_item(weapon, 1)
+	var gear: Dictionary = m.get("gear", {})
+	if gear.has("main"):
+		var old := Inventory.item_by_id(StringName(gear["main"]))
+		if old:
+			Inventory.add_item(old, 1)
+	gear["main"] = String(weapon.id)
+	m["gear"] = gear
+	var lvl := Hero.MAX_LEVEL
+	for b in Hero.MIXED[id]["bases"]:
+		lvl = mini(lvl, int(m["levels"].get(String(b), 1)))
+	m["levels"][String(id)] = lvl
+	m["cls"] = String(id)
+	changed.emit()
+	return ""
+
+
 ## Retour au métier : tout l'équipement revient dans le sac, les niveaux de classe sont gardés.
 func back_to_work(m: Dictionary) -> void:
 	for slot in m.get("gear", {}):
@@ -488,7 +549,7 @@ func equip_member(m: Dictionary, item: ItemData) -> bool:
 		return false
 	var cls := StringName(m["cls"])
 	var slot := &"main" if weapon_fits(item, cls) else item.slot
-	if slot == &"" or (slot != &"main" and not (item.classes.is_empty() or item.classes.has(cls))):
+	if slot == &"" or (slot != &"main" and not Hero.classes_fit(item.classes, cls)):
 		return false
 	Inventory.remove_item(item, 1)
 	var gear: Dictionary = m.get("gear", {})

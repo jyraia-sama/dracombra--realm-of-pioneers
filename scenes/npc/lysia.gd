@@ -66,7 +66,7 @@ static func menu() -> void:
 			"Alors je ferai pareil. Je tiens le registre, j'accueille les candidats, et je prépare vos groupes d'aventure."])
 	while true:
 		var options := ["Le registre des membres", "Les candidats du jour (%d)" % Roster.candidates.size(),
-			"Le groupe d'aventure", "Bavarder", "Au revoir"]
+			"Le groupe d'aventure", "Les commandes (%d en cours)" % GuildOrders.pending_count(), "Bavarder", "Au revoir"]
 		var body := "%s\n%s" % [GuildRegistry.beds_text(), GuildRegistry.party_text()]
 		var i := await Choice.ask("Lysia, intendante de la guilde", body, options)
 		match i:
@@ -77,6 +77,8 @@ static func menu() -> void:
 			2:
 				await GuildRegistry.open_party()
 			3:
+				await GuildOrders.open()
+			4:
 				await _chat()
 			_:
 				return

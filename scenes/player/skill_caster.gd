@@ -115,6 +115,10 @@ func _execute(id: StringName, s: Dictionary) -> void:
 		"buff":
 			for k in s["buff"]:
 				Hero.add_buff(StringName(k), float(s["buff"][k]), float(s["duration"]))
+			if s.get("group", false) and s["buff"].has("guard"):
+				for c in _near_companions():
+					c.add_guard(float(s["buff"]["guard"]), float(s["duration"]))
+					SkillFx.ring(level, c.global_position + Vector2(0, -t * 0.5), t, col, 0.5)
 			if s.has("heal"):
 				player.health.heal(int(ceil(player.health.max_health * float(s["heal"]))))
 			player.play_cast(0.3)
@@ -122,6 +126,13 @@ func _execute(id: StringName, s: Dictionary) -> void:
 		"heal":
 			var amount := int(ceil(player.health.max_health * float(s["heal"])))
 			player.health.heal(amount)
+			if s.get("group", false):
+				for c in _near_companions():
+					var ch: HealthComponent = c.health
+					var n := int(ceil(ch.max_health * float(s["heal"])))
+					ch.heal(n)
+					Emote.show(c, "+%d" % n, Color(0.5, 1.0, 0.5), 34.0)
+					SkillFx.ring(level, c.global_position + Vector2(0, -t * 0.5), t, col, 0.5)
 			player.play_cast(0.3)
 			SkillFx.ring(level, body, t * 1.2, col, 0.6)
 			Emote.show(player, "+%d" % amount, Color(0.5, 1.0, 0.5), 34.0)
@@ -133,6 +144,16 @@ func _execute(id: StringName, s: Dictionary) -> void:
 			if then != &"":
 				# La technique qui suit est offerte (ni coût ni recharge).
 				_execute(then, SkillBook.get_skill(then))
+
+
+## Compagnons debout à moins de 6 cases du héros (techniques de groupe).
+func _near_companions() -> Array[Companion]:
+	var out: Array[Companion] = []
+	for c in get_tree().get_nodes_in_group("companions"):
+		var comp := c as Companion
+		if comp and comp.can_be_targeted() and comp.global_position.distance_to(player.global_position) < Game.TILE_SIZE * 6.0:
+			out.append(comp)
+	return out
 
 
 func _shoot(s: Dictionary) -> void:

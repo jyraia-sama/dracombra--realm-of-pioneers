@@ -89,6 +89,8 @@ func _on_interacted() -> void:
 		ids.append("members")
 		options.append("Candidats du jour (%d)" % Roster.candidates.size())
 		ids.append("candidates")
+		options.append("Commandes (%d en cours)" % GuildOrders.pending_count())
+		ids.append("orders")
 	for pair in [["Dormir jusqu'au lendemain", "sleep"], ["Fabriquer des outils", "craft"], ["Améliorer la guilde", "upgrade"],
 			["Changer de classe", "class"], ["Fermer", "close"]]:
 		options.append(pair[0])
@@ -108,6 +110,8 @@ func _on_interacted() -> void:
 			var i := await Choice.ask(Town.guild_name(), "Dormir jusqu'au lendemain matin ? (%s)" % Game.clock_text(), ["Dormir", "Annuler"])
 			if i == 0:
 				Game.sleep()
+		"orders":
+			await GuildOrders.open()
 		"craft":
 			Crafting.open(&"camp")
 		"upgrade":
@@ -181,13 +185,13 @@ func _missing_buildings_text() -> String:
 func _change_class() -> void:
 	var ids: Array[StringName] = []
 	var options: Array[String] = []
-	for id in Hero.ORDER:
+	for id in Hero.all_classes():
 		if Hero.unlocked.has(id):
 			ids.append(id)
 			var mark := " (actuelle)" if id == Hero.current else ""
-			options.append("%s — niveau %d%s" % [Hero.CLASSES[id]["name"], Hero.level(id), mark])
+			options.append("%s — niveau %d%s" % [Hero.class_data(id)["name"], Hero.level(id), mark])
 	options.append("Fermer")
 	var body := "Fabriquez l'équipement d'une classe à l'établi pour la débloquer."
 	var choice := await Choice.ask("Changer de classe", body, options)
 	if choice >= 0 and choice < ids.size() and Hero.switch_to(ids[choice]):
-		Narration.say("%s : %s" % [Hero.CLASSES[ids[choice]]["name"], Hero.CLASSES[ids[choice]]["role"]], 2.6)
+		Narration.say("%s : %s" % [Hero.class_data(ids[choice])["name"], Hero.class_data(ids[choice])["role"]], 2.6)

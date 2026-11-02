@@ -68,6 +68,10 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"wraps_shoes", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 2, &"crypt_leather": 1}},
 	{"out": &"spectral_staff", "n": 1, "station": &"workbench", "in": {&"wood": 2, &"spectral_essence": 3, &"mana_crystal": 2}},
 	{"out": &"spectral_tome", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 3, &"spectral_essence": 2, &"silver_ingot": 1}},
+	# ---- Classes mixtes : apparaissent quand le héros a débloqué la classe (requires).
+	{"out": &"long_sword", "n": 1, "station": &"forge", "in": {&"silver_ingot": 3, &"iron_ingot": 2, &"crypt_leather": 1}, "requires": [&"knight", &"paladin"]},
+	{"out": &"tower_shield", "n": 1, "station": &"forge", "in": {&"silver_ingot": 4, &"crypt_leather": 2, &"wood": 2}, "requires": [&"knight"]},
+	{"out": &"sacred_shield", "n": 1, "station": &"forge", "in": {&"silver_ingot": 4, &"spectral_essence": 2, &"mana_crystal": 1}, "requires": [&"paladin"]},
 ]
 const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à peaux", &"camp": "Feu de camp", &"forge": "Forge"}
 
@@ -97,6 +101,7 @@ const CATEGORIES := {
 	&"wraps_hood": "Palier 2 · tissu (mage, clerc)", &"spectral_robe": "Palier 2 · tissu (mage, clerc)",
 	&"wraps_gloves": "Palier 2 · tissu (mage, clerc)", &"wraps_shoes": "Palier 2 · tissu (mage, clerc)",
 	&"potion_mana": "Potions", &"potion_stamina": "Potions",
+	&"long_sword": "Classes mixtes", &"tower_shield": "Classes mixtes", &"sacred_shield": "Classes mixtes",
 }
 
 
@@ -107,8 +112,11 @@ func category_of(recipe: Dictionary) -> String:
 func recipes_for(station: StringName) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for r in RECIPES:
-		if r["station"] == station:
-			out.append(r)
+		if r["station"] != station:
+			continue
+		if r.has("requires") and not r["requires"].any(func(c): return Hero.unlocked.has(c)):
+			continue
+		out.append(r)
 	return out
 
 
@@ -117,6 +125,16 @@ func can_craft(recipe: Dictionary) -> bool:
 		if Town.amount_of(id) < int(recipe["in"][id]):
 			return false
 	return true
+
+
+## Ce qui manque pour une recette : « 2 lingots de fer, 1 bois ».
+func missing_text(recipe: Dictionary) -> String:
+	var miss := {}
+	for id in recipe["in"]:
+		var lack := int(recipe["in"][id]) - Town.amount_of(id)
+		if lack > 0:
+			miss[id] = lack
+	return Building.cost_text(miss)
 
 
 func craft(recipe: Dictionary) -> bool:
@@ -168,10 +186,10 @@ func _open_list(station: StringName, list: Array[Dictionary], body: String) -> v
 		var options: Array[String] = []
 		for r in list:
 			var item := Inventory.item_by_id(r["out"])
-			var mark := "" if can_craft(r) else "  (manque)"
+			var mark := "" if can_craft(r) else "  (manque : %s)" % missing_text(r)
 			options.append("%s ← %s%s" % [item.display_name, Building.cost_text(r["in"]), mark])
 		options.append("Retour")
-		var choice := await Choice.ask(STATION_NAMES.get(station, "Atelier"), body, options)
+		var choice := await Choice.ask(STATION_NAMES.get(station, "Atelier"), body + "\n(Matériaux pris dans le sac, l'entrepôt et les stocks des ateliers.)", options)
 		if choice < 0 or choice >= list.size():
 			return
 		var r: Dictionary = list[choice]

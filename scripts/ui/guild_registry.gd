@@ -92,6 +92,9 @@ static func member_sheet(id: int) -> void:
 			actions.append("gear")
 			options.append("Comportement au combat : %s" % Roster.STANCES.get(m["stance"], "Équilibré"))
 			actions.append("stance")
+			if not Roster.promotions(m).is_empty():
+				options.append("Classe mixte…")
+				actions.append("promote")
 			options.append("Revenir à son métier (%s)" % String(Roster.JOBS.get(StringName(m.get("job", "")), "villageois")).to_lower())
 			actions.append("back_to_work")
 		else:
@@ -109,6 +112,8 @@ static func member_sheet(id: int) -> void:
 				await _member_gear(m)
 			"train":
 				await _train(m)
+			"promote":
+				await _promote(m)
 			"back_to_work":
 				var k := await Choice.ask("Revenir au métier ?", "%s rend son équipement (il revient dans votre sac) et reprend son métier. Ses niveaux de combat sont gardés." % m["name"], ["Confirmer", "Annuler"])
 				if k == 0:
@@ -133,6 +138,27 @@ static func member_sheet(id: int) -> void:
 					return
 
 
+## Classe mixte d'un membre : débloquée par le héros, au niveau demandé dans sa classe.
+## Coût : de l'or et l'arme de la classe mixte (prise dans le sac).
+static func _promote(m: Dictionary) -> void:
+	var ids := Roster.promotions(m)
+	var opts: Array[String] = []
+	for id in ids:
+		var w := Inventory.item_by_id(Roster.MIXED_WEAPONS[id])
+		opts.append("%s — %d or + %s%s" % [Hero.MIXED[id]["name"], Roster.PROMOTE_GOLD, w.display_name,
+			"" if Inventory.get_count(w.id) > 0 else " (pas dans le sac)"])
+	opts.append("Retour")
+	var i := await Choice.ask("Classe mixte de %s" % m["name"],
+		"Une classe mixte garde son niveau et ses techniques, et en apprend de nouvelles. L'arme actuelle revient dans votre sac.", opts)
+	if i < 0 or i >= ids.size():
+		return
+	var err := Roster.promote(m, ids[i])
+	if err != "":
+		Narration.say(err, 2.5)
+	else:
+		Narration.say("%s devient %s !" % [m["name"], String(Hero.MIXED[ids[i]]["name"]).to_lower()], 3.0)
+
+
 ## Former un villageois : choisir la classe, puis l'arme (prise dans le sac).
 static func _train(m: Dictionary) -> void:
 	var classes: Array = Hero.ORDER
@@ -140,7 +166,7 @@ static func _train(m: Dictionary) -> void:
 	for cls in classes:
 		var n := Roster.weapons_in_bag(cls).size()
 		var base := Inventory.item_by_id(Roster.CLASS_WEAPONS[cls])
-		opts.append("%s — %s" % [Hero.CLASSES[cls]["name"], "%d arme%s dans le sac" % [n, "s" if n > 1 else ""] if n > 0 else "il faut : %s (ou une arme de la classe)" % base.display_name])
+		opts.append("%s — %s" % [Hero.class_data(cls)["name"], "%d arme%s dans le sac" % [n, "s" if n > 1 else ""] if n > 0 else "il faut : %s (ou une arme de la classe)" % base.display_name])
 	opts.append("Retour")
 	var bonus: Array = Roster.ORIGIN_BONUS.get(StringName(m.get("job", "")), [])
 	var body := "%s quitte son métier et devient combattant. Il lui faut l'arme de sa classe (prise dans votre sac)." % m["name"]
@@ -162,7 +188,7 @@ static func _train(m: Dictionary) -> void:
 	if j < 0 or j >= weapons.size():
 		return
 	if Roster.train(m, cls, weapons[j]):
-		Narration.say("%s devient %s !" % [m["name"], String(Hero.CLASSES[cls]["name"]).to_lower()], 3.0)
+		Narration.say("%s devient %s !" % [m["name"], String(Hero.class_data(cls)["name"]).to_lower()], 3.0)
 
 
 ## Équipement d'un membre : chaque emplacement, objets du sac qui lui conviennent.

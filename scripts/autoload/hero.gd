@@ -60,6 +60,27 @@ const CLASSES: Dictionary = {
 		"regen": 8.0},
 }
 const ORDER: Array[StringName] = [&"warrior", &"archer", &"mage", &"cleric"]
+
+## Les classes mixtes (voir CLASSES.md) : une branche d'une classe ou le mélange de deux.
+## bases : classes d'origine ; unlock_level : niveau à atteindre dans chacune ; quest : la quête
+## (ClassQuests) qui la débloque. Le niveau continue : elle démarre au niveau de ses classes
+## d'origine (le plus bas des deux pour un mélange), avec les points de ces niveaux à répartir.
+## Elle garde les techniques de ses classes d'origine et en ajoute trois (niveaux 20, 35, 45).
+const MIXED: Dictionary = {
+	&"knight": {"name": "Chevalier", "role": "Épée et grand bouclier : encaisse, attire les monstres sur lui, protège le groupe.",
+		"attack": "melee", "cooldown": 0.0, "item": &"", "tint": Color(0.92, 0.96, 1.1), "icon": 272,
+		"stats": {&"str": 5, &"dex": 2, &"int": 1, &"wis": 2, &"vit": 7},
+		"growth": {&"str": 0.6, &"dex": 0.2, &"int": 0.1, &"wis": 0.2, &"vit": 0.8},
+		"main": &"str", "resource": "Vigueur", "res_stat": &"vit", "skill_word": "Techniques",
+		"bases": [&"warrior"], "unlock_level": 20, "quest": &"knight"},
+	&"paladin": {"name": "Paladin", "role": "Guerrier sacré : épée longue et bouclier sacré, soigne le groupe en combattant.",
+		"attack": "melee", "cooldown": 0.0, "item": &"", "tint": Color(1.15, 1.08, 0.82), "icon": 416,
+		"stats": {&"str": 5, &"dex": 2, &"int": 2, &"wis": 5, &"vit": 5},
+		"growth": {&"str": 0.6, &"dex": 0.2, &"int": 0.2, &"wis": 0.6, &"vit": 0.6},
+		"main": &"str", "resource": "Mana", "res_stat": &"wis", "skill_word": "Techniques et prières",
+		"bases": [&"warrior", &"cleric"], "unlock_level": 20, "quest": &"paladin"},
+}
+const MIXED_ORDER: Array[StringName] = [&"knight", &"paladin"]
 ## Nombre d'emplacements de techniques dans la barre (touches R, F, C).
 const SKILL_SLOTS := 3
 
@@ -111,7 +132,43 @@ func reset() -> void:
 
 
 func info(id: StringName = &"") -> Dictionary:
-	return CLASSES[current if id == &"" else id]
+	var c := current if id == &"" else id
+	return CLASSES[c] if CLASSES.has(c) else MIXED[c]
+
+
+## Toutes les classes : de base puis mixtes.
+static func all_classes() -> Array[StringName]:
+	var out: Array[StringName] = ORDER.duplicate()
+	out.append_array(MIXED_ORDER)
+	return out
+
+
+## Données d'une classe, de base ou mixte.
+static func class_data(id: StringName) -> Dictionary:
+	return CLASSES[id] if CLASSES.has(id) else MIXED.get(id, {})
+
+
+static func is_mixed(id: StringName) -> bool:
+	return MIXED.has(id)
+
+
+## Les classes d'origine (une classe de base est sa propre origine).
+static func bases_of(id: StringName) -> Array[StringName]:
+	var out: Array[StringName] = [id]
+	if MIXED.has(id):
+		for b in MIXED[id]["bases"]:
+			out.append(b)
+	return out
+
+
+## Un objet réservé à certaines classes convient-il à `id` (ou à ses classes d'origine) ?
+static func classes_fit(classes: Array, id: StringName) -> bool:
+	if classes.is_empty():
+		return true
+	for c in bases_of(id):
+		if classes.has(c):
+			return true
+	return false
 
 
 func level(id: StringName = &"") -> int:
@@ -130,7 +187,7 @@ func xp_to_next(lvl: int) -> int:
 ## Valeur d'une caractéristique : base de la classe + croissance par niveau + points répartis.
 func stat(key: StringName, cls: StringName = &"") -> int:
 	var c := current if cls == &"" else cls
-	var data: Dictionary = CLASSES[c]
+	var data: Dictionary = class_data(c)
 	var base := float(data["stats"][key]) + float(data["growth"][key]) * (level(c) - 1)
 	return int(floor(base)) + allocated(key, c) + gear_bonus(key)
 
@@ -364,7 +421,7 @@ const BONUS_SHORT := {&"str": "FOR", &"dex": "DEX", &"int": "INT", &"wis": "SAG"
 func can_wear(item: ItemData) -> bool:
 	if item == null or item.slot == &"":
 		return false
-	return item.classes.is_empty() or item.classes.has(current)
+	return classes_fit(item.classes, current)
 
 
 ## Bonus total de l'équipement porté pour une caractéristique (seulement les objets
@@ -490,6 +547,13 @@ func unlock(id: StringName) -> bool:
 	unlocked.append(id)
 	levels[id] = 1
 	xp[id] = 0
+	if is_mixed(id):
+		# Le niveau continue : celui des classes d'origine (le plus bas), avec ses points.
+		var lvl := MAX_LEVEL
+		for b in MIXED[id]["bases"]:
+			lvl = mini(lvl, level(b))
+		levels[id] = maxi(1, lvl)
+		unspent[id] = (levels[id] - 1) * POINTS_PER_LEVEL
 	_auto_equip(id)
 	return true
 
@@ -536,6 +600,7 @@ func gain_xp(amount: int) -> void:
 					SkillBook.SKILLS[id]["name"]], 3.0)
 	if level() >= MAX_LEVEL:
 		xp[current] = 0
+	ClassQuests.on_level_up()
 	xp_changed.emit(current, level(), int(xp[current]))
 	stats_changed.emit()
 

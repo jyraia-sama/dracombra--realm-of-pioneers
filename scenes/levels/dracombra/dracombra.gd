@@ -34,6 +34,12 @@ func _ready() -> void:
 		lysia.name = "Lysia"
 		lysia.position = guild.position + Vector2(30, 6)
 		$Props.add_child(lysia)
+	# Dame Ombeline, maîtresse d'armes (quêtes des classes mixtes), près de la guilde.
+	if Game.has_flag(&"ombeline_arrived"):
+		var omb := Ombeline.new()
+		omb.name = "Ombeline"
+		omb.position = guild.position + Vector2(-36, 10)
+		$Props.add_child(omb)
 	super()
 	# Sol aux bords organiques (plus d'effet de grille).
 	GroundPainter.apply(self, $Ground, &"city")

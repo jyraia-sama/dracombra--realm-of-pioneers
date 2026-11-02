@@ -23,6 +23,9 @@ const CLASS_COMBAT := {
 	&"archer": {"weapon": 9, "hp": 100, "hp_vit": 5, "armor": 4, "poise": 0},
 	&"mage": {"weapon": 22, "hp": 80, "hp_vit": 4, "armor": 0, "poise": 0},
 	&"cleric": {"weapon": 9, "hp": 100, "hp_vit": 5, "armor": 5, "poise": 5},
+	# Classes mixtes : le chevalier encaisse encore plus que le guerrier ; le paladin entre les deux.
+	&"knight": {"weapon": 11, "hp": 140, "hp_vit": 7, "armor": 18, "poise": 30},
+	&"paladin": {"weapon": 11, "hp": 125, "hp_vit": 6, "armor": 13, "poise": 20},
 }
 
 ## Les monstres au niveau 1. Les dégâts de base sont réglés dans leur script ;
@@ -151,6 +154,9 @@ static func pick_target(enemy: Node2D, current: Node2D = null) -> Node2D:
 	var player := tree.get_first_node_in_group("player") as Node2D
 	if player:
 		candidates.append(player)
+		# Provocation du chevalier : les monstres proches ne voient plus que lui.
+		if Hero.buff(&"taunt", 0.0) > 0.0 and enemy.global_position.distance_to(player.global_position) < Game.TILE_SIZE * 9.0:
+			return player
 	for c in tree.get_nodes_in_group("companions"):
 		if c is Companion and (c as Companion).can_be_targeted():
 			candidates.append(c)

@@ -95,14 +95,36 @@ const SKILLS: Dictionary = {
 	&"judgement": {"class": &"cleric", "name": "Jugement", "level": 75, "cost": 18, "cooldown": 20.0,
 		"type": "nova", "mult": 4.0, "radius": 4.0, "knock": 3.0, "color": Color(1.0, 1.0, 0.75),
 		"desc": "Une colonne de lumière foudroie tout ce qui entoure le héros (×4 dégâts)."},
+	# ------------------------------------------------------------ Chevalier (classe mixte)
+	&"taunt": {"class": &"knight", "name": "Provocation", "level": 20, "cost": 6, "cooldown": 12.0,
+		"type": "buff", "buff": {"taunt": 1.0, "guard": 0.7}, "duration": 5.0, "color": Color(1.0, 0.45, 0.35),
+		"desc": "Tous les monstres proches s'en prennent au chevalier pendant 5 s ; il encaisse 30 % de moins."},
+	&"shield_bash": {"class": &"knight", "name": "Coup de bouclier", "level": 35, "cost": 6, "cooldown": 6.0,
+		"type": "nova", "mult": 1.6, "radius": 1.6, "knock": 4.0, "color": Color(0.8, 0.85, 1.0),
+		"desc": "Un grand coup de bouclier repousse loin tous les ennemis autour."},
+	&"bulwark": {"class": &"knight", "name": "Rempart", "level": 45, "cost": 10, "cooldown": 25.0,
+		"type": "buff", "buff": {"guard": 0.25}, "duration": 6.0, "group": true, "color": Color(0.7, 0.8, 1.0),
+		"desc": "Le chevalier et ses compagnons proches ne subissent qu'un quart des dégâts pendant 6 s."},
+	# ------------------------------------------------------------ Paladin (classe mixte)
+	&"holy_blade": {"class": &"paladin", "name": "Lame bénie", "level": 20, "cost": 7, "cooldown": 14.0,
+		"type": "buff", "buff": {"damage": 1.35}, "duration": 10.0, "heal": 0.15, "color": Color(1.0, 0.9, 0.5),
+		"desc": "+35 % de dégâts pendant 10 s et rend 15 % des PV."},
+	&"light_aura": {"class": &"paladin", "name": "Aura de lumière", "level": 35, "cost": 10, "cooldown": 18.0,
+		"type": "heal", "heal": 0.25, "group": true, "color": Color(0.7, 1.0, 0.7),
+		"desc": "Rend 25 % des PV au paladin et à ses compagnons proches."},
+	&"divine_hammer": {"class": &"paladin", "name": "Marteau divin", "level": 45, "cost": 12, "cooldown": 12.0,
+		"type": "area", "mult": 3.0, "radius": 1.8, "dist": 1.5, "delay": 0.25, "ticks": 1, "interval": 0.0,
+		"color": Color(1.0, 0.95, 0.6), "desc": "Un marteau de lumière s'abat devant le paladin (×3 dégâts, en zone)."},
 }
 
 
 ## Les techniques d'une classe, dans l'ordre d'apprentissage.
+## Techniques d'une classe ; une classe mixte garde aussi celles de ses classes d'origine.
 static func of_class(cls: StringName) -> Array[StringName]:
 	var out: Array[StringName] = []
+	var from := Hero.bases_of(cls)
 	for id in SKILLS:
-		if SKILLS[id]["class"] == cls:
+		if from.has(SKILLS[id]["class"]):
 			out.append(id)
 	out.sort_custom(func(a, b): return int(SKILLS[a]["level"]) < int(SKILLS[b]["level"]))
 	return out

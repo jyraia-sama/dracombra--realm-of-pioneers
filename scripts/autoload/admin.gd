@@ -77,16 +77,17 @@ func open_menu() -> void:
 
 func _pick_class() -> void:
 	var options: Array[String] = []
-	for id in Hero.ORDER:
-		options.append("%s%s" % [Hero.CLASSES[id]["name"], " (actuelle)" if id == Hero.current else ""])
+	var all := Hero.all_classes()
+	for id in all:
+		options.append("%s%s" % [Hero.class_data(id)["name"], " (actuelle)" if id == Hero.current else ""])
 	options.append("Fermer")
 	var i := await Choice.ask("Changer de classe", "Sans condition (mode admin).", options)
-	if i < 0 or i >= Hero.ORDER.size():
+	if i < 0 or i >= all.size():
 		return
-	var id: StringName = Hero.ORDER[i]
+	var id: StringName = all[i]
 	Hero.unlock(id)
 	if Hero.switch_to(id):
-		Narration.say("%s : %s" % [Hero.CLASSES[id]["name"], Hero.CLASSES[id]["role"]], 2.0)
+		Narration.say("%s : %s" % [Hero.class_data(id)["name"], Hero.class_data(id)["role"]], 2.0)
 
 
 func _pick_floor() -> void:

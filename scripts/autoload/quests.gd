@@ -42,7 +42,7 @@ func current() -> Dictionary:
 ## Texte affiché à l'écran.
 func objective_text() -> String:
 	if not active():
-		return ""
+		return ClassQuests.objective_text() if Game.has_flag(&"prologue_done") else ""
 	var s := current()
 	var text := "Objectif : %s" % s["title"]
 	var progress := _progress(s)

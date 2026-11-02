@@ -288,8 +288,14 @@ func _furnish() -> void:
 				props.add_child(chest)
 			DungeonGen.Kind.SECRET:
 				var rich := DungeonRoomProps.chest(floor_number, int(zone()["tier"]), true)
-				rich.position = c
+				rich.position = c + Vector2(40, 0)
 				props.add_child(rich)
+				# Quête du Paladin : l'autel du bouclier sacré (étages 5 à 7).
+				if zone_index() == 1 and floor_number >= 5 and ClassQuests.active(&"paladin") \
+						and not Game.has_flag(ClassQuests.flag(&"paladin", "ready")):
+					var shrine := ClassQuests.shrine()
+					shrine.position = c + Vector2(-20, 0)
+					props.add_child(shrine)
 		if kind == DungeonGen.Kind.START:
 			continue
 		var count := rng.randi_range(1, 3)

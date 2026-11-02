@@ -150,11 +150,18 @@ func _workplace_menu() -> void:
 		var names: Array[String] = []
 		for m in workers:
 			names.append("%s (%s)" % [m["name"], Roster.specialty(m)])
-		var body := "%s\nTravailleurs (%d/%d) : %s.\nProduction par travailleur et par jour : %s." % [data.description,
-			workers.size(), data.workers, ", ".join(names) if not names.is_empty() else "personne",
-			cost_text(data.produces)]
+		var is_station := Crafting.STATION_NAMES.has(data.id)
+		var work_text := "Production par travailleur et par jour : %s." % cost_text(data.produces) if not is_station \
+			else "Ils fabriquent les commandes de la guilde (%d en cours)." % GuildOrders.pending_count()
+		var body := "%s\nTravailleurs (%d/%d) : %s.\n%s" % [data.description,
+			workers.size(), data.workers, ", ".join(names) if not names.is_empty() else "personne", work_text]
 		var options: Array[String] = []
 		var acts: Array = []
+		if is_station:
+			options.append("Fabriquer vous-même")
+			acts.append(["craft"])
+			options.append("Commandes de la guilde (%d)" % GuildOrders.pending_count())
+			acts.append(["orders"])
 		var has_stock := not _stock_text(stock).is_empty()
 		if has_stock:
 			options.append("Récupérer : %s" % _stock_text(stock))
@@ -173,6 +180,10 @@ func _workplace_menu() -> void:
 		if i < 0 or acts[i][0] == "close":
 			return
 		match acts[i][0]:
+			"craft":
+				await Crafting.open(data.id)
+			"orders":
+				await GuildOrders.open()
 			"take":
 				var got := {}
 				for k in stock:

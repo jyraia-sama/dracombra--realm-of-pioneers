@@ -47,6 +47,7 @@ func reset() -> void:
 	tier = 0
 	sites.clear()
 	warehouse = {}
+	orders = []
 	guild_upgrade = {}
 	changed.emit()
 
@@ -129,6 +130,8 @@ func missing(cost: Dictionary, delivered: Dictionary) -> Dictionary:
 ## Stock commun de la ville : { identifiant : quantité }. Rempli par la production une fois
 ## l'entrepôt construit ; l'établi, la forge et les chantiers y puisent (après le sac).
 var warehouse: Dictionary = {}
+## Commandes de la guilde en cours (voir GuildOrders).
+var orders: Array = []
 
 
 func has_warehouse() -> bool:
@@ -144,12 +147,37 @@ func store(id: StringName, n: int) -> void:
 	changed.emit()
 
 
-## Quantité disponible : sac du héros + entrepôt.
+## Ce que gardent les bâtiments de travail (avant l'entrepôt, ou en attendant le transport du matin).
+func in_workshops(id: StringName) -> int:
+	var n := 0
+	for r in sites:
+		n += int(r.get("stock", {}).get(String(id), 0))
+	return n
+
+
+## Quantité disponible pour fabriquer et bâtir : sac du héros + entrepôt + stocks des bâtiments.
+## Tous les ateliers (établi, forge, séchoir, chantiers, commandes) puisent dans cette réserve.
 func amount_of(id: StringName) -> int:
-	return Inventory.get_count(id) + stored(id)
+	return Inventory.get_count(id) + int(warehouse.get(String(id), 0)) + in_workshops(id)
 
 
-## Prend `n` objets : d'abord dans le sac, puis dans l'entrepôt. false (rien pris) s'il en manque.
+## Détail de la réserve, pour l'affichage : « 3 (sac 1, entrepôt 2) ».
+func amount_text(id: StringName) -> String:
+	var parts: Array[String] = []
+	var bag := Inventory.get_count(id)
+	var ware := int(warehouse.get(String(id), 0))
+	var shops := in_workshops(id)
+	if bag > 0:
+		parts.append("sac %d" % bag)
+	if ware > 0:
+		parts.append("entrepôt %d" % ware)
+	if shops > 0:
+		parts.append("ateliers %d" % shops)
+	return "%d%s" % [bag + ware + shops, " (%s)" % ", ".join(parts) if parts.size() > 1 else ""]
+
+
+## Prend `n` objets : d'abord dans le sac, puis dans l'entrepôt, puis dans les stocks des
+## bâtiments. false (rien pris) s'il en manque.
 func consume(id: StringName, n: int) -> bool:
 	if amount_of(id) < n:
 		return false
@@ -158,11 +186,22 @@ func consume(id: StringName, n: int) -> bool:
 	if from_bag > 0:
 		Inventory.remove_item(item, from_bag)
 	var rest := n - from_bag
-	if rest > 0:
-		warehouse[String(id)] = int(warehouse.get(String(id), 0)) - rest
-		if int(warehouse[String(id)]) <= 0:
-			warehouse.erase(String(id))
-		changed.emit()
+	var key := String(id)
+	if rest > 0 and int(warehouse.get(key, 0)) > 0:
+		var take := mini(int(warehouse[key]), rest)
+		warehouse[key] = int(warehouse[key]) - take
+		if int(warehouse[key]) <= 0:
+			warehouse.erase(key)
+		rest -= take
+	for r in sites:
+		if rest <= 0:
+			break
+		var st: Dictionary = r.get("stock", {})
+		if int(st.get(key, 0)) > 0:
+			var take := mini(int(st[key]), rest)
+			st[key] = int(st[key]) - take
+			rest -= take
+	changed.emit()
 	return true
 
 
@@ -255,6 +294,10 @@ func advance_day() -> Array[String]:
 				guild_upgrade = {}
 				messages.append("La guilde devient : %s. Dracombra est maintenant un %s !" % [guild_name(), tier_name().to_lower()])
 				messages.append("Un nouveau quartier peut être déblayé.")
+	# Les artisans avancent les commandes de la guilde.
+	var made := GuildOrders.work_day()
+	if not made.is_empty():
+		messages.append("Commandes prêtes (%s) : %s." % ["à l'entrepôt" if has_warehouse() else "dans votre sac", Building.cost_text(made)])
 	changed.emit()
 	return messages
 
@@ -263,7 +306,7 @@ func advance_day() -> Array[String]:
 
 func serialize() -> Dictionary:
 	return {"tier": tier, "sites": sites.duplicate(true), "guild_upgrade": guild_upgrade.duplicate(true),
-		"warehouse": warehouse.duplicate()}
+		"warehouse": warehouse.duplicate(), "orders": orders.duplicate(true)}
 
 
 func deserialize(data: Dictionary) -> void:
@@ -282,4 +325,5 @@ func deserialize(data: Dictionary) -> void:
 		sites.append(record)
 	guild_upgrade = data.get("guild_upgrade", {})
 	warehouse = data.get("warehouse", {}).duplicate()
+	orders = data.get("orders", []).duplicate(true)
 	changed.emit()

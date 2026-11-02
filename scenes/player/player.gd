@@ -229,7 +229,8 @@ const WEAPONS := {
 	&"pickaxe": ["res://assets/sprites/weapons/pickaxe.png", Vector2(8.5, 16), "swing"],
 	&"book": ["res://assets/sprites/weapons/book.png", Vector2(7, 15), "upright"],
 }
-const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"book"}
+const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"book",
+	&"knight": &"sword", &"paladin": &"sword"}
 ## Outil sorti pour récolter : ressource -> outil.
 const HARVEST_TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe", &"iron_ore": &"pickaxe",
 	&"mana_crystal": &"pickaxe", &"obsidian_shard": &"pickaxe"}
@@ -478,7 +479,7 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 	visual.modulate = Color.WHITE
 	var knock := hitbox.knockback_tiles
 	# Le guerrier encaisse mieux : il est repoussé deux fois moins loin.
-	if Game.has_flag(&"prologue_done") and Hero.current == &"warrior":
+	if Game.has_flag(&"prologue_done") and Hero.bases_of(Hero.current).has(&"warrior"):
 		knock *= 0.5
 	var knockback_speed: float = knock * Game.TILE_SIZE / hurt_duration
 	velocity = hitbox.get_knockback_direction(global_position) * knockback_speed

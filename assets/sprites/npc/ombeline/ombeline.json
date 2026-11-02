@@ -1,0 +1,55 @@
+{
+ "cell": [
+  48,
+  64
+ ],
+ "anchor": [
+  24,
+  62
+ ],
+ "scale": 0.5,
+ "dirs": [
+  "bas",
+  "haut",
+  "droite"
+ ],
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 2,
+   "fps": 3,
+   "loop": true
+  },
+  "walk": {
+   "row": 3,
+   "frames": 4,
+   "fps": 8,
+   "loop": true
+  },
+  "attack": {
+   "row": 6,
+   "frames": 3,
+   "fps": 0,
+   "loop": false
+  },
+  "harvest": {
+   "row": 9,
+   "frames": 2,
+   "fps": 0,
+   "loop": false
+  },
+  "hurt": {
+   "row": 12,
+   "frames": 1,
+   "fps": 8,
+   "loop": false
+  },
+  "death": {
+   "row": 15,
+   "frames": 2,
+   "fps": 5,
+   "loop": false
+  }
+ },
+ "provisoire": true
+}

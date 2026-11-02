@@ -49,6 +49,14 @@ var _last_pos := Vector2.ZERO
 var _stuck := 0.0
 
 const HEAL_COST := 6.0
+var _guard := 1.0
+var _guard_until := 0
+
+
+## Protection donnée par une technique de groupe (Rempart du chevalier) : dégâts × value.
+func add_guard(value: float, duration: float) -> void:
+	_guard = value
+	_guard_until = Time.get_ticks_msec() + int(duration * 1000.0)
 const HEAL_COOLDOWN := 8.0
 const DODGE_COOLDOWN := 2.5
 
@@ -103,7 +111,9 @@ func _ready() -> void:
 	hurtbox.collision_mask = 0
 	hurtbox.health = health
 	# Sa défense retire un pourcentage des dégâts (comme le héros).
-	hurtbox.damage_filter = func(amount: int) -> int: return Combat.after_defense(amount, Roster.defense(_m))
+	hurtbox.damage_filter = func(amount: int) -> int:
+		var guard := _guard if Time.get_ticks_msec() < _guard_until else 1.0
+		return Combat.after_defense(amount * guard, Roster.defense(_m))
 	var hs := CollisionShape2D.new()
 	var hr := RectangleShape2D.new()
 	hr.size = Vector2(12, 22)
@@ -131,7 +141,12 @@ func _ready() -> void:
 
 
 func mana_max() -> float:
-	return 10.0 + 2.0 * Roster.stat(_m, &"wis") if _cls == &"cleric" else 0.0
+	return 10.0 + 2.0 * Roster.stat(_m, &"wis") if _healer() else 0.0
+
+
+## Le clerc et le paladin soignent le groupe.
+func _healer() -> bool:
+	return Hero.bases_of(_cls).has(&"cleric")
 
 
 ## Les monstres peuvent-ils le viser ?
@@ -203,12 +218,12 @@ func _physics_process(delta: float) -> void:
 		teleport_near(player.global_position)
 	_check_stuck(delta, player)
 	var stance: String = Roster.by_id(member_id).get("stance", "equilibre")
-	if _cls == &"cleric" and _heal_cd <= 0.0 and mana >= HEAL_COST and (stance == "soins" or stance == "equilibre"):
+	if _healer() and _heal_cd <= 0.0 and mana >= HEAL_COST and (stance == "soins" or stance == "equilibre"):
 		if _try_heal(0.7 if stance == "soins" else 0.45):
 			move_and_slide()
 			_animate()
 			return
-	var reach := 9.0 if stance == "agressif" else (4.0 if stance == "soins" and _cls != &"cleric" else 7.0)
+	var reach := 9.0 if stance == "agressif" else (4.0 if stance == "soins" and not _healer() else 7.0)
 	var low := float(health.current_health) / health.max_health < 0.4
 	if stance == "equilibre" and low:
 		_target = null
@@ -242,7 +257,8 @@ func _fight(_delta: float) -> void:
 	var to := _target.global_position - global_position
 	var dist := to.length() / Game.TILE_SIZE
 	_facing = to.normalized()
-	var ranged := _cls != &"warrior"
+	var attack: String = Hero.class_data(_cls)["attack"]
+	var ranged := attack != "melee"
 	var want := ARROW_RANGE * 0.7 if ranged else MELEE_RANGE * 0.8
 	if dist > want:
 		_move_to(_target.global_position, 4.0)
@@ -254,10 +270,10 @@ func _fight(_delta: float) -> void:
 	if _cooldown > 0.0:
 		return
 	if ranged and dist <= ARROW_RANGE:
-		var kind: StringName = {&"archer": &"arrow", &"mage": &"bolt", &"cleric": &"holy"}.get(_cls, &"arrow")
+		var kind: StringName = {"arrow": &"arrow", "bolt": &"bolt", "holy": &"holy"}.get(attack, &"arrow")
 		var shot := HeroProjectile.create(kind, global_position + Vector2(0, -10), _facing, Roster.damage(_m), self)
 		get_parent().add_child(shot)
-		_cooldown = float(Hero.CLASSES[_cls]["cooldown"]) + 0.35
+		_cooldown = float(Hero.class_data(_cls)["cooldown"]) + 0.35
 	elif not ranged and dist <= MELEE_RANGE + 0.4:
 		_melee.rotation = _facing.angle()
 		_melee.damage = Roster.damage(_m)

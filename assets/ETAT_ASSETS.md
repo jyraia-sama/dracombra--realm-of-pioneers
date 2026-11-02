@@ -31,6 +31,7 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `res://assets/sprites/buildings/work/jardin_herbes.png` | PROVISOIRE | 2026-11-02 | bâtiment 2x1 logement (généré) |
 | `res://assets/sprites/buildings/work/*.png` | PROVISOIRE | 2026-11-02 | bâtiments de travail : hutte du bûcheron, carrière, cabane du chasseur, jardin d'herbes (générés) |
 | `res://assets/sprites/buildings/work/entrepot.png` | PROVISOIRE | 2026-11-02 | bâtiment 3x2 commerce (généré) |
+| `res://assets/sprites/npc/ombeline/ombeline.png` | PROVISOIRE | 2026-11-02 | perso pnj (généré) |
 <!-- fin provisoires -->
 
 ## Existants au 2026-11-01 (version 0.4.1)
@@ -175,3 +176,4 @@ Tous marqués FINAL par défaut : passer une ligne en À DESSINER si l'asset doi
 | `res://assets/sprites/enemies/crypt/wisp.png` | PROVISOIRE | 2026-11-02 | feu follet, planche 4 × 2 (tools/placeholder/cryptes.py) |
 | `res://assets/sprites/enemies/crypt/crypt_rat.png` | PROVISOIRE | 2026-11-02 | rat des cryptes, planche 4 × 2 (tools/placeholder/cryptes.py) |
 | `res://assets/sprites/enemies/crypt/crypt_guardian.png` | PROVISOIRE | 2026-11-02 | boss Gardien des cryptes, planche 4 × 4 en cases de 128 (tools/placeholder/cryptes.py) |
+| `res://assets/sprites/items/items_mx.png` | PROVISOIRE | 2026-11-02 | icônes de l'équipement des classes mixtes : épée longue, grand bouclier, bouclier sacré (tools/placeholder/classes_mixtes.py) |

@@ -213,14 +213,14 @@ func _on_bag_selected(index: int) -> void:
 	if item.use_vigor > 0:
 		text += "\n\nRend %d de vigueur (techniques du guerrier et de l'archer)." % item.use_vigor
 	for cls in Hero.CLASSES:
-		if Hero.CLASSES[cls]["item"] == item.id:
-			text += "\n\nDébloque la classe %s." % Hero.CLASSES[cls]["name"]
+		if Hero.class_data(cls)["item"] == item.id:
+			text += "\n\nDébloque la classe %s." % Hero.class_data(cls)["name"]
 	if item.slot != &"":
 		text += "\n\n%s : %s" % [Hero.GEAR_NAMES.get(item.slot, ""), bonus_text(item)]
 		if not item.classes.is_empty():
 			var names: Array[String] = []
 			for c in item.classes:
-				names.append(Hero.CLASSES[c]["name"])
+				names.append(Hero.class_data(c)["name"])
 			text += "\nClasses : %s" % ", ".join(names)
 		text += "\n" + Loot.compare_text(item)
 	_bag_info.text = text
@@ -242,7 +242,7 @@ func _on_bag_use() -> void:
 	# Les armes de classe (bâton, arc, symbole) ne se portent pas : elles suivent la classe.
 	var is_class_item := false
 	for cls in Hero.CLASSES:
-		if Hero.CLASSES[cls]["item"] == item.id:
+		if Hero.class_data(cls)["item"] == item.id:
 			is_class_item = true
 	if item.slot == &"" and not _drinkable(item):
 		_on_bag_selected(sel[0])
@@ -430,8 +430,8 @@ func _refresh_sheet() -> void:
 		child.queue_free()
 	var can_switch := Hero.can_switch_here()
 	var summary: Array[String] = []
-	for id in Hero.ORDER:
-		var cd: Dictionary = Hero.CLASSES[id]
+	for id in Hero.all_classes():
+		var cd: Dictionary = Hero.class_data(id)
 		if Hero.unlocked.has(id):
 			summary.append("%s niv. %d" % [cd["name"], Hero.level(id)])
 			var b := _small_button("%s (niv. %d)" % [cd["name"], Hero.level(id)])

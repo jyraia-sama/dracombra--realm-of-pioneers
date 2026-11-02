@@ -15,3 +15,5 @@ build_days = 2
 texture = ExtResource("2_t")
 housing = 0
 can_sleep = false
+job = &"forgeron"
+workers = 2
