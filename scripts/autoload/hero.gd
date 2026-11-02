@@ -91,8 +91,33 @@ const MIXED: Dictionary = {
 		"growth": {&"str": 0.1, &"dex": 0.3, &"int": 0.9, &"wis": 0.4, &"vit": 0.3},
 		"main": &"int", "resource": "Mana", "res_stat": &"int", "skill_word": "Sorts",
 		"bases": [&"mage"], "unlock_level": 20, "quest": &"elementalist"},
+	&"priest": {"name": "Prêtre", "role": "Le soigneur du groupe : prières qui soignent tout le monde, relève les compagnons à terre.",
+		"attack": "holy", "cooldown": 0.55, "item": &"", "tint": Color(1.1, 1.1, 0.95), "icon": 416,
+		"stats": {&"str": 2, &"dex": 2, &"int": 3, &"wis": 7, &"vit": 4},
+		"growth": {&"str": 0.2, &"dex": 0.2, &"int": 0.3, &"wis": 0.9, &"vit": 0.5},
+		"main": &"wis", "resource": "Mana", "res_stat": &"wis", "skill_word": "Prières",
+		"bases": [&"cleric"], "unlock_level": 20, "quest": &"priest"},
+	&"ranger": {"name": "Rôdeur", "role": "Chasseur des terres sauvages : arc et hachette, pièges, redoutable contre les bêtes.",
+		"attack": "arrow", "cooldown": 0.4, "item": &"", "tint": Color(0.95, 1.05, 0.9), "icon": 224,
+		"stats": {&"str": 4, &"dex": 6, &"int": 1, &"wis": 2, &"vit": 4},
+		"growth": {&"str": 0.5, &"dex": 0.6, &"int": 0.1, &"wis": 0.2, &"vit": 0.5},
+		"main": &"dex", "resource": "Vigueur", "res_stat": &"dex", "skill_word": "Techniques",
+		"bases": [&"archer", &"warrior"], "unlock_level": 20, "quest": &"ranger"},
+	&"spellblade": {"name": "Lame-sort", "role": "Épée enchantée : des coups chargés de feu et de foudre, et la magie pour se protéger.",
+		"attack": "melee", "cooldown": 0.0, "item": &"", "tint": Color(0.95, 0.9, 1.1), "icon": 272,
+		"stats": {&"str": 5, &"dex": 3, &"int": 5, &"wis": 2, &"vit": 4},
+		"growth": {&"str": 0.5, &"dex": 0.3, &"int": 0.5, &"wis": 0.2, &"vit": 0.5},
+		"main": &"str", "resource": "Mana", "res_stat": &"int", "skill_word": "Techniques et sorts",
+		"bases": [&"warrior", &"mage"], "unlock_level": 20, "quest": &"spellblade"},
+	&"oracle": {"name": "Oracle", "role": "Voit l'avenir : protège le groupe d'un instant à l'autre, ralentit le temps, appelle les étoiles.",
+		"attack": "holy", "cooldown": 0.6, "item": &"", "tint": Color(0.9, 0.95, 1.15), "icon": 240,
+		"stats": {&"str": 1, &"dex": 3, &"int": 5, &"wis": 6, &"vit": 3},
+		"growth": {&"str": 0.1, &"dex": 0.3, &"int": 0.6, &"wis": 0.6, &"vit": 0.4},
+		"main": &"wis", "resource": "Mana", "res_stat": &"wis", "skill_word": "Visions",
+		"bases": [&"mage", &"cleric"], "unlock_level": 20, "quest": &"oracle"},
 }
-const MIXED_ORDER: Array[StringName] = [&"knight", &"paladin", &"marksman", &"elementalist"]
+const MIXED_ORDER: Array[StringName] = [&"knight", &"paladin", &"marksman", &"elementalist", &"priest", &"ranger",
+	&"spellblade", &"oracle"]
 ## Nombre d'emplacements de techniques dans la barre (touches R, F, C).
 const SKILL_SLOTS := 3
 

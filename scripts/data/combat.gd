@@ -28,6 +28,10 @@ const CLASS_COMBAT := {
 	&"paladin": {"weapon": 11, "hp": 125, "hp_vit": 6, "armor": 13, "poise": 20},
 	&"marksman": {"weapon": 22, "hp": 105, "hp_vit": 5, "armor": 5, "poise": 0},
 	&"elementalist": {"weapon": 22, "hp": 85, "hp_vit": 4, "armor": 0, "poise": 0},
+	&"priest": {"weapon": 10, "hp": 105, "hp_vit": 5, "armor": 6, "poise": 5},
+	&"ranger": {"weapon": 11, "hp": 120, "hp_vit": 6, "armor": 8, "poise": 10},
+	&"spellblade": {"weapon": 13, "hp": 115, "hp_vit": 5, "armor": 10, "poise": 15},
+	&"oracle": {"weapon": 16, "hp": 95, "hp_vit": 4, "armor": 3, "poise": 0},
 }
 
 ## Les monstres au niveau 1. Les dégâts de base sont réglés dans leur script ;

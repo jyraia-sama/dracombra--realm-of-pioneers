@@ -11,6 +11,8 @@ var ticks := 1
 var interval := 0.0
 ## Si défini, la zone suit ce nœud (consécration autour du héros).
 var follow: Node2D
+## Ralentit ce qu'elle touche (piège du rôdeur).
+var slows := false
 
 var _time := 0.0
 var _next_tick := 0.0
@@ -44,6 +46,8 @@ static func create(at: Vector2, radius_px: float, dmg: int, knock_tiles: float, 
 func _ready() -> void:
 	super()
 	_next_tick = delay
+	if slows:
+		hit_landed.connect(func(h: Hurtbox) -> void: Combat.slow(h.get_parent(), 0.4, 3.0))
 
 
 func _physics_process(delta: float) -> void:

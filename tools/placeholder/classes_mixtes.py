@@ -34,6 +34,14 @@ ITEMS = [
      "Les plans d'une arme à poudre des pionniers. La forge peut s'en servir (ils ne s'usent pas).", "scroll", PAPER),
     ("elemental_scepter", "Sceptre élémentaire", "equipment", "main", {"dmg": 26, "int": 3}, ["elementalist"],
      "Trois cristaux — feu, glace, foudre — enchâssés dans le bois. Élémentaliste.", "scepter", ELEM),
+    ("prayer_book", "Livre des prières", "equipment", "main", {"dmg": 12, "wis": 3}, ["priest"],
+     "Les prières des pionniers, recopiées sur des bandelettes. Prêtre.", "book", [(200, 190, 150), (240, 230, 190), (255, 255, 230)]),
+    ("hunter_bow", "Arc de chasse", "equipment", "main", {"dmg": 13, "dex": 2, "str": 1}, ["ranger"],
+     "Un arc court et nerveux, une hachette à la ceinture. Rôdeur.", "bow", [(70, 90, 50), (110, 140, 70), (170, 200, 120)]),
+    ("rune_sword", "Épée runique", "equipment", "main", {"dmg": 18, "str": 1, "int": 2}, ["spellblade"],
+     "Des runes de mana courent le long de la lame. Lame-sort.", "long_sword", [(90, 70, 150), (150, 120, 220), (210, 190, 255)]),
+    ("oracle_scepter", "Sceptre de l'oracle", "equipment", "main", {"dmg": 20, "int": 2, "wis": 2}, ["oracle"],
+     "Un œil de cristal au bout d'un bâton d'argent. Oracle.", "scepter", [(120, 160, 240), (230, 230, 255), (200, 240, 255)]),
 ]
 
 

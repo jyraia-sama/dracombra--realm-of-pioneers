@@ -230,7 +230,8 @@ const WEAPONS := {
 	&"book": ["res://assets/sprites/weapons/book.png", Vector2(7, 15), "upright"],
 }
 const CLASS_WEAPON := {&"warrior": &"sword", &"archer": &"bow", &"mage": &"staff", &"cleric": &"book",
-	&"knight": &"sword", &"paladin": &"sword", &"marksman": &"bow", &"elementalist": &"staff"}
+	&"knight": &"sword", &"paladin": &"sword", &"marksman": &"bow", &"elementalist": &"staff",
+	&"priest": &"book", &"ranger": &"bow", &"spellblade": &"sword", &"oracle": &"staff"}
 var _elem_turn := 0
 ## Outil sorti pour récolter : ressource -> outil.
 const HARVEST_TOOLS := {&"wood": &"axe", &"stone": &"pickaxe", &"gem": &"pickaxe", &"iron_ore": &"pickaxe",

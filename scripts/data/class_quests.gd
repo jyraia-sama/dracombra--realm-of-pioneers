@@ -34,7 +34,38 @@ const QUESTS := {
 		"objective": "Rallumer les trois foyers élémentaires de la Sylve",
 		"back": "Retourner voir Dame Ombeline (Élémentaliste)",
 		"thanks": "Je les ai vus briller depuis la ville. Le feu, la glace et la foudre vous répondent maintenant, élémentaliste."},
+	&"priest": {"title": "L'épidémie",
+		"pitch": "Une fièvre court dans Dracombra. Des villageois sont tombés près de la guilde. Soignez-les tous, avant qu'elle ne s'étende.",
+		"hint": ["Un clerc peut les soigner par la prière (un peu de mana). Sinon, il faudra un baume de soin pour chacun.",
+			"Ils sont cinq, quelque part autour de la guilde."],
+		"objective": "Soigner les villageois fiévreux autour de la guilde",
+		"back": "Retourner voir Dame Ombeline (Prêtre)",
+		"thanks": "Plus un seul fiévreux. La ville vous doit beaucoup, prêtre. Vos prières portent loin, maintenant."},
+	&"ranger": {"title": "La bête de la Sylve",
+		"pitch": "Un sanglier énorme, Grand-Défense, ravage le sud de la Sylve. Les chasseurs n'osent plus sortir. Traquez-le.",
+		"hint": ["Il rôde au sud de la forêt, loin de la porte. Il charge fort : esquivez, puis frappez.",
+			"Un bon rôdeur se bat à l'arc comme à la hache. Vous aurez besoin des deux."],
+		"objective": "Abattre Grand-Défense, la bête du sud de la Sylve",
+		"back": "Retourner voir Dame Ombeline (Rôdeur)",
+		"thanks": "Grand-Défense... Les chasseurs vont pouvoir ressortir. Bienvenue parmi les rôdeurs."},
+	&"spellblade": {"title": "Le chevalier spectral",
+		"pitch": "Un ancien de mon ordre erre encore, prisonnier de son serment. Il ne cède qu'à qui le bat en duel, l'épée et la magie à la main.",
+		"objective": "Vaincre le chevalier spectral en duel (parler à Ombeline pour l'appeler)",
+		"back": "Retourner voir Dame Ombeline (Lame-sort)",
+		"thanks": "Il est enfin libre. Et vous... vous mêlez l'acier et les arcanes comme personne. Lame-sort."},
+	&"oracle": {"title": "La vision",
+		"pitch": "Je fais le même rêve chaque nuit : une lumière, tout au fond des cryptes, qui appelle quelqu'un qui voit plus loin que les autres. Suivez-la.",
+		"hint": ["Descendez dans les cryptes, aux étages 6 ou 7. La lumière attend près d'un feu de camp.",
+			"Ce qu'elle vous montrera... revenez me le raconter."],
+		"objective": "Suivre la vision au fond des cryptes (étages 6 ou 7, près d'un feu de camp)",
+		"back": "Raconter la vision à Dame Ombeline (Oracle)",
+		"thanks": "Un cartographe, perdu plus bas ? Lysia devra le savoir. Vous voyez ce que les autres ne voient pas : oracle."},
 }
+
+## L'épidémie : où sont les fiévreux, autour de la guilde (en pixels).
+const SICK := [Vector2(-90, 44), Vector2(84, 52), Vector2(-52, -70), Vector2(110, -34), Vector2(12, 96)]
+## La bête de la Sylve.
+const BEAST_AT := Vector2(1912, 1368)
 
 ## Lieux des quêtes dans la Sylve (en pixels).
 const RUINS_AT := Vector2(2232, 1336)
@@ -102,6 +133,8 @@ static func objective_text() -> String:
 			return "Objectif : forger le mousquet (forge : plans + 3 lingots de fer, 1 d'argent, 2 bois)"
 		if id == &"elementalist":
 			return "Objectif : %s (%d / 3)" % [q["objective"], lit_count()]
+		if id == &"priest":
+			return "Objectif : %s (encore %d)" % [q["objective"], sick_left()]
 		return "Objectif : %s" % q["objective"]
 	for id in Hero.MIXED_ORDER:
 		if available(id) and not active(id):
@@ -199,6 +232,8 @@ static func setup_sylve(level: Node2D) -> void:
 	if active(&"elementalist") and not Game.has_flag(flag(&"elementalist", "ready")):
 		for k in SHRINES:
 			props.add_child(ElementShrine.make(k))
+	if active(&"ranger") and not Game.has_flag(flag(&"ranger", "ready")):
+		_beast(level)
 
 
 static func _ruins(props: Node) -> void:
@@ -299,6 +334,162 @@ class ElementShrine extends Node2D:
 			Narration.say("Les trois foyers brûlent ensemble ! Dame Ombeline vous attend.", 3.5)
 		else:
 			Narration.say("Foyer du %s rallumé (%d / 3)." % [ClassQuests.SHRINE_NAMES[element], n], 2.5)
+
+
+# ------------------------------------------------------------------ Prêtre : l'épidémie
+
+static func sick_left() -> int:
+	var n := 0
+	for i in SICK.size():
+		if not Game.has_flag(StringName("cq_priest_sick_%d" % i)):
+			n += 1
+	return n
+
+
+## Pose les villageois fiévreux autour de la guilde (appelé par dracombra.gd).
+static func setup_city(level: Node2D, guild_pos: Vector2) -> void:
+	if not active(&"priest") or Game.has_flag(flag(&"priest", "ready")):
+		return
+	for i in SICK.size():
+		if Game.has_flag(StringName("cq_priest_sick_%d" % i)):
+			continue
+		var s := SickVillager.new()
+		s.index = i
+		s.position = guild_pos + SICK[i]
+		level.get_node("Props").add_child(s)
+
+
+class SickVillager extends Node2D:
+	var index := 0
+	var _sprite: Sprite2D
+
+	func _ready() -> void:
+		add_to_group("npc")
+		var base := Roster.ARTISAN_SPRITE
+		var sheet := SheetAnimation.load_sheet(base + ".json")
+		_sprite = Sprite2D.new()
+		_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		SheetAnimation.apply_to(_sprite, load(base + ".png"), sheet)
+		_sprite.modulate = Color(0.7, 0.95, 0.65)
+		_sprite.rotation = PI / 2.0
+		_sprite.position = Vector2(-8, -4)
+		add_child(_sprite)
+		var it := Interactable.new()
+		it.prompt = "Soigner le fiévreux"
+		it.radius_tiles = 1.8
+		add_child(it)
+		it.interacted.connect(_heal.bind(it))
+
+	func _heal(it: Interactable) -> void:
+		var player := get_tree().get_first_node_in_group("player") as Node2D
+		if Hero.bases_of(Hero.current).has(&"cleric") and Hero.mana >= 10.0:
+			Hero.mana -= 10.0
+			Hero.energy_changed.emit(Hero.energy, Hero.energy_max())
+		elif Inventory.get_count(&"balm") > 0:
+			Inventory.remove_item(Inventory.item_by_id(&"balm"), 1)
+		else:
+			Narration.say("Il faudrait prier (clerc, 10 mana) ou un baume de soin.", 2.5)
+			return
+		it.enabled = false
+		Game.set_flag(StringName("cq_priest_sick_%d" % index))
+		SkillFx.ring(get_parent(), global_position, 20.0, Color(0.7, 1.0, 0.7), 0.6)
+		Emote.show(self, "Merci...", Color(0.8, 1.0, 0.8), 20.0)
+		var left := ClassQuests.sick_left()
+		if left == 0:
+			Game.set_flag(ClassQuests.flag(&"priest", "ready"))
+			Narration.say("Tous les fiévreux sont soignés ! Dame Ombeline vous attend.", 3.0)
+		else:
+			Narration.say("Encore %d fiévreux." % left, 1.8)
+		var tween := create_tween()
+		tween.tween_interval(1.0)
+		tween.tween_property(self, "modulate:a", 0.0, 0.6)
+		tween.tween_callback(queue_free)
+
+
+# ------------------------------------------------------------------ Lame-sort : le duel
+
+## Appelle le chevalier spectral devant le héros.
+static func start_duel(level: Node2D) -> void:
+	var player := level.get_tree().get_first_node_in_group("player") as Player
+	if player == null or level.get_node_or_null("ChevalierSpectral") != null:
+		return
+	var k := CryptGuardian.new()
+	k.name = "ChevalierSpectral"
+	k.can_summon = false
+	Combat.set_level(k, 16)
+	k.health.max_health = int(k.health.max_health * 0.6)
+	k.health.current_health = k.health.max_health
+	k.position = player.global_position + Vector2(0, -80)
+	k.base_tint = Color(0.6, 0.8, 1.2, 0.85)
+	level.add_child(k)
+	var bar := BossBar.create("Le chevalier spectral", k.health)
+	level.add_child(bar)
+	PixelBurst.spawn(level, k.position, PixelBurst.SMOKE, Vector2.ZERO, 2.0)
+	Narration.say("Un froid glacial... Le chevalier spectral lève son épée.", 2.5)
+	k.health.died.connect(func() -> void:
+		Game.set_flag(ClassQuests.flag(&"spellblade", "ready"))
+		if is_instance_valid(bar):
+			bar.queue_free()
+		Narration.say("Le chevalier s'incline, puis s'efface. Dame Ombeline vous attend.", 3.5), CONNECT_ONE_SHOT)
+	player.health.died.connect(func() -> void:
+		if is_instance_valid(k):
+			k.queue_free()
+		if is_instance_valid(bar):
+			bar.queue_free()
+		Game.pending_message = "Le chevalier spectral vous a vaincu... Dame Ombeline vous attend pour réessayer.", CONNECT_ONE_SHOT)
+
+
+# ------------------------------------------------------------------ Rôdeur : la bête
+
+static func _beast(level: Node2D) -> void:
+	var b: Node2D = load(SCENES[&"boar"]).instantiate()
+	b.name = "GrandDefense"
+	Combat.set_level(b, 18)
+	var h := b.get_node("Health") as HealthComponent
+	h.max_health = h.max_health * 5
+	h.current_health = h.max_health
+	b.scale = Vector2(1.7, 1.7)
+	b.position = BEAST_AT
+	b.set("alert_radius_tiles", 6.0)
+	(b.get_node("Visual") as CanvasItem).modulate = Color(0.75, 0.62, 0.55)
+	level.add_child.call_deferred(b)
+	h.died.connect(func() -> void:
+		Game.set_flag(ClassQuests.flag(&"ranger", "ready"))
+		Narration.say("Grand-Défense est tombé ! Dame Ombeline voudra le savoir.", 3.5), CONNECT_ONE_SHOT)
+
+
+# ------------------------------------------------------------------ Oracle : la vision
+
+## La lumière de la vision (salle de repos des cryptes, étages 6 et 7).
+static func vision() -> Node2D:
+	var root := Node2D.new()
+	root.name = "Vision"
+	var light := PointLight2D.new()
+	light.texture = load("res://assets/lights/light_radial.tres")
+	light.color = Color(0.7, 0.85, 1.0)
+	light.energy = 1.4
+	light.texture_scale = 1.2
+	root.add_child(light)
+	var glow := SkillFx.new()
+	glow.radius = 12.0
+	glow.color = Color(0.75, 0.9, 1.0)
+	glow.duration = 99999.0
+	root.add_child(glow)
+	var it := Interactable.new()
+	it.prompt = "Toucher la lumière"
+	it.radius_tiles = 1.8
+	root.add_child(it)
+	it.interacted.connect(func() -> void:
+		it.enabled = false
+		await Transition.fade_out(0.6)
+		await Transition.story_text("Une galerie, très loin sous les cryptes. Un homme aux cartes déchirées trace un chemin à la craie.", 3.5)
+		await Transition.story_text("Il ressemble à Lysia. « Aurèle... », murmure une voix. Puis l'ombre l'avale.", 3.5)
+		await Transition.fade_in(0.6)
+		Game.set_flag(ClassQuests.flag(&"oracle", "ready"))
+		Game.set_flag(&"vision_aurele")
+		Narration.say("La lumière s'éteint. Dame Ombeline doit entendre cela.", 3.0)
+		root.queue_free())
+	return root
 
 
 # ------------------------------------------------------------------ Paladin : l'autel

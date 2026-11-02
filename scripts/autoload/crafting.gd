@@ -76,6 +76,10 @@ const RECIPES: Array[Dictionary] = [
 	{"out": &"musket", "n": 1, "station": &"forge", "in": {&"iron_ingot": 3, &"silver_ingot": 1, &"wood": 2, &"musket_plans": 1},
 		"keep": [&"musket_plans"], "requires": [&"marksman", &"cq_marksman_active"]},
 	{"out": &"elemental_scepter", "n": 1, "station": &"workbench", "in": {&"mana_crystal": 3, &"spectral_essence": 2, &"wood": 2}, "requires": [&"elementalist"]},
+	{"out": &"prayer_book", "n": 1, "station": &"workbench", "in": {&"linen_wraps": 3, &"spectral_essence": 2, &"silver_ingot": 1, &"herb": 3}, "requires": [&"priest"]},
+	{"out": &"hunter_bow", "n": 1, "station": &"workbench", "in": {&"wood": 4, &"crypt_leather": 2, &"ancient_bone": 2, &"silk": 2}, "requires": [&"ranger"]},
+	{"out": &"rune_sword", "n": 1, "station": &"forge", "in": {&"silver_ingot": 3, &"mana_crystal": 2, &"spectral_essence": 1}, "requires": [&"spellblade"]},
+	{"out": &"oracle_scepter", "n": 1, "station": &"workbench", "in": {&"mana_crystal": 2, &"spectral_essence": 3, &"silver_ingot": 1, &"wood": 2}, "requires": [&"oracle"]},
 ]
 const STATION_NAMES := {&"workbench": "Établi", &"drying_rack": "Séchoir à peaux", &"camp": "Feu de camp", &"forge": "Forge"}
 
@@ -107,6 +111,7 @@ const CATEGORIES := {
 	&"potion_mana": "Potions", &"potion_stamina": "Potions",
 	&"long_sword": "Classes mixtes", &"tower_shield": "Classes mixtes", &"sacred_shield": "Classes mixtes",
 	&"musket": "Classes mixtes", &"elemental_scepter": "Classes mixtes",
+	&"prayer_book": "Classes mixtes", &"hunter_bow": "Classes mixtes", &"rune_sword": "Classes mixtes", &"oracle_scepter": "Classes mixtes",
 }
 
 

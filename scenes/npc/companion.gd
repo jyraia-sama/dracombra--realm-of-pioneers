@@ -164,6 +164,15 @@ func teleport_near(at: Vector2) -> void:
 	PixelBurst.spawn(get_parent(), global_position, PixelBurst.SMOKE, Vector2.ZERO, 0.6)
 
 
+## Relevé par un prêtre : se remet debout avec une part de ses PV. false s'il n'était pas à terre.
+func revive(part: float) -> bool:
+	if state != State.DOWN:
+		return false
+	_get_up()
+	health.heal(int(health.max_health * part))
+	return true
+
+
 ## Repos (feu de camp) : PV et mana au maximum.
 func rest() -> void:
 	if state == State.DEAD:

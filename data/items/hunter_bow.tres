@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/items_mx.png" id="2_icons"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icons")
+region = Rect2(224, 0, 32, 32)
+
+[resource]
+script = ExtResource("1_item")
+id = &"hunter_bow"
+display_name = "Arc de chasse"
+icon = SubResource("AtlasTexture_icon")
+description = "Un arc court et nerveux, une hachette à la ceinture. Rôdeur."
+category = &"equipment"
+slot = &"main"
+bonus = {&"dmg": 13, &"dex": 2, &"str": 1}
+classes = Array[StringName]([&"ranger"])

@@ -16,6 +16,10 @@ const MAX_MINIONS := 4
 const SHIELD_ARC := 70.0
 
 var _summon_t := 6.0
+## false : n'invoque pas de squelettes (chevalier spectral de la quête de la Lame-sort).
+var can_summon := true
+## Teinte de base (chevalier spectral : bleuté, à moitié transparent).
+var base_tint := Color.WHITE
 var _enraged := false
 var _minions: Array[Node2D] = []
 var _charging := false
@@ -84,7 +88,7 @@ func _shield(amount: int) -> int:
 func _physics_process(delta: float) -> void:
 	_exposed = maxf(0.0, _exposed - delta)
 	# Exposé : il clignote en doré.
-	visual.modulate = Color(1.35, 1.2, 0.8) if _exposed > 0.0 and int(_t * 8.0) % 2 == 0 else Color.WHITE
+	visual.modulate = Color(1.35, 1.2, 0.8) if _exposed > 0.0 and int(_t * 8.0) % 2 == 0 else base_tint
 	if state != State.DEAD:
 		_summon_t -= delta * (1.6 if _enraged else 1.0)
 		if _summon_t <= 0.0 and state == State.CHASE:
@@ -152,6 +156,8 @@ func _on_hit_received(hitbox: Hitbox) -> void:
 
 
 func _summon(count: int) -> void:
+	if not can_summon:
+		return
 	_minions = _minions.filter(func(n): return is_instance_valid(n) and not n.get_node("Health").is_dead())
 	var free := MAX_MINIONS - _minions.size()
 	if free <= 0 or not is_inside_tree():

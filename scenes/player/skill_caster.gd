@@ -104,6 +104,7 @@ func _execute(id: StringName, s: Dictionary) -> void:
 			var at := body + player.facing * float(s.get("dist", 0.0)) * t
 			var area := SkillArea.create(at, float(s["radius"]) * t, Hero.hit_damage(float(s["mult"]), Hero.roll_crit()), 1.0, col, player)
 			area.delay = float(s.get("delay", 0.0))
+			area.slows = bool(s.get("slow", false))
 			area.ticks = int(s.get("ticks", 1))
 			area.interval = float(s.get("interval", 0.0))
 			if s.get("follow", false):
@@ -139,6 +140,26 @@ func _execute(id: StringName, s: Dictionary) -> void:
 		"chain":
 			player.play_cast(0.3)
 			_chain(s, body, col)
+		"revive":
+			player.play_cast(0.4)
+			player.health.heal(int(ceil(player.health.max_health * 0.1)))
+			SkillFx.ring(level, body, t * 1.4, col, 0.6)
+			var n := 0
+			for c in get_tree().get_nodes_in_group("companions"):
+				var comp := c as Companion
+				if comp and comp.global_position.distance_to(player.global_position) < float(s["range"]) * t \
+						and comp.revive(float(s["heal"])):
+					n += 1
+					SkillFx.ring(level, comp.global_position + Vector2(0, -t * 0.5), t, col, 0.6)
+			if n == 0:
+				Emote.show(player, "Personne à relever", Color(0.9, 0.9, 0.8), 34.0)
+		"slow_field":
+			player.play_cast(0.3)
+			SkillFx.ring(level, body, float(s["radius"]) * t, col, 0.8)
+			for e in get_tree().get_nodes_in_group("enemies"):
+				var en := e as Node2D
+				if en and en.global_position.distance_to(player.global_position) < float(s["radius"]) * t:
+					Combat.slow(en, float(s["factor"]), float(s["duration"]))
 		"blink":
 			SkillFx.ring(level, body, t, col, 0.35)
 			player.blink(float(s["dist"]))

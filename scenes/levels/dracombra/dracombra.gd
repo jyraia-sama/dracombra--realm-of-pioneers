@@ -40,6 +40,8 @@ func _ready() -> void:
 		omb.name = "Ombeline"
 		omb.position = guild.position + Vector2(-36, 10)
 		$Props.add_child(omb)
+	# Quête du Prêtre : les fiévreux autour de la guilde.
+	ClassQuests.setup_city(self, guild.position)
 	super()
 	# Sol aux bords organiques (plus d'effet de grille).
 	GroundPainter.apply(self, $Ground, &"city")

@@ -108,6 +108,8 @@ func _offer(id: StringName) -> void:
 	Game.set_flag(ClassQuests.flag(id, "active"))
 	if id == &"knight":
 		await _defense_now()
+	elif id == &"spellblade":
+		await _duel_now()
 	else:
 		await Ysolde.lines("Dame Ombeline", q.get("hint", [q["pitch"]]))
 
@@ -115,6 +117,8 @@ func _offer(id: StringName) -> void:
 func _remind(id: StringName) -> void:
 	if id == &"knight":
 		await _defense_now()
+	elif id == &"spellblade":
+		await _duel_now()
 	else:
 		var q: Dictionary = ClassQuests.QUESTS[id]
 		await Ysolde.lines("Dame Ombeline", [q["pitch"]] + Array(q.get("hint", [])))
@@ -129,6 +133,17 @@ func _defense_now() -> void:
 		return
 	await Ysolde.lines("Dame Ombeline", ["Bouclier haut. Ne reculez pas d'un pas."])
 	ClassQuests.start_defense(level)
+
+
+func _duel_now() -> void:
+	var level := get_tree().current_scene as Node2D
+	if level == null or level.get_node_or_null("ChevalierSpectral") != null:
+		return
+	var i := await Choice.ask("Le chevalier spectral", "Appeler le chevalier spectral pour le duel ? (ici même)", ["Qu'il vienne !", "Pas encore"])
+	if i != 0:
+		return
+	await Ysolde.lines("Dame Ombeline", ["Frère d'armes, entends-moi : voici qui te libérera.", "Méfiez-vous de son bouclier : frappez-le de dos, ou quand il manque son coup."])
+	ClassQuests.start_duel(level)
 
 
 func _finish(id: StringName) -> void:

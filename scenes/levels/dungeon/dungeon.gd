@@ -279,6 +279,12 @@ func _furnish() -> void:
 				var fire := DungeonRoomProps.campfire()
 				fire.position = c + Vector2(8, 0)
 				props.add_child(fire)
+				# Quête de l'Oracle : la vision attend près du feu (cryptes, étages 6 et 7).
+				if zone_index() == 1 and floor_number >= 6 and ClassQuests.active(&"oracle") \
+						and not Game.has_flag(ClassQuests.flag(&"oracle", "ready")):
+					var v := ClassQuests.vision()
+					v.position = c + Vector2(48, -10)
+					props.add_child(v)
 				var m := DungeonRoomProps.merchant()
 				m.position = c + Vector2(-28, -6)
 				props.add_child(m)

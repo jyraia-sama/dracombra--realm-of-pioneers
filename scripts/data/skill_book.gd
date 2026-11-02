@@ -15,6 +15,9 @@ extends RefCounted
 ##   heal        soin                                heal (part des PV max)
 ##   blink       saut instantané                     dist (cases, négatif = en arrière), then (technique lancée après)
 ##   chain       éclair qui saute d'ennemi en ennemi  mult, jumps (ennemis), range (cases)
+##   revive      relève les compagnons à terre        heal (part des PV), range (cases)
+##   slow_field  ralentit les ennemis autour          factor, radius (cases), duration
+## Option « slow » (area) : la zone ralentit ce qu'elle touche.
 ## Option « crit » (projectile) : le tir est toujours critique.
 ## Toutes les valeurs sont des premiers réglages, à équilibrer en jouant.
 
@@ -137,6 +140,46 @@ const SKILLS: Dictionary = {
 	&"chain_lightning": {"class": &"elementalist", "name": "Chaîne d'éclairs", "level": 45, "cost": 12, "cooldown": 9.0,
 		"type": "chain", "mult": 2.2, "jumps": 4, "range": 6.0, "color": Color(1.0, 0.95, 0.5),
 		"desc": "Un éclair frappe l'ennemi le plus proche puis saute sur quatre autres (×2,2 chacun)."},
+	# ------------------------------------------------------------ Prêtre (classe mixte)
+	&"group_prayer": {"class": &"priest", "name": "Prière de groupe", "level": 20, "cost": 10, "cooldown": 12.0,
+		"type": "heal", "heal": 0.35, "group": true, "color": Color(0.7, 1.0, 0.7),
+		"desc": "Rend 35 % des PV au prêtre et à ses compagnons proches."},
+	&"raise": {"class": &"priest", "name": "Relèvement", "level": 35, "cost": 14, "cooldown": 30.0,
+		"type": "revive", "heal": 0.4, "range": 8.0, "color": Color(1.0, 1.0, 0.7),
+		"desc": "Relève les compagnons à terre (40 % de leurs PV) et rend 10 % des PV au prêtre."},
+	&"sanctuary": {"class": &"priest", "name": "Sanctuaire", "level": 45, "cost": 14, "cooldown": 28.0,
+		"type": "buff", "buff": {"guard": 0.6, "regen": 15.0}, "duration": 8.0, "group": true, "color": Color(1.0, 0.95, 0.7),
+		"desc": "Le groupe prend 40 % de dégâts en moins pendant 8 s ; le prêtre se soigne en continu."},
+	# ------------------------------------------------------------ Rôdeur (classe mixte)
+	&"snare": {"class": &"ranger", "name": "Piège à mâchoires", "level": 20, "cost": 6, "cooldown": 8.0,
+		"type": "area", "mult": 2.0, "radius": 1.6, "dist": 2.0, "delay": 0.5, "ticks": 1, "interval": 0.0, "slow": true,
+		"color": Color(0.8, 0.7, 0.5), "desc": "Un piège claque 2 cases devant : blesse (×2) et ralentit ce qu'il attrape."},
+	&"hatchet_spin": {"class": &"ranger", "name": "Hachette tournoyante", "level": 35, "cost": 7, "cooldown": 7.0,
+		"type": "nova", "mult": 1.8, "radius": 1.8, "knock": 2.0, "color": Color(0.9, 0.8, 0.6),
+		"desc": "Un grand revers de hachette frappe tout autour."},
+	&"hunter_mark": {"class": &"ranger", "name": "Marque du chasseur", "level": 45, "cost": 10, "cooldown": 22.0,
+		"type": "buff", "buff": {"damage": 1.5, "crit": 20.0}, "duration": 10.0, "color": Color(1.0, 0.6, 0.3),
+		"desc": "+50 % de dégâts et +20 % de critique pendant 10 s."},
+	# ------------------------------------------------------------ Lame-sort (classe mixte)
+	&"flame_edge": {"class": &"spellblade", "name": "Lame de feu", "level": 20, "cost": 6, "cooldown": 5.0,
+		"type": "area", "mult": 2.2, "radius": 1.4, "dist": 1.2, "delay": 0.0, "ticks": 1, "interval": 0.0,
+		"color": Color(1.0, 0.5, 0.2), "desc": "Un coup d'épée chargé de feu explose devant la lame (×2,2, en zone)."},
+	&"storm_bolts": {"class": &"spellblade", "name": "Éclairs d'épée", "level": 35, "cost": 7, "cooldown": 6.0,
+		"type": "projectile", "kind": &"spark", "mult": 1.6, "count": 3, "spread": 14.0,
+		"color": Color(1.0, 0.95, 0.5), "desc": "La lame libère trois éclairs en éventail."},
+	&"steel_tempest": {"class": &"spellblade", "name": "Tempête d'acier", "level": 45, "cost": 12, "cooldown": 12.0,
+		"type": "nova", "mult": 2.5, "radius": 2.4, "knock": 2.5, "color": Color(0.75, 0.55, 1.0),
+		"desc": "Une tempête de lames et d'arcanes frappe tout autour (×2,5)."},
+	# ------------------------------------------------------------ Oracle (classe mixte)
+	&"foresight": {"class": &"oracle", "name": "Prémonition", "level": 20, "cost": 8, "cooldown": 18.0,
+		"type": "buff", "buff": {"guard": 0.0}, "duration": 2.5, "group": true, "color": Color(0.7, 0.85, 1.0),
+		"desc": "L'oracle voit le coup venir : le groupe ne prend aucun dégât pendant 2,5 s."},
+	&"slow_time": {"class": &"oracle", "name": "Ralentir le temps", "level": 35, "cost": 10, "cooldown": 16.0,
+		"type": "slow_field", "factor": 0.35, "radius": 5.0, "duration": 4.0, "color": Color(0.6, 0.7, 1.0),
+		"desc": "Tous les ennemis à 5 cases sont ralentis des deux tiers pendant 4 s."},
+	&"fated_star": {"class": &"oracle", "name": "Étoile du destin", "level": 45, "cost": 14, "cooldown": 12.0,
+		"type": "area", "mult": 3.5, "radius": 2.2, "dist": 4.0, "delay": 0.8, "ticks": 1, "interval": 0.0,
+		"color": Color(0.85, 0.9, 1.0), "desc": "Une étoile tombe 4 cases devant (×3,5, en zone)."},
 }
 
 
