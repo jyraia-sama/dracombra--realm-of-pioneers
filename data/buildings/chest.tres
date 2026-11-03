@@ -8,6 +8,7 @@ script = ExtResource("1_b")
 id = &"chest"
 display_name = "Coffre"
 description = "Pour ranger les ressources du camp."
+category = &"stockage"
 tier_required = 0
 size = Vector2i(1, 1)
 cost = Dictionary[StringName, int]({&"wood": 6})

@@ -6,10 +6,13 @@
 [resource]
 script = ExtResource("1_b")
 id = &"tent"
-display_name = "Tente"
-description = "Un abri pour dormir. Chaque tente peut loger un habitant."
+display_name = "Logement"
+description = "Un abri pour dormir. Loge 2 habitants par palier (tente, cabane, maison)."
+category = &"logement"
+art = "house"
+level_names = Array[String](["Tente", "Cabane", "Maison"])
 tier_required = 0
-size = Vector2i(2, 1)
+size = Vector2i(3, 2)
 cost = Dictionary[StringName, int]({&"wood": 8, &"stone": 2})
 build_days = 1
 texture = ExtResource("2_t")

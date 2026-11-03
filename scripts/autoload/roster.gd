@@ -63,9 +63,7 @@ func capacity() -> int:
 	var total := 0
 	for record in Town.sites:
 		if record["built"]:
-			var data := Town.building(StringName(record["id"]))
-			if data:
-				total += data.housing
+			total += Town.housing_of(record)
 	return total
 
 
@@ -356,8 +354,7 @@ func auto_assign(m: Dictionary) -> bool:
 		return false
 	for r in Town.sites:
 		if r["built"] and StringName(r["id"]) == want:
-			var data := Town.building(want)
-			if workers_of(int(r["uid"])).size() < data.workers:
+			if workers_of(int(r["uid"])).size() < Town.workers_max(r):
 				m["work"] = int(r["uid"])
 				return true
 	return false
@@ -390,12 +387,12 @@ func _produce() -> void:
 			for id in data.produces:
 				var n := int(round(float(data.produces[id]) * skill))
 				var before := int(stock.get(String(id), 0))
-				var after := mini(data.stock_cap, before + n)
+				var after := mini(Town.stock_cap(r), before + n)
 				stock[String(id)] = after
 				total[id] = int(total.get(id, 0)) + (after - before)
 			# La carrière donne parfois une gemme.
 			if data.id == &"quarry" and randf() < 0.12:
-				stock["gem"] = mini(data.stock_cap, int(stock.get("gem", 0)) + 1)
+				stock["gem"] = mini(Town.stock_cap(r), int(stock.get("gem", 0)) + 1)
 				total[&"gem"] = int(total.get(&"gem", 0)) + 1
 		r["stock"] = stock
 	# Avec un entrepôt, tous les stocks des bâtiments y sont transportés chaque matin.

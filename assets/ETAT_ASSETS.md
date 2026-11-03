@@ -32,6 +32,31 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `res://assets/sprites/buildings/work/*.png` | PROVISOIRE | 2026-11-02 | bâtiments de travail : hutte du bûcheron, carrière, cabane du chasseur, jardin d'herbes (générés) |
 | `res://assets/sprites/buildings/work/entrepot.png` | PROVISOIRE | 2026-11-02 | bâtiment 3x2 commerce (généré) |
 | `res://assets/sprites/npc/ombeline/ombeline.png` | PROVISOIRE | 2026-11-02 | perso pnj (généré) |
+| `res://assets/sprites/buildings/house_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/house_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/house_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/forge_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/forge_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/forge_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/sawmill_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/sawmill_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/sawmill_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/tannery_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/tannery_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/warehouse_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/warehouse_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/warehouse_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/workbench_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/herb_garden_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/hunter_cabin_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/quarry_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/chantier_3x2_0.png` | PROVISOIRE | 2026-11-03 | chantier 3x2 fondations (généré) |
+| `res://assets/sprites/buildings/chantier_3x2_1.png` | PROVISOIRE | 2026-11-03 | chantier 3x2 structure (généré) |
+| `res://assets/sprites/buildings/chantier_4x4_0.png` | PROVISOIRE | 2026-11-03 | chantier 4x4 fondations (généré) |
+| `res://assets/sprites/buildings/chantier_4x4_1.png` | PROVISOIRE | 2026-11-03 | chantier 4x4 structure (généré) |
+| `res://assets/sprites/town/path_gravel.png` | PROVISOIRE | 2026-11-03 | chemin gravel : 4 tuiles répétables (généré) |
+| `res://assets/sprites/town/path_cobble.png` | PROVISOIRE | 2026-11-03 | chemin cobble : 4 tuiles répétables (généré) |
+| `res://assets/sprites/town/path_slab.png` | PROVISOIRE | 2026-11-03 | chemin slab : 4 tuiles répétables (généré) |
 <!-- fin provisoires -->
 
 ## Existants au 2026-11-01 (version 0.4.1)

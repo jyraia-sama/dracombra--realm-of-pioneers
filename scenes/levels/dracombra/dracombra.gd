@@ -45,6 +45,8 @@ func _ready() -> void:
 	super()
 	# Sol aux bords organiques (plus d'effet de grille).
 	GroundPainter.apply(self, $Ground, &"city")
+	# Les chemins en pierre, juste au-dessus du sol.
+	PathLayer.apply(self, $Ground)
 	if Game.has_flag(&"wake_in_dracombra") and not Game.has_flag(&"prologue_done"):
 		_wake_up.call_deferred()
 	elif Game.pending_message != "":

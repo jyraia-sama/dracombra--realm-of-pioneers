@@ -119,26 +119,67 @@ func _run() -> void:
 	Inv.add_item(Inv.item_by_id(&"stone"), 60)
 	Inv.add_item(Inv.item_by_id(&"flax"), 20)
 	var build: BuildMode = city.get_node("BuildMode")
-	player.global_position = city.get_node("Guild").global_position + Vector2(0, 5 * 16)
-	player.face(Vector2.DOWN)
+	var guild_pos: Vector2 = city.get_node("Guild").global_position
+	# Le menu s'ouvre, la caméra devient libre, le héros ne bouge plus.
+	build.open()
+	await _frames(2)
+	_check(build.state == BuildMode.State.MENU and build._panel.visible, "construction : le menu s'ouvre (B)")
+	_check(get_viewport().get_camera_2d() == build._cam and player.input_locked, "construction : caméra libre, héros immobile")
+	_check(build._entries.size() > 8 and build._preview.texture != null, "construction : liste et aperçu du bâtiment")
+	# La guilde garde ses 4 x 4 cases.
 	build.start(TownA.building(&"tent"))
-	await _frames(5)
+	build._cam.global_position = guild_pos + Vector2(0, -24)
+	await _frames(3)
+	_check(not build.valid and build.reason.contains("guilde"), "construction : impossible sur l'emprise de la guilde (%s)" % build.reason)
+	build._cam.global_position = guild_pos + Vector2(0, 5 * 16)
+	await _frames(3)
 	var tries := 0
-	while not build.valid and tries < 20:
-		player.global_position += Vector2(16, 0)
-		await _frames(3)
+	while not build.valid and tries < 30:
+		build._cam.global_position += Vector2(16, 0)
+		await _frames(2)
 		tries += 1
 	_check(build.valid, "construction : un emplacement libre est trouvé (%s)" % build.reason)
+	var placed_cell: Vector2i = build.cell
 	build._confirm()
-	_check(TownA.sites.size() == 1 and not build.active, "construction : le chantier de la tente est posé")
-	await _frames(5)
+	_check(TownA.sites.size() == 1 and build.state == BuildMode.State.MENU, "construction : le chantier est posé, retour au menu")
+	await _frames(3)
 	var site: Building = city.get_node("Town").get_child(0)
-	_check(site != null, "construction : l'échafaudage apparaît")
-	site._on_interacted()
+	_check(site != null and site._sprite.texture.resource_path.contains("chantier_3x2"), "construction : le chantier 3 x 2 apparaît")
+	# Le même emplacement est maintenant pris (emprise réservée).
+	build.start(TownA.building(&"tent"))
+	build._cam.global_position = Building.footprint_rect(TownA.building(&"tent"), placed_cell).get_center()
+	await _frames(3)
+	_check(not build.valid, "construction : on ne peut pas poser sur un autre bâtiment (%s)" % build.reason)
+	# Chemins : on trace du gravier, on l'efface, la pierre revient.
+	build.start_path(1)
+	var stone_before: int = Inv.get_count(&"stone")
+	var path_from: Vector2 = guild_pos + Vector2(-56, 24)
+	build._cam.global_position = path_from
+	await _frames(2)
+	build._press()
+	for i in 4:
+		build._cam.global_position += Vector2(16, 0)
+		await _frames(2)
+	build._painting = false
+	_check(TownA.paths.size() >= 4 and Inv.get_count(&"stone") < stone_before, "chemins : on trace un chemin de gravier (%d cases)" % TownA.paths.size())
+	_check(city.get_node_or_null("Paths") != null, "chemins : la couche des chemins est dans la ville")
+	var painted: int = TownA.paths.size()
+	build.start_erase()
+	build._cam.global_position = path_from
+	await _frames(2)
+	build._press()
+	build._painting = false
+	_check(TownA.paths.size() == painted - 1, "chemins : la gomme efface une case")
+	build.stop()
+	await _frames(2)
+	_check(not build.active and not player.input_locked and get_viewport().get_camera_2d() != build._cam, "construction : on quitte, la caméra revient au héros")
+	TownA.deliver(site.data.cost, site.record["delivered"])
 	_check(TownA.missing(site.data.cost, site.record["delivered"]).is_empty(), "construction : les matériaux sont déposés")
 	await Game_.sleep()
 	_check(Game_.day == 2, "nuit : un jour a passé (jour %d)" % Game_.day)
 	_check(TownA.sites[0]["built"], "construction : la tente est terminée le lendemain")
+	_check(TownA.site_name(TownA.sites[0]) == "Tente" and TownA.housing_of(TownA.sites[0]) == 2, "paliers : palier 1 = Tente (2 places)")
+	_check(TownA.upgrade_block(TownA.sites[0]).contains("Village"), "paliers : la cabane demande une guilde de village")
 
 	# --- Artisanat et classes
 	var workbench: Dictionary = TownA.add_site(&"workbench", TownA.center + Vector2i(-5, 3))
@@ -179,6 +220,12 @@ func _run() -> void:
 	await Game_.sleep()
 	_check(TownA.tier == 1, "guilde : tente de guilde, Dracombra devient un village (palier %d)" % TownA.tier)
 	_check(TownA.is_unlocked(TownA.center + Vector2i(20, 0)), "guilde : un nouveau quartier est constructible")
+	var tent: Dictionary = TownA.sites[0]
+	_check(TownA.start_site_upgrade(tent), "paliers : la tente peut devenir une cabane")
+	TownA.deliver(TownA.building(&"tent").upgrade_cost(2), tent["upgrade"]["delivered"])
+	await Game_.sleep()
+	await Game_.sleep()
+	_check(TownA.level_of(tent) == 2 and TownA.housing_of(tent) == 4, "paliers : cabane terminée, 4 places")
 
 	# --- Menu
 	var menu := _g("GameMenu")
@@ -206,6 +253,20 @@ func _run() -> void:
 	_check(Inv.get_count(&"wood") > 0 and HeroA.unlocked.has(&"archer"), "chargement : sac et classes restaurés")
 	city = get_tree().current_scene
 	_check(city.get_node("Town").get_child_count() == sites_before, "chargement : les bâtiments sont reconstruits")
+
+	# --- Mise à jour d'une ancienne sauvegarde (avant le nouveau système de construction)
+	var old_town: Dictionary = TownA.serialize()
+	old_town.erase("build_version")
+	var wood_before: int = Inv.get_count(&"wood")
+	TownA.deserialize(old_town)
+	_check(TownA.sites.is_empty() and TownA.paths.is_empty() and TownA.tier == 1, "mise à jour : bâtiments retirés, palier de la guilde gardé")
+	_check(Inv.get_count(&"wood") > wood_before and Game_.pending_message.contains("reconstruire"), "mise à jour : matériaux rendus dans le sac, message affiché")
+	Game_.pending_message = ""
+	var same: Dictionary = TownA.serialize()
+	TownA.add_site(&"tent", TownA.center + Vector2i(8, 6))
+	same = TownA.serialize()
+	TownA.deserialize(same)
+	_check(TownA.sites.size() == 1, "mise à jour : une sauvegarde à jour garde ses bâtiments")
 
 	# --- La porte vers la Sylve, et retour
 	player = city.get_node("Player")

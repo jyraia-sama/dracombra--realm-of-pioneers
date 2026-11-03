@@ -6,10 +6,13 @@
 [resource]
 script = ExtResource("1_b")
 id = &"lumber_hut"
-display_name = "Hutte du bûcheron"
-description = "Les bûcherons y travaillent : du bois chaque matin dans le stock de la hutte."
+display_name = "Scierie"
+description = "Les bûcherons y travaillent : du bois chaque matin dans le stock de la scierie."
+category = &"production"
+art = "sawmill"
+level_names = Array[String](["Billot du bûcheron", "Atelier du bûcheron", "Scierie"])
 tier_required = 0
-size = Vector2i(2, 2)
+size = Vector2i(3, 2)
 cost = Dictionary[StringName, int]({&"wood": 8, &"stone": 4})
 build_days = 1
 texture = ExtResource("2_t")

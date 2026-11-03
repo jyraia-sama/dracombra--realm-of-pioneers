@@ -9,10 +9,8 @@ const TEXTURES: Array[Texture2D] = [
 	preload("res://assets/sprites/buildings/guild_2.png"), preload("res://assets/sprites/buildings/guild_3.png"),
 	preload("res://assets/sprites/buildings/guild_4.png"),
 ]
-## Emprise au sol de chaque palier, en cases.
-const FOOTPRINTS: Array[Vector2] = [Vector2(1.0, 0.6), Vector2(3.0, 1.2), Vector2(3.2, 1.4), Vector2(3.8, 1.6), Vector2(5.6, 2.0)]
-## Zone réservée à la guilde (sa plus grande emprise), pour que rien ne gêne ses agrandissements.
-const RESERVED := Rect2(-5.0, -3.0, 10.0, 4.0)
+## Partie solide de chaque palier, en cases (le reste des 4 × 4 réservés reste praticable).
+const FOOTPRINTS: Array[Vector2] = [Vector2(1.0, 0.6), Vector2(3.0, 1.2), Vector2(3.2, 1.4), Vector2(3.8, 1.6), Vector2(4.0, 2.0)]
 
 var _visual: Node2D
 var _body: StaticBody2D
@@ -22,6 +20,9 @@ var _interact: Interactable
 
 func _ready() -> void:
 	add_to_group("guild")
+	# Calée sur la grille : son emprise de 4 × 4 cases (Town.guild_cells) tombe pile sur les cases.
+	var t := float(Game.TILE_SIZE)
+	position = Vector2(floorf(position.x / t), roundf(position.y / t)) * t
 	_body = StaticBody2D.new()
 	_body.collision_layer = 1
 	_body.collision_mask = 0
@@ -70,10 +71,11 @@ func refresh() -> void:
 	_interact.position = Vector2(0, -4)
 
 
-## La zone réservée à la guilde, en coordonnées du monde.
+## La zone réservée à la guilde (4 × 4 cases), en coordonnées du monde.
 func reserved_rect() -> Rect2:
 	var t := float(Game.TILE_SIZE)
-	return Rect2(global_position + RESERVED.position * t, RESERVED.size * t)
+	var cells := Town.guild_cells()
+	return Rect2(Vector2(cells[0]) * t, Vector2(Town.GUILD_SIZE) * t)
 
 
 func _on_interacted() -> void:

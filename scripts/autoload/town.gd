@@ -6,6 +6,8 @@ extends Node
 ## Les quartiers sont des anneaux autour de la guilde : chaque palier en débloque un.
 
 signal changed
+## Les chemins ont changé (posés, effacés, rechargés).
+signal paths_changed
 
 ## Les paliers de la guilde. radius : rayon (en cases) de la zone constructible.
 ## upgrade : ce qu'il faut pour passer à CE palier depuis le précédent.
@@ -22,6 +24,18 @@ const TIERS: Array[Dictionary] = [
 ]
 ## Les quartiers sont des ellipses : un peu plus larges que hautes, comme l'écran.
 const DISTRICT_ASPECT := 4.0 / 3.0
+## Version du système de construction. On l'augmente SEULEMENT quand une mise à jour change les
+## emprises, la grille ou le placement : au chargement d'une sauvegarde plus ancienne, les bâtiments
+## sont alors retirés et leurs matériaux rendus (voir _rebuild_reset). Sinon, on n'y touche pas.
+const BUILD_VERSION := 2
+## Emprise de la guilde, en cases (réservée dès le camp pour ses agrandissements).
+const GUILD_SIZE := Vector2i(4, 4)
+## Les chemins en pierre : un niveau par revêtement. cost : pierre par case.
+const PATHS: Array[Dictionary] = [
+	{"name": "Chemin de gravier", "art": "path_gravel", "cost": {&"stone": 1}, "tier": 0},
+	{"name": "Chemin pavé", "art": "path_cobble", "cost": {&"stone": 3}, "tier": 1},
+	{"name": "Dalles taillées", "art": "path_slab", "cost": {&"stone": 6}, "tier": 2},
+]
 
 ## Palier actuel de la guilde (0 = camp).
 var tier: int = 0
@@ -31,6 +45,8 @@ var center: Vector2i = Vector2i.ZERO
 var sites: Array[Dictionary] = []
 ## Amélioration de la guilde en cours (vide s'il n'y en a pas).
 var guild_upgrade: Dictionary = {}
+## Chemins posés : { Vector2i case : niveau (1 = gravier, 2 = pavés, 3 = dalles) }.
+var paths: Dictionary = {}
 
 var _db: Dictionary[StringName, BuildingData] = {}
 
@@ -49,11 +65,19 @@ func reset() -> void:
 	warehouse = {}
 	orders = []
 	guild_upgrade = {}
+	paths = {}
 	changed.emit()
+	paths_changed.emit()
 
 
 func building(id: StringName) -> BuildingData:
 	return _db.get(id)
+
+
+func all_buildings() -> Array[BuildingData]:
+	var out: Array[BuildingData] = []
+	out.assign(_db.values())
+	return out
 
 
 ## Les bâtiments déjà débloqués, du moins cher au plus cher.
@@ -101,10 +125,125 @@ func add_site(id: StringName, cell: Vector2i) -> Dictionary:
 	var uid := 1
 	for r in sites:
 		uid = maxi(uid, int(r.get("uid", 0)) + 1)
-	var record := {"uid": uid, "id": String(id), "cell": [cell.x, cell.y], "delivered": {}, "days": 0, "built": false}
+	var record := {"uid": uid, "id": String(id), "cell": [cell.x, cell.y], "delivered": {}, "days": 0, "built": false,
+		"level": 1}
 	sites.append(record)
+	# Un bâtiment posé sur un chemin le remplace (la pierre est rendue).
+	var data := building(id)
+	if data:
+		for c in footprint_cells(data, cell):
+			if paths.has(c):
+				remove_path(c)
 	changed.emit()
 	return record
+
+
+## Les cases couvertes par un bâtiment posé sur `cell` (même règle que Building.footprint_rect).
+func footprint_cells(data: BuildingData, cell: Vector2i) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var left := cell.x - (data.size.x - 1) / 2
+	var top := cell.y - data.size.y + 1
+	for y in data.size.y:
+		for x in data.size.x:
+			out.append(Vector2i(left + x, top + y))
+	return out
+
+
+## Les cases réservées à la guilde (4 × 4, la case centrale est celle du pied de la guilde).
+func guild_cells() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for y in GUILD_SIZE.y:
+		for x in GUILD_SIZE.x:
+			out.append(Vector2i(center.x - GUILD_SIZE.x / 2 + x, center.y - GUILD_SIZE.y + 1 + y))
+	return out
+
+
+## { case : true } de toutes les cases prises par la guilde et les bâtiments (chantiers compris).
+func occupied_cells() -> Dictionary:
+	var out := {}
+	for c in guild_cells():
+		out[c] = true
+	for r in sites:
+		var data := building(StringName(r["id"]))
+		if data:
+			for c in footprint_cells(data, site_cell(r)):
+				out[c] = true
+	return out
+
+
+# ------------------------------------------------------------------ paliers des bâtiments
+
+func level_of(record: Dictionary) -> int:
+	return int(record.get("level", 1))
+
+
+## Nom du bâtiment à son palier actuel (« Cabane »).
+func site_name(record: Dictionary) -> String:
+	var data := building(StringName(record["id"]))
+	return data.level_name(level_of(record)) if data else String(record["id"])
+
+
+func housing_of(record: Dictionary) -> int:
+	var data := building(StringName(record["id"]))
+	return data.housing * level_of(record) if data else 0
+
+
+func workers_max(record: Dictionary) -> int:
+	var data := building(StringName(record["id"]))
+	if data == null or data.workers <= 0:
+		return 0
+	return data.workers + level_of(record) - 1
+
+
+func stock_cap(record: Dictionary) -> int:
+	var data := building(StringName(record["id"]))
+	return data.stock_cap * level_of(record) if data else 40
+
+
+## Pourquoi on ne peut pas encore améliorer ce bâtiment ("" si c'est possible).
+func upgrade_block(record: Dictionary) -> String:
+	var data := building(StringName(record["id"]))
+	if data == null or not record["built"]:
+		return "Le bâtiment n'est pas terminé."
+	var next := level_of(record) + 1
+	if next > data.max_level():
+		return "Ce bâtiment est à son dernier palier."
+	if tier < data.tier_for_level(next):
+		return "Il faut une guilde de palier « %s »." % tier_name(mini(data.tier_for_level(next), TIERS.size() - 1))
+	return ""
+
+
+func start_site_upgrade(record: Dictionary) -> bool:
+	if upgrade_block(record) != "" or record.has("upgrade"):
+		return false
+	record["upgrade"] = {"delivered": {}, "days": 0}
+	changed.emit()
+	return true
+
+
+# ------------------------------------------------------------------ chemins
+
+func path_level(cell: Vector2i) -> int:
+	return int(paths.get(cell, 0))
+
+
+func set_path(cell: Vector2i, level: int) -> void:
+	paths[cell] = level
+	paths_changed.emit()
+
+
+## Retire un chemin et rend sa pierre dans le sac.
+func remove_path(cell: Vector2i) -> void:
+	var level := path_level(cell)
+	if level <= 0:
+		return
+	paths.erase(cell)
+	var cost: Dictionary = PATHS[level - 1]["cost"]
+	for id in cost:
+		var item := Inventory.item_by_id(id)
+		if item:
+			Inventory.add_item(item, int(cost[id]))
+	paths_changed.emit()
 
 
 func remove_site(record: Dictionary) -> void:
@@ -277,6 +416,15 @@ func advance_day() -> Array[String]:
 	var messages: Array[String] = []
 	for record in sites:
 		if record["built"]:
+			if record.has("upgrade"):
+				var bd := building(StringName(record["id"]))
+				var next := level_of(record) + 1
+				if bd and missing(bd.upgrade_cost(next), record["upgrade"]["delivered"]).is_empty():
+					record["upgrade"]["days"] = int(record["upgrade"]["days"]) + 1
+					if int(record["upgrade"]["days"]) >= bd.upgrade_days(next):
+						record["level"] = next
+						record.erase("upgrade")
+						messages.append("Amélioration terminée : %s." % bd.level_name(next))
 			continue
 		var data := building(StringName(record["id"]))
 		if data == null or not missing(data.cost, record["delivered"]).is_empty():
@@ -284,7 +432,7 @@ func advance_day() -> Array[String]:
 		record["days"] = int(record["days"]) + 1
 		if int(record["days"]) >= data.build_days:
 			record["built"] = true
-			messages.append("Construction terminée : %s." % data.display_name)
+			messages.append("Construction terminée : %s." % data.level_name(level_of(record)))
 	if not guild_upgrade.is_empty():
 		var up := next_upgrade()
 		if missing(up["cost"], guild_upgrade["delivered"]).is_empty():
@@ -305,11 +453,16 @@ func advance_day() -> Array[String]:
 # ------------------------------------------------------------------ sauvegarde
 
 func serialize() -> Dictionary:
+	var path_list := []
+	for c in paths:
+		path_list.append([c.x, c.y, int(paths[c])])
 	return {"tier": tier, "sites": sites.duplicate(true), "guild_upgrade": guild_upgrade.duplicate(true),
-		"warehouse": warehouse.duplicate(), "orders": orders.duplicate(true)}
+		"warehouse": warehouse.duplicate(), "orders": orders.duplicate(true), "paths": path_list,
+		"build_version": BUILD_VERSION}
 
 
 func deserialize(data: Dictionary) -> void:
+	rebuilt_after_update = false
 	tier = int(data.get("tier", 0))
 	sites.clear()
 	# Les identifiants sont gardés (les habitants y sont affectés) ; anciens enregistrements numérotés.
@@ -326,4 +479,56 @@ func deserialize(data: Dictionary) -> void:
 	guild_upgrade = data.get("guild_upgrade", {})
 	warehouse = data.get("warehouse", {}).duplicate()
 	orders = data.get("orders", []).duplicate(true)
+	paths = {}
+	for p in data.get("paths", []):
+		paths[Vector2i(int(p[0]), int(p[1]))] = int(p[2])
+	for r in sites:
+		r["level"] = int(r.get("level", 1))
+	# Sauvegarde d'avant un changement du système de construction : on repart d'une ville vide.
+	if int(data.get("build_version", 1)) < BUILD_VERSION and not sites.is_empty():
+		_rebuild_reset()
 	changed.emit()
+	paths_changed.emit()
+
+
+## Retire tous les bâtiments et chemins, et rend au héros (dans son sac) tout ce qu'ils avaient coûté,
+## ainsi que les stocks des bâtiments et de l'entrepôt. La guilde et son palier sont gardés.
+## Appelé uniquement quand BUILD_VERSION a augmenté depuis la sauvegarde.
+func _rebuild_reset() -> void:
+	var refund := {}
+	var add := func(items: Dictionary, times: int = 1) -> void:
+		for k in items:
+			refund[String(k)] = int(refund.get(String(k), 0)) + int(items[k]) * times
+	for r in sites:
+		var data := building(StringName(r["id"]))
+		if data == null:
+			continue
+		if r["built"]:
+			add.call(data.cost)
+			for l in range(2, level_of(r) + 1):
+				add.call(data.upgrade_cost(l))
+			if r.has("upgrade"):
+				add.call(r["upgrade"].get("delivered", {}))
+		else:
+			add.call(r.get("delivered", {}))
+		add.call(r.get("stock", {}))
+	for c in paths:
+		add.call(PATHS[int(paths[c]) - 1]["cost"])
+	add.call(warehouse)
+	var n := 0
+	for k in refund:
+		var item := Inventory.item_by_id(StringName(k))
+		if item and int(refund[k]) > 0:
+			Inventory.add_item(item, int(refund[k]))
+			n += int(refund[k])
+	sites.clear()
+	paths = {}
+	warehouse = {}
+	rebuilt_after_update = true
+	Game.pending_message = ("Mise à jour : la construction a changé (mode construction, nouvelles emprises). " +
+		"Vos bâtiments ont été retirés et leurs matériaux rendus dans votre sac (%d objets). " +
+		"Appuyez sur B pour reconstruire.") % n
+
+
+## true si le dernier chargement a vidé la ville (les membres doivent quitter leur travail).
+var rebuilt_after_update := false

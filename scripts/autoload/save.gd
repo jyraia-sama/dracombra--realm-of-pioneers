@@ -48,6 +48,10 @@ func load_game() -> bool:
 	Hero.deserialize(data.get("hero", {}))
 	Quests.deserialize(data.get("quests", {}))
 	Roster.deserialize(data.get("roster", {}))
+	# Les membres affectés à un bâtiment qui n'existe plus (ville vidée par une mise à jour) quittent leur poste.
+	for m in Roster.members:
+		if int(m.get("work", 0)) > 0 and Town.site_by_uid(int(m["work"])).is_empty():
+			m["work"] = 0
 	var pos = data.get("position")
 	if pos != null:
 		Game.pending_position = Vector2(pos[0], pos[1])

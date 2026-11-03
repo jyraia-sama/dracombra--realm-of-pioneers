@@ -56,7 +56,7 @@ static func open_party() -> void:
 
 
 static func beds_text() -> String:
-	return "Logements : %d / %d occupés (une tente loge 2 membres)." % [Roster.living().size(), Roster.capacity()]
+	return "Logements : %d / %d occupés (2 par palier de logement : tente, cabane, maison)." % [Roster.living().size(), Roster.capacity()]
 
 
 ## Liste des membres ; on choisit un membre pour voir sa fiche et agir.
@@ -238,7 +238,7 @@ static func open_candidates() -> void:
 		if list.is_empty():
 			body += "\nAucun candidat aujourd'hui. Revenez demain matin."
 		elif Roster.free_beds() <= 0:
-			body += "\nPlus de place : construisez une tente pour accueillir quelqu'un."
+			body += "\nPlus de place : construisez ou améliorez un logement pour accueillir quelqu'un."
 		var i := await Choice.ask("Candidats du jour", body, options)
 		if i < 0 or i >= list.size():
 			return

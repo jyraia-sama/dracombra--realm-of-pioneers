@@ -5,6 +5,16 @@ extends Node2D
 
 const SCAFFOLD := preload("res://assets/sprites/buildings/scaffold.png")
 
+
+## Dessin du chantier pour une emprise : chantier_3x2_0.png (fondations, matériaux à déposer)
+## puis chantier_3x2_1.png (structure, travaux en cours). L'échafaudage sert pour les autres tailles.
+static func site_texture(size: Vector2i, stage: int) -> Texture2D:
+	for st in [stage, 0]:
+		var path := "res://assets/sprites/buildings/chantier_%dx%d_%d.png" % [size.x, size.y, st]
+		if ResourceLoader.exists(path):
+			return load(path)
+	return SCAFFOLD
+
 var data: BuildingData
 var record: Dictionary
 
@@ -66,25 +76,32 @@ func setup(building: BuildingData, site: Dictionary) -> void:
 
 func refresh() -> void:
 	var built: bool = record["built"]
-	_sprite.texture = data.texture if built else SCAFFOLD
+	var need := Town.missing(data.cost, record["delivered"])
+	var level := Town.level_of(record)
+	_sprite.texture = data.texture_for(level) if built else site_texture(data.size, 0 if not need.is_empty() else 1)
 	if _sprite.texture:
 		_sprite.offset = Vector2(-_sprite.texture.get_width() / 2.0, -_sprite.texture.get_height())
-	var need := Town.missing(data.cost, record["delivered"])
 	if built:
 		_label.text = ""
 		var station := Crafting.STATION_NAMES.has(data.id)
-		_interact.prompt = "Dormir" if data.can_sleep else data.display_name
-		_interact.enabled = data.can_sleep or station or data.job != &"" or data.id == &"warehouse"
+		var nm := Town.site_name(record)
+		_interact.prompt = ("Dormir" if data.can_sleep else nm) if not _can_upgrade() else nm
+		_interact.enabled = data.can_sleep or station or data.job != &"" or data.id == &"warehouse" or _can_upgrade()
 		if data.id == &"warehouse":
 			var total := 0
 			for k in Town.warehouse:
 				total += int(Town.warehouse[k])
-			_label.text = "Entrepôt · %d objets" % total
+			_label.text = "%s · %d objets" % [Town.site_name(record), total]
 		if data.job != &"":
 			var stock: Dictionary = record.get("stock", {})
 			var n := Roster.workers_of(int(record["uid"])).size()
-			_label.text = "%s · %d/%d trav.%s" % [data.display_name, n, data.workers,
+			_label.text = "%s · %d/%d trav.%s" % [Town.site_name(record), n, Town.workers_max(record),
 				(" · " + _stock_text(stock)) if not stock.is_empty() else ""]
+		if record.has("upgrade"):
+			var up_need := Town.missing(data.upgrade_cost(level + 1), record["upgrade"]["delivered"])
+			_label.text = ("Amélioration : %s" % cost_text(up_need)) if not up_need.is_empty() else \
+				"Amélioration : %d / %d jours" % [int(record["upgrade"]["days"]), data.upgrade_days(level + 1)]
+			_interact.enabled = true
 	elif need.is_empty():
 		_label.text = "%s : %d / %d jours" % [data.display_name, int(record["days"]), data.build_days]
 		_interact.enabled = false
@@ -94,8 +111,70 @@ func refresh() -> void:
 		_interact.enabled = true
 
 
+## true si le bâtiment a un palier suivant (même si la guilde n'est pas encore assez haute).
+func _can_upgrade() -> bool:
+	return record["built"] and Town.level_of(record) < data.max_level()
+
+
+## Option « Améliorer » : lance l'amélioration ou y dépose les matériaux.
+func _upgrade_label() -> String:
+	var next := Town.level_of(record) + 1
+	if record.has("upgrade"):
+		return "Amélioration en %s : déposer les matériaux" % data.level_name(next)
+	return "Améliorer en %s" % data.level_name(next)
+
+
+func _upgrade() -> void:
+	var next := Town.level_of(record) + 1
+	if not record.has("upgrade"):
+		var block := Town.upgrade_block(record)
+		if block != "":
+			Narration.say(block, 2.6)
+			return
+		var cost := data.upgrade_cost(next)
+		var body := "%s → %s\nCoût : %s, puis %d jour%s de travaux." % [Town.site_name(record), data.level_name(next),
+			cost_text(cost), data.upgrade_days(next), "s" if data.upgrade_days(next) > 1 else ""]
+		if await Choice.ask("Améliorer", body, ["Lancer les travaux", "Annuler"]) != 0:
+			return
+		Town.start_site_upgrade(record)
+	var up: Dictionary = record["upgrade"]
+	Town.deliver(data.upgrade_cost(next), up["delivered"])
+	var need := Town.missing(data.upgrade_cost(next), up["delivered"])
+	if need.is_empty():
+		Narration.say("Tout est là. Les travaux avancent chaque jour : dormez pour les voir finir.", 3.0)
+	else:
+		Narration.say("Il manque : %s." % cost_text(need), 2.4)
+	Town.changed.emit()
+
+
 func _on_interacted() -> void:
 	if record["built"]:
+		if data.id != &"warehouse" and data.job == &"" and _can_upgrade():
+			var opts: Array[String] = []
+			var acts: Array[String] = []
+			if data.can_sleep:
+				opts.append("Dormir")
+				acts.append("sleep")
+			elif Crafting.STATION_NAMES.has(data.id):
+				opts.append("Fabriquer")
+				acts.append("craft")
+			opts.append(_upgrade_label())
+			acts.append("upgrade")
+			opts.append("Fermer")
+			acts.append("close")
+			var k := await Choice.ask(Town.site_name(record), data.description, opts)
+			if k < 0 or acts[k] == "close":
+				return
+			if acts[k] == "upgrade":
+				await _upgrade()
+				refresh()
+				return
+			if acts[k] == "craft":
+				Crafting.open(data.id)
+				return
+			if acts[k] == "sleep":
+				Game.sleep()
+				return
 		if data.id == &"warehouse":
 			await _warehouse_menu()
 			refresh()
@@ -154,7 +233,7 @@ func _workplace_menu() -> void:
 		var work_text := "Production par travailleur et par jour : %s." % cost_text(data.produces) if not is_station \
 			else "Ils fabriquent les commandes de la guilde (%d en cours)." % GuildOrders.pending_count()
 		var body := "%s\nTravailleurs (%d/%d) : %s.\n%s" % [data.description,
-			workers.size(), data.workers, ", ".join(names) if not names.is_empty() else "personne", work_text]
+			workers.size(), Town.workers_max(record), ", ".join(names) if not names.is_empty() else "personne", work_text]
 		var options: Array[String] = []
 		var acts: Array = []
 		if is_station:
@@ -168,15 +247,18 @@ func _workplace_menu() -> void:
 			acts.append(["take"])
 		for m in Roster.living():
 			if m["kind"] == "artisan" and String(m["job"]) == String(data.job) and int(m.get("work", 0)) != uid \
-					and workers.size() < data.workers:
+					and workers.size() < Town.workers_max(record):
 				options.append("Affecter %s (%s)" % [m["name"], Roster.specialty(m)])
 				acts.append(["add", int(m["id"])])
 		for m in workers:
 			options.append("Retirer %s du travail" % m["name"])
 			acts.append(["remove", int(m["id"])])
+		if _can_upgrade():
+			options.append(_upgrade_label())
+			acts.append(["upgrade"])
 		options.append("Fermer")
 		acts.append(["close"])
-		var i := await Choice.ask(data.display_name, body, options)
+		var i := await Choice.ask(Town.site_name(record), body, options)
 		if i < 0 or acts[i][0] == "close":
 			return
 		match acts[i][0]:
@@ -199,6 +281,8 @@ func _workplace_menu() -> void:
 				Roster.assign(Roster.by_id(acts[i][1]), uid)
 			"remove":
 				Roster.unassign(Roster.by_id(acts[i][1]))
+			"upgrade":
+				await _upgrade()
 		refresh()
 
 
@@ -212,8 +296,15 @@ func _warehouse_menu() -> void:
 			var item := Inventory.item_by_id(StringName(k))
 			lines.append("%s ×%d" % [item.display_name if item else k, int(Town.warehouse[k])])
 		var body := "Stock : %s.\nL'établi, la forge et les chantiers puisent ici directement." % (", ".join(lines) if not lines.is_empty() else "vide")
-		var options: Array[String] = ["Déposer toutes mes ressources", "Retirer un objet", "Fermer"]
-		var i := await Choice.ask("Entrepôt", body, options)
+		var options: Array[String] = ["Déposer toutes mes ressources", "Retirer un objet"]
+		if _can_upgrade():
+			options.append(_upgrade_label())
+		options.append("Fermer")
+		var i := await Choice.ask(Town.site_name(record), body, options)
+		if _can_upgrade() and i == 2:
+			await _upgrade()
+			refresh()
+			continue
 		match i:
 			0:
 				var moved := {}

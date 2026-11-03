@@ -82,19 +82,29 @@ rocher gris 15×12 / 24×21, rocher à gemme 20×20, herbes hautes 38×32, fleur
 cristaux 10×12 → 44×53, stalagmites 15×21 → 40×51, statue tête de dragon 160×108, porte de Dracombra 222×166.
 Un arbre fait donc ~60 px monde de haut (≈ 4 cases), un buisson ~18 px monde.
 
-## 6. Bâtiments (px HD, échelle 0,5)
+## 6. Bâtiments (px HD, échelle 0,5) — nouveau système du 3 novembre 2026
 
-| Bâtiment | Image | Empreinte (cases) |
-| --- | --- | --- |
-| Coffre | 39 × 29 | 1 × 1 |
-| Établi | 66 × 42 | 2 × 1 |
-| Séchoir à peaux | 68 × 58 | 2 × 1 |
-| Tente | 71 × 63 | 2 × 1 |
-| Échafaudage (chantier) | 85 × 77 | |
-| Guilde, paliers 0 → 4 | 75×65, 122×100, 123×108, 142×180, 210×194 | |
+Chaque bâtiment **réserve dès sa pose l'emprise de son dernier palier** ; tous ses paliers ont donc la même taille au sol.
+Le vide des petits paliers est comblé dans le dessin (barrière, caisses, tonneaux, herbe).
 
-Règle : largeur de l'image ≈ empreinte × 32 px HD (+ débord du toit), hauteur libre. L'Atelier (onglet Bâtiments) utilise
-des cases de 32 px par défaut, ce qui correspond bien aux cases du jeu en HD.
+| Bâtiment | Empreinte (cases) | Image (largeur) | Fichiers |
+| --- | --- | --- | --- |
+| Guilde | 4 × 4 | 128 px | `guild_0` … `guild_4` (5 paliers) |
+| Logement (tente → cabane → maison) | 3 × 2 | 96 px | `house_0` … `house_2` |
+| Forge | 3 × 2 | 96 px | `forge_0` … `forge_2` |
+| Scierie (ex-hutte du bûcheron) | 3 × 2 | 96 px | `sawmill_0` … `sawmill_2` |
+| Tannerie (ex-séchoir) | 3 × 2 | 96 px | `tannery_0`, `tannery_1` |
+| Entrepôt | 3 × 2 | 96 px | `warehouse_0` … `warehouse_2` |
+| Établi, jardin d'herbes, cabane du chasseur, carrière | 3 × 2 | 96 px | `<art>_0` |
+| Coffre | 1 × 1 | 39 px | `chest` |
+| Chantiers | 3 × 2 et 4 × 4 | 96 / 128 px | `chantier_3x2_0` (fondations), `chantier_3x2_1` (structure) |
+| Chemins (gravier, pavés, dalles) | 1 × 1 | 4 tuiles de 32 × 32 côte à côte | `assets/sprites/town/path_gravel.png`… |
+
+Tous dans `assets/sprites/buildings/` (le code charge `<art>_<palier>.png` ; s'il manque, il prend le palier d'en dessous).
+Le sol de l'emprise est dessiné en bas de l'image (cases × 32 px de profondeur) ; le bâtiment peut monter au-dessus.
+La porte est toujours en bas au centre de la façade. Les dessins actuels sont PROVISOIRES (`tools/placeholder/construction.py`) :
+on les remplace en écrasant le PNG. ⚠ Les dessins actuels de la guilde (FINAL) dépassent de ses 4 × 4 aux derniers paliers
+(210 px au palier 4) : à refaire avec les prompts du projet.
 
 ## 7. Interface
 

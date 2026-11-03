@@ -1,0 +1,17 @@
+{
+ "cell": [
+  96,
+  128
+ ],
+ "anchor": [
+  48,
+  128
+ ],
+ "scale": 0.5,
+ "footprint": [
+  3,
+  2
+ ],
+ "palier": 2,
+ "provisoire": true
+}
