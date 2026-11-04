@@ -9,8 +9,13 @@ const TEXTURES: Array[Texture2D] = [
 	preload("res://assets/sprites/buildings/guild_2.png"), preload("res://assets/sprites/buildings/guild_3.png"),
 	preload("res://assets/sprites/buildings/guild_4.png"),
 ]
-## Partie solide de chaque palier, en cases (le reste des 4 × 4 réservés reste praticable).
-const FOOTPRINTS: Array[Vector2] = [Vector2(1.0, 0.6), Vector2(3.0, 1.2), Vector2(3.2, 1.4), Vector2(3.8, 1.6), Vector2(4.0, 2.0)]
+## Partie solide de chaque palier, en cases, contre le fond des 4 × 4 réservés : la cour devant
+## la porte reste praticable.
+const FOOTPRINTS: Array[Vector2] = [Vector2(3.0, 1.6), Vector2(3.0, 1.8), Vector2(3.6, 2.0), Vector2(3.8, 2.2), Vector2(3.8, 2.5)]
+## Ligne de façade (tri avec le héros), en cases au-dessus du bas de l'emprise.
+const FACADE := 1.8
+## Le feu de camp du palier 0, par rapport au pied de la guilde (dessin guild_0).
+const CAMPFIRE := Vector2(-13, -22)
 
 var _visual: Node2D
 var _body: StaticBody2D
@@ -20,6 +25,7 @@ var _interact: Interactable
 
 func _ready() -> void:
 	add_to_group("guild")
+	y_sort_enabled = true
 	# Calée sur la grille : son emprise de 4 × 4 cases (Town.guild_cells) tombe pile sur les cases.
 	var t := float(Game.TILE_SIZE)
 	position = Vector2(floorf(position.x / t), roundf(position.y / t)) * t
@@ -50,7 +56,9 @@ func refresh() -> void:
 	sprite.centered = false
 	# Dessin HD : deux pixels dessinés par pixel du monde.
 	sprite.scale = Vector2(0.5, 0.5)
-	sprite.offset = Vector2(-sprite.texture.get_width() / 2.0, -sprite.texture.get_height() + 4)
+	# Le bas de l'image est le bas des 4 × 4 cases ; le tri se fait sur la ligne de façade.
+	root.position = Vector2(0, -FACADE * t)
+	sprite.offset = Vector2(-sprite.texture.get_width() / 2.0, -sprite.texture.get_height() + FACADE * t * 2.0)
 	root.add_child(sprite)
 	# Le feu (ou les braseros) éclaire les alentours.
 	var light := PointLight2D.new()
@@ -58,7 +66,7 @@ func refresh() -> void:
 	light.color = Color(1.0, 0.62, 0.3)
 	light.energy = 0.9 if tier == 0 else 0.6
 	light.texture_scale = 1.2 + tier * 0.4
-	light.position = Vector2(0, -6)
+	light.position = (CAMPFIRE if tier == 0 else Vector2(0, -6)) - root.position
 	light.set_script(load("res://scenes/props/flicker_light.gd"))
 	root.add_child(light)
 	_visual = root
@@ -67,7 +75,7 @@ func refresh() -> void:
 	_interact.prompt = Town.guild_name()
 	add_child(_visual)
 	move_child(_visual, 0)
-	_body.get_child(0).position = Vector2(0, -_shape.size.y / 2.0)
+	_body.get_child(0).position = Vector2(0, -Town.GUILD_SIZE.y * t + _shape.size.y / 2.0)
 	_interact.position = Vector2(0, -4)
 
 

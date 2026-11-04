@@ -32,17 +32,17 @@ le vrai dessin peut être commandé. Pour remplacer un provisoire : écraser le 
 | `res://assets/sprites/buildings/work/*.png` | PROVISOIRE | 2026-11-02 | bâtiments de travail : hutte du bûcheron, carrière, cabane du chasseur, jardin d'herbes (générés) |
 | `res://assets/sprites/buildings/work/entrepot.png` | PROVISOIRE | 2026-11-02 | bâtiment 3x2 commerce (généré) |
 | `res://assets/sprites/npc/ombeline/ombeline.png` | PROVISOIRE | 2026-11-02 | perso pnj (généré) |
-| `res://assets/sprites/buildings/house_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/house_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/house_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/forge_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/forge_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/forge_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/sawmill_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/sawmill_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/sawmill_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/tannery_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
-| `res://assets/sprites/buildings/tannery_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
+| `res://assets/sprites/buildings/house_0.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/house_1.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/house_2.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/forge_0.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/forge_1.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/forge_2.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/sawmill_0.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/sawmill_1.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/sawmill_2.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/tannery_0.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/tannery_1.png` | FINAL | 2026-11-04 | bâtiment 3x2 (dessin ChatGPT) |
 | `res://assets/sprites/buildings/warehouse_0.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 0 (généré, emprise réservée) |
 | `res://assets/sprites/buildings/warehouse_1.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 1 (généré, emprise réservée) |
 | `res://assets/sprites/buildings/warehouse_2.png` | PROVISOIRE | 2026-11-03 | bâtiment 3x2 palier 2 (généré, emprise réservée) |
@@ -68,11 +68,11 @@ Tous marqués FINAL par défaut : passer une ligne en À DESSINER si l'asset doi
 | `res://assets/sprites/bosses/solakor.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/buildings/chest.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/buildings/drying_rack.png` | FINAL | 2026-11-01 | |
-| `res://assets/sprites/buildings/guild_0.png` | FINAL | 2026-11-01 | |
-| `res://assets/sprites/buildings/guild_1.png` | FINAL | 2026-11-01 | |
-| `res://assets/sprites/buildings/guild_2.png` | FINAL | 2026-11-01 | |
-| `res://assets/sprites/buildings/guild_3.png` | FINAL | 2026-11-01 | |
-| `res://assets/sprites/buildings/guild_4.png` | FINAL | 2026-11-01 | |
+| `res://assets/sprites/buildings/guild_0.png` | FINAL | 2026-11-04 | bâtiment 4x4 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/guild_1.png` | FINAL | 2026-11-04 | bâtiment 4x4 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/guild_2.png` | FINAL | 2026-11-04 | bâtiment 4x4 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/guild_3.png` | FINAL | 2026-11-04 | bâtiment 4x4 (dessin ChatGPT) |
+| `res://assets/sprites/buildings/guild_4.png` | FINAL | 2026-11-04 | bâtiment 4x4 (dessin ChatGPT) |
 | `res://assets/sprites/buildings/scaffold.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/buildings/tent.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/buildings/workbench.png` | FINAL | 2026-11-01 | |

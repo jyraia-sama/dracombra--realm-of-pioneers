@@ -1,17 +1,17 @@
 {
  "cell": [
   96,
-  104
+  80
  ],
  "anchor": [
   48,
-  104
+  80
  ],
  "scale": 0.5,
  "footprint": [
   3,
   2
  ],
- "palier": 0,
- "provisoire": true
+ "source": "ChatGPT",
+ "provisoire": false
 }

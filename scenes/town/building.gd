@@ -4,6 +4,11 @@ extends Node2D
 ## Créé par TownLayer à partir d'un enregistrement de Town.sites.
 
 const SCAFFOLD := preload("res://assets/sprites/buildings/scaffold.png")
+## Le dessin comprend le sol de toute l'emprise : la façade est à 45 % de la profondeur en partant
+## du bas. C'est cette ligne qui sert au tri (le héros devant la façade passe devant le dessin),
+## et seule la partie de l'emprise derrière elle est solide (on marche dans la cour).
+const FACADE := 0.45
+const SOLID := 0.6
 
 
 ## Dessin du chantier pour une emprise : chantier_3x2_0.png (fondations, matériaux à déposer)
@@ -44,15 +49,19 @@ func setup(building: BuildingData, site: Dictionary) -> void:
 	body.collision_mask = 0
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()
-	box.size = rect.size - Vector2(2, 2)
+	var solid := rect.size.y if data.size.y <= 1 else maxf(Game.TILE_SIZE, rect.size.y * SOLID)
+	box.size = Vector2(rect.size.x - 2, solid - 2)
 	shape.shape = box
-	shape.position = Vector2(0, -rect.size.y / 2.0)
+	shape.position = Vector2(0, -rect.size.y + solid / 2.0)
 	body.add_child(shape)
 	add_child(body)
 
+	# Trié par la ligne de façade (voir FACADE) : le nœud se trie avec ses enfants.
+	y_sort_enabled = true
 	_sprite = Sprite2D.new()
 	_sprite.scale = Vector2(0.5, 0.5)  # dessins HD
 	_sprite.centered = false
+	_sprite.position = Vector2(0, -_facade_lift())
 	add_child(_sprite)
 
 	_label = Label.new()
@@ -74,13 +83,19 @@ func setup(building: BuildingData, site: Dictionary) -> void:
 	refresh()
 
 
+## Hauteur de la ligne de façade au-dessus du bas de l'emprise (px monde).
+func _facade_lift() -> float:
+	return 0.0 if data.size.y <= 1 else data.size.y * Game.TILE_SIZE * FACADE
+
+
 func refresh() -> void:
 	var built: bool = record["built"]
 	var need := Town.missing(data.cost, record["delivered"])
 	var level := Town.level_of(record)
 	_sprite.texture = data.texture_for(level) if built else site_texture(data.size, 0 if not need.is_empty() else 1)
 	if _sprite.texture:
-		_sprite.offset = Vector2(-_sprite.texture.get_width() / 2.0, -_sprite.texture.get_height())
+		# Le bas de l'image reste au bas de l'emprise.
+		_sprite.offset = Vector2(-_sprite.texture.get_width() / 2.0, -_sprite.texture.get_height() + _facade_lift() * 2.0)
 	if built:
 		_label.text = ""
 		var station := Crafting.STATION_NAMES.has(data.id)
@@ -145,6 +160,18 @@ func _upgrade() -> void:
 	else:
 		Narration.say("Il manque : %s." % cost_text(need), 2.4)
 	Town.changed.emit()
+
+
+## Les étiquettes des bâtiments voisins se chevauchaient : celle d'un bâtiment terminé ne
+## s'affiche que quand le héros est tout près (les chantiers gardent la leur en permanence).
+func _process(_delta: float) -> void:
+	if _label == null or _label.text == "":
+		return
+	if not record["built"] or record.has("upgrade"):
+		_label.visible = true
+		return
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	_label.visible = player != null and player.global_position.distance_to(global_position + Vector2(0, -8)) < 44.0
 
 
 func _on_interacted() -> void:

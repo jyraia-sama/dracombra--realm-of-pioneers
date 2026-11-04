@@ -70,7 +70,7 @@ func _wake_up() -> void:
 	wound.play(&"sit", true)
 	player.apply_class(true)
 	# Il est assis près du feu, à sa gauche, face aux flammes.
-	player.global_position = guild.global_position + Vector2(-16, 1)
+	player.global_position = guild.global_position + Guild.CAMPFIRE + Vector2(-16, 1)
 	player.face(Vector2.RIGHT)
 	await get_tree().process_frame
 	await Transition.fade_in(1.6)

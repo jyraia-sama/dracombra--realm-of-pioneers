@@ -102,9 +102,10 @@ Le vide des petits paliers est comblé dans le dessin (barrière, caisses, tonne
 
 Tous dans `assets/sprites/buildings/` (le code charge `<art>_<palier>.png` ; s'il manque, il prend le palier d'en dessous).
 Le sol de l'emprise est dessiné en bas de l'image (cases × 32 px de profondeur) ; le bâtiment peut monter au-dessus.
-La porte est toujours en bas au centre de la façade. Les dessins actuels sont PROVISOIRES (`tools/placeholder/construction.py`) :
-on les remplace en écrasant le PNG. ⚠ Les dessins actuels de la guilde (FINAL) dépassent de ses 4 × 4 aux derniers paliers
-(210 px au palier 4) : à refaire avec les prompts du projet.
+La porte est toujours en bas au centre de la façade. Dessins ChatGPT importés avec `tools/art/import_building.py`
+(retire le magenta, recadre, réduit par blocs à la largeur de l'emprise) ; les autres restent PROVISOIRES
+(`tools/placeholder/construction.py`). En jeu, le tri avec le héros se fait sur la ligne de façade (45 % de la profondeur
+depuis le bas, 1,8 case pour la guilde) et seul l'arrière de l'emprise est solide : on marche dans la cour.
 
 ## 7. Interface
 
