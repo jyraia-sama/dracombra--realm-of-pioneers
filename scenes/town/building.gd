@@ -141,6 +141,12 @@ func _upgrade_label() -> String:
 
 func _upgrade() -> void:
 	var next := Town.level_of(record) + 1
+	if Admin.free_build:
+		record["level"] = next
+		record.erase("upgrade")
+		Narration.say("Amélioré (admin) : %s." % data.level_name(next), 1.6)
+		Town.changed.emit()
+		return
 	if not record.has("upgrade"):
 		var block := Town.upgrade_block(record)
 		if block != "":

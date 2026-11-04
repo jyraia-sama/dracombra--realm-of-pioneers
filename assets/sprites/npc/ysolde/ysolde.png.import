@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6povuc071n01"
-path="res://.godot/imported/ysolde.png-d6c2d509de05c43ab6f78f6bd10c57e2.ctex"
+uid="uid://dicawe6hta74r"
+path="res://.godot/imported/ysolde.png-ed55fa2350b78feaae662b32738a1227.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/npc/ysolde.png"
-dest_files=["res://.godot/imported/ysolde.png-d6c2d509de05c43ab6f78f6bd10c57e2.ctex"]
+source_file="res://assets/sprites/npc/ysolde/ysolde.png"
+dest_files=["res://.godot/imported/ysolde.png-ed55fa2350b78feaae662b32738a1227.ctex"]
 
 [params]
 

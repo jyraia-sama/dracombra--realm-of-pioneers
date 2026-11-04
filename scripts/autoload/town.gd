@@ -232,12 +232,15 @@ func set_path(cell: Vector2i, level: int) -> void:
 	paths_changed.emit()
 
 
-## Retire un chemin et rend sa pierre dans le sac.
-func remove_path(cell: Vector2i) -> void:
+## Retire un chemin et rend sa pierre dans le sac (sauf `refund` à false).
+func remove_path(cell: Vector2i, refund: bool = true) -> void:
 	var level := path_level(cell)
 	if level <= 0:
 		return
 	paths.erase(cell)
+	if not refund:
+		paths_changed.emit()
+		return
 	var cost: Dictionary = PATHS[level - 1]["cost"]
 	for id in cost:
 		var item := Inventory.item_by_id(id)
@@ -249,6 +252,53 @@ func remove_path(cell: Vector2i) -> void:
 func remove_site(record: Dictionary) -> void:
 	sites.erase(record)
 	changed.emit()
+
+
+## Ce que rend un bâtiment démoli : son coût et ses améliorations s'il est terminé (sinon ce qui a
+## été déposé sur le chantier), plus le stock qu'il gardait.
+func site_refund(r: Dictionary) -> Dictionary:
+	var refund := {}
+	var add := func(items: Dictionary, times: int = 1) -> void:
+		for k in items:
+			refund[String(k)] = int(refund.get(String(k), 0)) + int(items[k]) * times
+	var data := building(StringName(r["id"]))
+	if data == null:
+		return refund
+	if r["built"]:
+		add.call(data.cost)
+		for l in range(2, level_of(r) + 1):
+			add.call(data.upgrade_cost(l))
+		if r.has("upgrade"):
+			add.call(r["upgrade"].get("delivered", {}))
+	else:
+		add.call(r.get("delivered", {}))
+	add.call(r.get("stock", {}))
+	return refund
+
+
+## Le bâtiment (ou chantier) qui couvre une case, ou {}.
+func site_at(cell: Vector2i) -> Dictionary:
+	for r in sites:
+		var data := building(StringName(r["id"]))
+		if data and cell in footprint_cells(data, site_cell(r)):
+			return r
+	return {}
+
+
+## Démolit un bâtiment : ses travailleurs quittent leur poste, ses matériaux reviennent dans le sac
+## (sauf `refund` à false, en mode admin). Renvoie ce qui a été rendu.
+func demolish(record: Dictionary, refund: bool = true) -> Dictionary:
+	var back := site_refund(record) if refund else {}
+	for k in back:
+		var item := Inventory.item_by_id(StringName(k))
+		if item and int(back[k]) > 0:
+			Inventory.add_item(item, int(back[k]))
+	for m in Roster.members:
+		if int(m.get("work", 0)) == int(record["uid"]):
+			m["work"] = 0
+	sites.erase(record)
+	changed.emit()
+	return back
 
 
 func site_cell(record: Dictionary) -> Vector2i:

@@ -24,6 +24,9 @@ var state: State = State.OFF
 var data: BuildingData
 var path_level := 0
 var erasing := false
+var demolishing := false
+## Bâtiment visé par la démolition.
+var target: Dictionary = {}
 ## Case visée (pour un bâtiment : la case du pied, au bas-centre de l'emprise).
 var cell := Vector2i.ZERO
 var valid := false
@@ -115,6 +118,7 @@ func start(building: BuildingData) -> void:
 	data = building
 	path_level = 0
 	erasing = false
+	demolishing = false
 	_begin_place()
 
 
@@ -124,6 +128,7 @@ func start_path(level: int) -> void:
 	data = null
 	path_level = level
 	erasing = false
+	demolishing = false
 	_begin_place()
 
 
@@ -133,6 +138,17 @@ func start_erase() -> void:
 	data = null
 	path_level = 0
 	erasing = true
+	demolishing = false
+	_begin_place()
+
+
+func start_demolish() -> void:
+	if state == State.OFF:
+		_enter()
+	data = null
+	path_level = 0
+	erasing = false
+	demolishing = true
 	_begin_place()
 
 
@@ -248,7 +264,7 @@ func _entries_list() -> Array[Dictionary]:
 		var items: Array[Dictionary] = []
 		for b in all:
 			if b.category == cat:
-				var locked := "" if b.tier_required <= Town.tier else "Palier « %s » requis" % Town.tier_name(mini(b.tier_required, Town.TIERS.size() - 1))
+				var locked := "" if b.tier_required <= Town.tier or Admin.free_build else "Palier « %s » requis" % Town.tier_name(mini(b.tier_required, Town.TIERS.size() - 1))
 				items.append({"kind": "building", "data": b, "title": b.display_name, "locked": locked})
 		if not items.is_empty():
 			out.append({"kind": "header", "title": BuildingData.CATEGORY_NAMES.get(cat, String(cat))})
@@ -256,9 +272,11 @@ func _entries_list() -> Array[Dictionary]:
 	out.append({"kind": "header", "title": "Chemins"})
 	for i in Town.PATHS.size():
 		var p: Dictionary = Town.PATHS[i]
-		var locked := "" if int(p["tier"]) <= Town.tier else "Palier « %s » requis" % Town.tier_name(int(p["tier"]))
+		var locked := "" if int(p["tier"]) <= Town.tier or Admin.free_build else "Palier « %s » requis" % Town.tier_name(int(p["tier"]))
 		out.append({"kind": "path", "level": i + 1, "title": p["name"], "locked": locked})
 	out.append({"kind": "erase", "title": "Effacer un chemin", "locked": ""})
+	out.append({"kind": "header", "title": "Outils"})
+	out.append({"kind": "demolish", "title": "Démolir un bâtiment", "locked": ""})
 	return out
 
 
@@ -291,7 +309,7 @@ func _fill_menu() -> void:
 			b.pressed.connect(_choose.bind(i))
 		_list.add_child(b)
 		_rows.append(b)
-	_title.text = "Construction — %s" % Town.tier_name()
+	_title.text = "Construction — %s%s" % [Town.tier_name(), " · admin : gratuit" if Admin.free_build else ""]
 	var idx := 1
 	for i in _entries.size():
 		if not keep.is_empty() and _entries[i]["kind"] == keep.get("kind") and _entries[i]["title"] == keep.get("title"):
@@ -342,6 +360,13 @@ func _show_preview(e: Dictionary) -> void:
 			_preview.texture = null
 			_info_name.text = "Effacer un chemin"
 			lines.append("Maintenez E (ou le clic) en bougeant : la pierre revient dans votre sac.")
+		"demolish":
+			_preview.texture = null
+			_info_name.text = "Démolir un bâtiment"
+			if Admin.free_build:
+				lines.append("Mode admin : le bâtiment visé disparaît tout de suite, sans rien rendre.")
+			else:
+				lines.append("Visez un bâtiment ou un chantier : après confirmation, ses matériaux et son stock reviennent dans votre sac. Ses travailleurs quittent leur poste.")
 	if e.get("locked", "") != "":
 		lines.append("Verrouillé : " + e["locked"] + ".")
 	_info.text = "\n".join(lines)
@@ -373,6 +398,8 @@ func _choose(i: int) -> void:
 			start_path(int(e["level"]))
 		"erase":
 			start_erase()
+		"demolish":
+			start_demolish()
 
 
 # ------------------------------------------------------------------ le placement
@@ -417,7 +444,9 @@ func _set_zoom(i: int) -> void:
 
 
 func _press() -> void:
-	if data:
+	if demolishing:
+		_demolish()
+	elif data:
 		_confirm()
 	else:
 		_painting = true
@@ -448,6 +477,12 @@ func _process(delta: float) -> void:
 		_check_building()
 		_ghost.modulate = Color(GOOD, 0.8) if valid else Color(BAD, 0.7)
 		_hint.text = ("%s — E / clic : poser · Espace : menu · B : quitter" % data.display_name) if valid else reason
+	elif demolishing:
+		cell = Vector2i(floori(cursor.x / t), floori(cursor.y / t))
+		target = Town.site_at(cell)
+		valid = not target.is_empty()
+		reason = "Visez un bâtiment ou un chantier."
+		_hint.text = ("Démolir : %s — E / clic · Espace : menu" % Town.site_name(target)) if valid else reason
 	else:
 		cell = Vector2i(floori(cursor.x / t), floori(cursor.y / t))
 		_check_path()
@@ -472,7 +507,7 @@ func _refresh_occupied() -> void:
 
 ## Une case est-elle libre pour construire ? "" si oui, sinon la raison.
 func _cell_block(c: Vector2i) -> String:
-	if not Town.is_unlocked(c):
+	if not Town.is_unlocked(c) and not Admin.free_build:
 		return "Quartier encore en ruines : il faut une guilde de palier « %s »." % Town.tier_name(Town.district_of(c))
 	if c in Town.guild_cells():
 		return "Cet espace est réservé à la guilde et à ses agrandissements."
@@ -523,7 +558,7 @@ func _check_path() -> void:
 			valid = true  # rien à faire, mais pas une erreur
 			return
 		for id in p["cost"]:
-			if Town.amount_of(id) < int(p["cost"][id]):
+			if Town.amount_of(id) < int(p["cost"][id]) and not Admin.free_build:
 				reason = "Pas assez de pierre (%d par case)." % int(p["cost"][id])
 				return
 	elif Town.path_level(cell) == 0:
@@ -541,16 +576,38 @@ func _paint() -> void:
 	if not valid:
 		return
 	if erasing:
-		Town.remove_path(cell)
+		Town.remove_path(cell, not Admin.free_build)
 		return
 	if Town.path_level(cell) == path_level:
 		return
 	if Town.path_level(cell) > 0:
-		Town.remove_path(cell)
+		Town.remove_path(cell, not Admin.free_build)
 	var cost: Dictionary = Town.PATHS[path_level - 1]["cost"]
-	for id in cost:
-		Town.consume(id, int(cost[id]))
+	if not Admin.free_build:
+		for id in cost:
+			Town.consume(id, int(cost[id]))
 	Town.set_path(cell, path_level)
+
+
+func _demolish() -> void:
+	if target.is_empty():
+		Narration.say(reason, 1.6)
+		return
+	var record := target
+	var nm := Town.site_name(record)
+	if Admin.free_build:
+		Town.demolish(record, false)
+		Narration.say("Démoli (admin) : %s." % nm, 1.4)
+		return
+	var back := Town.site_refund(record)
+	var parts := {}
+	for k in back:
+		parts[StringName(k)] = int(back[k])
+	var body := "Démolir %s ?\n%s" % [nm, ("Vous récupérez : %s." % Building.cost_text(parts)) if not parts.is_empty() else "Rien à récupérer."]
+	if await Choice.ask("Démolir", body, ["Démolir", "Annuler"]) != 0:
+		return
+	Town.demolish(record, true)
+	Narration.say("%s démoli." % nm, 1.8)
 
 
 func _confirm() -> void:
@@ -558,12 +615,18 @@ func _confirm() -> void:
 		Narration.say(reason, 2.0)
 		return
 	var rect := Building.footprint_rect(data, cell)
-	Town.add_site(data.id, cell)
+	var record := Town.add_site(data.id, cell)
+	if Admin.free_build:
+		record["built"] = true
+		Town.changed.emit()
 	# Le héros ne doit pas rester coincé dans le chantier.
 	var player := _player()
 	if player and rect.grow(4.0).has_point(player.global_position):
 		player.global_position = Vector2(player.global_position.x, rect.end.y + 10.0)
-	Narration.say("Chantier posé : %s. Déposez-y les matériaux (E)." % data.display_name, 2.6)
+	if Admin.free_build:
+		Narration.say("Construit (admin) : %s." % data.level_name(1), 1.6)
+	else:
+		Narration.say("Chantier posé : %s. Déposez-y les matériaux (E)." % data.display_name, 2.6)
 	open()
 
 
@@ -604,7 +667,14 @@ func _draw() -> void:
 	if state != State.PLACE:
 		return
 	var col := GOOD if valid else BAD
-	if data:
+	if demolishing:
+		if not target.is_empty():
+			var rect := Building.footprint_rect(Town.building(StringName(target["id"])), Town.site_cell(target))
+			draw_rect(rect, Color(BAD, 0.35))
+			draw_rect(rect, Color(BAD, 0.95), false, 1.0)
+		else:
+			draw_rect(Rect2(Vector2(cell) * t, Vector2(t, t)), Color(1, 1, 1, 0.6), false, 1.0)
+	elif data:
 		var rect := Building.footprint_rect(data, cell)
 		draw_rect(rect, Color(col, 0.28))
 		draw_rect(rect, Color(col, 0.95), false, 1.0)

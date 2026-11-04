@@ -8,6 +8,9 @@ const RESOURCES := [&"wood", &"stone", &"flax", &"herb", &"hide", &"leather", &"
 	&"silver_ore", &"silver_ingot", &"ancient_bone", &"crypt_leather", &"spectral_essence", &"linen_wraps"]
 
 var invincible := false
+## Construction gratuite et instantanée : tous les bâtiments et chemins sont débloqués, rien n'est
+## payé, les chantiers et les améliorations sont terminés tout de suite, partout dans la ville.
+var free_build := false
 
 
 func _ready() -> void:
@@ -38,6 +41,7 @@ func open_menu() -> void:
 		"Aller au donjon (choisir l'étage)",
 		"Passer au jour suivant",
 		"Guilde : passer au palier suivant (actuel : %s)" % Town.tier_name(),
+		"Construction gratuite et instantanée : %s" % ("OUI" if free_build else "non"),
 		"Enregistrement pour les rapports (F8) : %s" % ("OUI" if BugReport.recording else "non"),
 		"Fermer",
 	]
@@ -71,6 +75,10 @@ func open_menu() -> void:
 				Town.changed.emit()
 				Narration.say("La guilde passe au palier : %s." % Town.tier_name(), 2.0)
 		8:
+			free_build = not free_build
+			Narration.say("Construction gratuite et instantanée : %s%s" % ["oui" if free_build else "non",
+				" (B pour construire, tout est débloqué)" if free_build else ""], 2.5)
+		9:
 			BugReport.set_recording(not BugReport.recording)
 			Narration.say("Enregistrement : %s. F8 : rapport avec les 12 dernières secondes." % ("oui" if BugReport.recording else "non"), 2.5)
 

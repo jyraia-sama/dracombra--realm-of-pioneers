@@ -268,6 +268,34 @@ func _run() -> void:
 	TownA.deserialize(same)
 	_check(TownA.sites.size() == 1, "mise à jour : une sauvegarde à jour garde ses bâtiments")
 
+	# --- Démolition, et construction gratuite du mode admin
+	var tent_cost: int = int(TownA.building(&"tent").cost[&"wood"])
+	TownA.sites[0]["built"] = true
+	var wood_now: int = Inv.get_count(&"wood")
+	var refunded: Dictionary = TownA.demolish(TownA.sites[0])
+	_check(TownA.sites.is_empty() and Inv.get_count(&"wood") == wood_now + tent_cost, "démolition : le logement disparaît, son bois revient (%s)" % refunded)
+	var adm := _g("Admin")
+	adm.free_build = true
+	var bm: BuildMode = city.get_node("BuildMode")
+	bm.start(TownA.building(&"forge"))
+	bm._cam.global_position = city.get_node("Guild").global_position + Vector2(-90, 80)
+	var tries2 := 0
+	await _frames(3)
+	while not bm.valid and tries2 < 30:
+		bm._cam.global_position += Vector2(-16, 0)
+		await _frames(2)
+		tries2 += 1
+	var stone_admin: int = Inv.get_count(&"stone")
+	bm._confirm()
+	_check(TownA.sites.size() == 1 and TownA.sites[0]["built"] and Inv.get_count(&"stone") == stone_admin, "admin : la forge est construite tout de suite, gratuitement")
+	bm.start_demolish()
+	bm._cam.global_position = Building.footprint_rect(TownA.building(&"forge"), TownA.site_cell(TownA.sites[0])).get_center()
+	await _frames(3)
+	bm._press()
+	_check(TownA.sites.is_empty() and Inv.get_count(&"stone") == stone_admin, "admin : démolition instantanée, sans remboursement")
+	bm.stop()
+	adm.free_build = false
+
 	# --- La porte vers la Sylve, et retour
 	player = city.get_node("Player")
 	var exit: Area2D = city.get_node("ExitToSylve")

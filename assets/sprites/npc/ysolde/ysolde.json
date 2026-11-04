@@ -1,0 +1,25 @@
+{
+ "cell": [
+  48,
+  64
+ ],
+ "anchor": [
+  24,
+  64
+ ],
+ "scale": 0.5,
+ "dirs": [
+  "bas",
+  "haut",
+  "droite"
+ ],
+ "anims": {
+  "idle": {
+   "row": 0,
+   "frames": 4,
+   "fps": 2.5,
+   "loop": true
+  }
+ },
+ "source": "ChatGPT"
+}

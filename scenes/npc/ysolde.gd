@@ -5,14 +5,14 @@ extends Node2D
 ## Elle guide ses premiers pas (quêtes de l'autoload Quests) et deviendra la première
 ## habitante de la guilde.
 
-const SHEET := preload("res://assets/sprites/npc/ysolde.png")
-## Planche ysolde.png (6 colonnes) : [rangée, images, durée d'une image].
+## Nouveau dessin (fiche ChatGPT du 4 novembre 2026, importée par tools/art/import_npc_views.py) :
+## 4 colonnes × 3 lignes (face, dos, profil droit), cases de 48 × 64, pieds en bas au centre.
+const SHEET := preload("res://assets/sprites/npc/ysolde/ysolde.png")
+## [rangée, images, durée d'une image] — 2 images posées puis 2 de respiration.
 const ANIMS := {
-	&"idle_down": [0, 4, 0.3], &"idle_up": [1, 4, 0.3], &"idle_side": [2, 4, 0.3],
-	&"walk_down": [3, 6, 0.12], &"walk_up": [4, 6, 0.12], &"walk_side": [5, 6, 0.12],
-	&"heal": [6, 4, 0.25], &"mortar": [7, 4, 0.22],
+	&"idle_down": [0, 4, 0.4], &"idle_up": [1, 4, 0.4], &"idle_side": [2, 4, 0.4],
 }
-const COLUMNS := 6
+const COLUMNS := 4
 
 var _sprite: Sprite2D
 var _interact: Interactable
@@ -25,10 +25,10 @@ func _ready() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.texture = SHEET
 	_sprite.hframes = COLUMNS
-	_sprite.vframes = 8
+	_sprite.vframes = 3
 	_sprite.centered = false
 	_sprite.scale = Vector2(0.5, 0.5)  # dessin HD
-	_sprite.offset = Vector2(-24, -50)
+	_sprite.offset = Vector2(-24, -64)
 	add_child(_sprite)
 	var body := StaticBody2D.new()
 	body.collision_layer = 1
@@ -51,18 +51,18 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	var player := get_tree().get_first_node_in_group("player") as Node2D
-	var anim := &"mortar"
+	var anim := &"idle_down"
 	_sprite.flip_h = false
 	if player and (_talking or player.global_position.distance_to(global_position) < Game.TILE_SIZE * 4.0):
 		# Elle se tourne vers le héros quand il approche.
 		var d := player.global_position - global_position
 		if absf(d.x) > absf(d.y):
 			anim = &"idle_side"
-			# La planche HD la dessine tournée vers la gauche.
-			_sprite.flip_h = d.x > 0.0
+			# Le profil est dessiné tourné vers la droite.
+			_sprite.flip_h = d.x < 0.0
 		else:
 			anim = &"idle_down" if d.y > 0.0 else &"idle_up"
-	# Sinon, elle pile des herbes dans son mortier.
+	# Sinon, elle attend, face à la place.
 	_sprite.frame = SheetAnimation.frame(ANIMS, anim, COLUMNS, _time, true)
 	# Un « ! » quand elle a quelque chose à dire.
 	if Quests.ready_to_report and int(_time * 2.0) % 6 == 0 and not _talking and fmod(_time, 3.0) < delta:

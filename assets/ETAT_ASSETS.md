@@ -89,7 +89,7 @@ Tous marqués FINAL par défaut : passer une ligne en À DESSINER si l'asset doi
 | `res://assets/sprites/hero/warrior_hd.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/hero/warrior_wounded.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/items/items.png` | FINAL | 2026-11-01 | |
-| `res://assets/sprites/npc/ysolde.png` | FINAL | 2026-11-01 | |
+| `res://assets/sprites/npc/ysolde/ysolde.png` | FINAL | 2026-11-04 | nouveau dessin ChatGPT : face, dos, profil + respiration (immobile) |
 | `res://assets/sprites/props/cave/boulder.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/props/cave/cave_rubble.png` | FINAL | 2026-11-01 | |
 | `res://assets/sprites/props/cave/crystal_blue.png` | FINAL | 2026-11-01 | |
